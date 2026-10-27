@@ -1,0 +1,21 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object fvSchemes;
+}
+
+ddtSchemes { default steadyState; }
+gradSchemes { default Gauss linear; }
+divSchemes
+{
+    default none;
+    div(massPhi,U) Gauss upwind;
+    div(phi,Cgas) Gauss upwind;
+    div(heatPhi,T) Gauss upwind;
+}
+laplacianSchemes { default Gauss linear orthogonal; }
+interpolationSchemes { default linear; }
+snGradSchemes { default orthogonal; }
+fluxRequired { default no; p; }

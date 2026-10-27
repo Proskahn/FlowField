@@ -1,0 +1,40 @@
+{
+  "case": "/Users/zhuang/FlowField/Problem2/cases/parallelFlow",
+  "converged": true,
+  "last_iteration": {
+    "iteration": 96.0,
+    "voltage_V": 2.25187297538,
+    "current_anode_A": 1.21,
+    "current_cathode_A": 1.21,
+    "charge_residual": 1.43362505648e-11,
+    "dp_anode_Pa": 106.830623416,
+    "dp_cathode_Pa": 130.880088445,
+    "Tmax_K": 335.580986113,
+    "gas_volume_max": 0.787022018165,
+    "O2_source_mol_s": 3.13519157113e-06,
+    "H2_source_mol_s": 6.27038314225e-06,
+    "O2_out_mol_s": 3.13519187578e-06,
+    "H2_out_mol_s": 6.27038341944e-06,
+    "mass_error": 2.02614120738e-07,
+    "gas_error": 9.71725731262e-08,
+    "field_change": 6.64706854249e-06,
+    "heat_W": 0.942632592476,
+    "bounded_cells": 0.0
+  },
+  "checks": {
+    "anode_current_relative_error": 0.0,
+    "cathode_current_relative_error": 0.0,
+    "oxygen_out_relative_error": 9.717209636939117e-08,
+    "hydrogen_out_relative_error": 4.4205636040572927e-08,
+    "mass_relative_error": 2.02614120738e-07,
+    "bounded_cells": 0
+  },
+  "mesh_cells": 89056,
+  "expected_O2_mol_s": 3.1351915711268628e-06,
+  "expected_H2_mol_s": 6.2703831422537255e-06,
+  "expected_O2_mL_min": 5.142481328435799,
+  "expected_H2_mL_min": 10.284962656871597,
+  "electrical_power_W": 2.7247663002098,
+  "pump_power_W": 5.942767796524999e-05,
+  "validation_status": "Numerical reconstruction with estimated closures; not calibrated to the paper."
+}

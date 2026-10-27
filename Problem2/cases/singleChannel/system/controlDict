@@ -1,0 +1,21 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object controlDict;
+}
+
+application pemElectrolyzerFoam;
+startFrom latestTime;
+startTime 0;
+stopAt endTime;
+endTime 1000;
+deltaT 1;
+writeControl timeStep;
+writeInterval 100;
+purgeWrite 2;
+writeFormat ascii;
+writePrecision 10;
+timeFormat general;
+runTimeModifiable true;

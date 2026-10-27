@@ -1,0 +1,40 @@
+{
+  "case": "/Users/zhuang/FlowField/Problem2/cases/singleChannel",
+  "converged": true,
+  "last_iteration": {
+    "iteration": 108.0,
+    "voltage_V": 2.27767912208,
+    "current_anode_A": 1.0,
+    "current_cathode_A": 1.0,
+    "charge_residual": 1.51248759322e-11,
+    "dp_anode_Pa": 206.98102928,
+    "dp_cathode_Pa": 232.063559624,
+    "Tmax_K": 334.941705748,
+    "gas_volume_max": 0.437561036498,
+    "O2_source_mol_s": 2.59106741415e-06,
+    "H2_source_mol_s": 5.18213482831e-06,
+    "O2_out_mol_s": 2.59106834461e-06,
+    "H2_out_mol_s": 5.18213526939e-06,
+    "mass_error": 1.45257709552e-07,
+    "gas_error": 3.59101630177e-07,
+    "field_change": 5.22719960134e-06,
+    "heat_W": 0.812917885579,
+    "bounded_cells": 0.0
+  },
+  "checks": {
+    "anode_current_relative_error": 2.220446049250313e-16,
+    "cathode_current_relative_error": 2.220446049250313e-16,
+    "oxygen_out_relative_error": 3.5910125806282167e-07,
+    "hydrogen_out_relative_error": 8.511571980562849e-08,
+    "mass_relative_error": 1.45257709552e-07,
+    "bounded_cells": 0
+  },
+  "mesh_cells": 73600,
+  "expected_O2_mol_s": 2.591067414154432e-06,
+  "expected_H2_mol_s": 5.182134828308864e-06,
+  "expected_O2_mL_min": 4.249984568955206,
+  "expected_H2_mL_min": 8.499969137910412,
+  "electrical_power_W": 2.2776791220799995,
+  "pump_power_W": 0.00010976114722599998,
+  "validation_status": "Numerical reconstruction with estimated closures; not calibrated to the paper."
+}

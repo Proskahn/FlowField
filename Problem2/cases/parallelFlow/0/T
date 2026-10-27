@@ -1,0 +1,20 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volScalarField;
+    object T;
+}
+
+dimensions [0 0 0 1 0 0 0];
+internalField uniform 333.15;
+boundaryField
+{
+anodeInlet { type fixedValue; value uniform 333.15; }
+anodeOutlet { type zeroGradient; }
+cathodeInlet { type fixedValue; value uniform 333.15; }
+cathodeOutlet { type zeroGradient; }
+anodeTerminal { type zeroGradient; }
+cathodeTerminal { type zeroGradient; }
+externalWalls { type zeroGradient; }
+}

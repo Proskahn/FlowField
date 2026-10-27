@@ -1,0 +1,55 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object pemProperties;
+}
+
+// SI units, except explicitly named inletFlow_mL_min. See docs/model.md.
+currentDensity 10000.0;
+inletFlow_mL_min 15.0;
+inletTemperature 333.15;
+operatingPressure 101325.0;
+referenceTemperature 298.15;
+electronConductivity 1000.0;
+porosityPTL 0.5;
+porosityCL 0.25;
+permeabilityPTL 1e-12;
+permeabilityCL 1e-13;
+exchangeCurrentAnode 0.1;
+exchangeCurrentCathode 10000.0;
+alphaAnodic 0.5;
+alphaCathodic 0.5;
+activeAreaAnode 100000.0;
+activeAreaCathode 100000.0;
+referenceConcentrationO2 36.579;
+referenceConcentrationH2 36.579;
+diffusivityO2 2e-05;
+diffusivityH2 6e-05;
+liquidDensity 983.2;
+liquidViscosity 0.000466;
+oxygenViscosity 2.2e-05;
+hydrogenViscosity 9.5e-06;
+liquidCp 4184.0;
+oxygenCp 920.0;
+hydrogenCp 14300.0;
+liquidConductivity 0.65;
+oxygenConductivity 0.028;
+hydrogenConductivity 0.2;
+kTitanium 21.9;
+kCarbon 10.0;
+kAnodeCL 2.0;
+kCathodeCL 2.0;
+kMembrane 0.2;
+coveragePressureMode dimensionless;
+concentrationFloorRatio 1e-06;
+includeNernstConcentration true;
+reversibleHeatSign 1.0;
+flowPseudoDt 0.01;
+outerTolerance 1e-05;
+balanceTolerance 0.001;
+minimumIterations 60;
+maxChargeNewton 40;
+reactionArea 9.999999999999999e-05;
+catalystThickness 2e-05;

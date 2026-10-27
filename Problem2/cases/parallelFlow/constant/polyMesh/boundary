@@ -1,0 +1,25 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class polyBoundaryMesh;
+    object boundary;
+}
+
+7
+(
+anodeInlet
+{ type patch; nFaces 32; startFace 261184; }
+anodeOutlet
+{ type patch; nFaces 32; startFace 261216; }
+cathodeInlet
+{ type patch; nFaces 32; startFace 261248; }
+cathodeOutlet
+{ type patch; nFaces 32; startFace 261280; }
+anodeTerminal
+{ type wall; nFaces 1936; startFace 261312; }
+cathodeTerminal
+{ type wall; nFaces 1936; startFace 263248; }
+externalWalls
+{ type wall; nFaces 7968; startFace 265184; }
+)
