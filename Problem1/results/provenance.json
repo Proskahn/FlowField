@@ -1,0 +1,9 @@
+{
+  "paper_doi": "10.1016/j.ijheatmasstransfer.2025.127446",
+  "supplied_pdf_sha256": "44580713d2c95709d78a32af34f0f6f0f32bba7f6411efdd9e63e9d3ba062875",
+  "openfoam_image": "opencfd/openfoam-default:2312",
+  "openfoam_version": "OpenCFD v2312",
+  "verification_date": "2026-10-23",
+  "production_window_completed": false,
+  "electrochemical_thermal_solver_included": false
+}

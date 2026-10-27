@@ -1,0 +1,124 @@
+// v2312 coded function object; runs after each completed solver time step.
+bubbleMetrics
+{
+    type coded;
+    libs (utilityFunctionObjects);
+    name liBubbleMetrics;
+    executeControl timeStep;
+    executeInterval 1;
+    writeControl none;
+    codeInclude
+    #{
+        #include "fvCFD.H"
+        #include "PstreamReduceOps.H"
+        #include <fstream>
+        #include <iomanip>
+    #};
+    codeExecute
+    #{
+        const fvMesh& msh = mesh();
+        const volScalarField& a = msh.lookupObject<volScalarField>("alpha.water");
+        const volScalarField& p = msh.lookupObject<volScalarField>("p");
+        const surfaceScalarField& phi = msh.lookupObject<surfaceScalarField>("phi");
+        const surfaceScalarField& aflux = msh.lookupObject<surfaceScalarField>("alphaPhi0.water");
+        const auto& V = msh.V();
+        auto boundedGas = [](scalar water) { return max(scalar(0), min(scalar(1), scalar(1)-water)); };
+        auto patchMetric = [&](const word& name, int mode)
+        {
+            const label id = msh.boundaryMesh().findPatchID(name);
+            if (id < 0) FatalErrorInFunction << "Missing patch " << name << exit(FatalError);
+            scalar total = 0;
+            forAll(a.boundaryField()[id], f)
+            {
+                const scalar gas = boundedGas(a.boundaryField()[id][f]);
+                total += msh.magSf().boundaryField()[id][f]
+                    *(mode==0 ? scalar(1) : mode==1 ? gas : scalar(gas >= 0.5));
+            }
+            reduce(total, sumOp<scalar>());
+            return total;
+        };
+        scalar bottomArea = patchMetric("bottomWall",0);
+        scalar bottomGas = patchMetric("bottomWall",1);
+        scalar bottomThreshold = patchMetric("bottomWall",2);
+        const scalar topArea = patchMetric("topWall",0);
+        const scalar topGas = patchMetric("topWall",1);
+        const scalar sideArea = patchMetric("sideWalls",0);
+        const scalar sideGas = patchMetric("sideWalls",1);
+        const auto afTmp = fvc::interpolate(a);
+        const surfaceScalarField& af = afTmp();
+        const label fz = msh.faceZones().findZoneID("poreMouths");
+        if (fz < 0) FatalErrorInFunction << "Missing poreMouths" << exit(FatalError);
+        scalar mouthArea = 0, mouthGas = 0, mouthThreshold = 0;
+        for (const label f : msh.faceZones()[fz])
+        {
+            scalar water, area;
+            if (f < msh.nInternalFaces()) { water=af[f]; area=msh.magSf()[f]; }
+            else
+            {
+                const label pi=msh.boundaryMesh().whichPatch(f);
+                const label pf=f-msh.boundaryMesh()[pi].start();
+                water=af.boundaryField()[pi][pf];
+                area=msh.magSf().boundaryField()[pi][pf];
+                // A decomposed internal face appears on both processor patches.
+                if (msh.boundary()[pi].coupled()) area *= 0.5;
+            }
+            mouthArea += area;
+            mouthGas += area*boundedGas(water);
+            mouthThreshold += area*scalar(boundedGas(water)>=0.5);
+        }
+        reduce(mouthArea,sumOp<scalar>());
+        reduce(mouthGas,sumOp<scalar>());
+        reduce(mouthThreshold,sumOp<scalar>());
+        const label cz=msh.cellZones().findZoneID("channels");
+        if (cz < 0) FatalErrorInFunction << "Missing channels" << exit(FatalError);
+        scalar channelVolume=0, channelGas=0, domainGas=0, oldGas=0;
+        scalar amin=GREAT, amax=-GREAT;
+        for (const label c : msh.cellZones()[cz])
+        {
+            channelVolume+=V[c];
+            channelGas+=V[c]*(1-a[c]);
+        }
+        forAll(V,c)
+        {
+            domainGas+=V[c]*(1-a[c]);
+            oldGas+=V[c]*(1-a.oldTime()[c]);
+            amin=min(amin,a[c]); amax=max(amax,a[c]);
+        }
+        reduce(channelVolume,sumOp<scalar>()); reduce(channelGas,sumOp<scalar>());
+        reduce(domainGas,sumOp<scalar>()); reduce(oldGas,sumOp<scalar>());
+        reduce(amin,minOp<scalar>()); reduce(amax,maxOp<scalar>());
+        scalar netPhi=0, netGas=0;
+        forAll(msh.boundary(),pi)
+        {
+            if (msh.boundary()[pi].coupled()) continue;
+            netPhi+=sum(phi.boundaryField()[pi]);
+            netGas+=sum(phi.boundaryField()[pi]-aflux.boundaryField()[pi]);
+        }
+        reduce(netPhi,sumOp<scalar>()); reduce(netGas,sumOp<scalar>());
+        auto patchP = [&](const word& name)
+        {
+            label pi=msh.boundaryMesh().findPatchID(name);
+            scalar pa=sum(p.boundaryField()[pi]*msh.magSf().boundaryField()[pi]);
+            scalar ar=sum(msh.magSf().boundaryField()[pi]);
+            reduce(pa,sumOp<scalar>()); reduce(ar,sumOp<scalar>());
+            return pa/max(ar,VSMALL);
+        };
+        scalar dp=patchP("waterInlet")-patchP("outlet");
+        const scalar residual=(domainGas-oldGas)/msh.time().deltaTValue()+netGas;
+        if (Pstream::master())
+        {
+            const fileName dir=msh.time().globalPath()/"postProcessing"/"bubbleMetrics";
+            mkDir(dir);
+            const fileName path=dir/"metrics.csv";
+            const bool fresh=!isFile(path);
+            std::ofstream out(path.c_str(),std::ios::app);
+            if (fresh) out << "time_s,beta_bottom_solid,beta_bottom_with_mouths,beta_bottom_threshold,beta_top,beta_side,gas_fraction_channels,gas_volume_domain_m3,alpha_min,alpha_max,net_volume_flux_m3_s,net_oxygen_flux_m3_s,oxygen_balance_residual_m3_s,pressure_drop_Pa\n";
+            out << std::setprecision(12) << msh.time().value() << ','
+                << bottomGas/bottomArea << ',' << (bottomGas+mouthGas)/(bottomArea+mouthArea) << ','
+                << (bottomThreshold+mouthThreshold)/(bottomArea+mouthArea) << ','
+                << topGas/topArea << ',' << sideGas/sideArea << ','
+                << channelGas/channelVolume << ',' << domainGas << ',' << amin << ',' << amax << ','
+                << netPhi << ',' << netGas << ',' << residual << ',' << dp << '\n';
+        }
+    #};
+}

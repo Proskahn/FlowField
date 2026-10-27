@@ -1,0 +1,107 @@
+[
+  {
+    "case": "runs/check/w2mm",
+    "width_mm": 2,
+    "cells": 53408,
+    "interval_s": [
+      1.19760479042e-06,
+      0.001
+    ],
+    "samples": 169,
+    "requested_interval_complete": false,
+    "status": "Short transient verification only; not a paper comparison",
+    "time_weighted_means": {
+      "beta_bottom_solid": 0.0019497852083507777,
+      "beta_bottom_with_mouths": 0.11145921306266368,
+      "beta_bottom_threshold": 0.16,
+      "beta_top": 2.907275954386656e-10,
+      "beta_side": 6.0686484084458135e-05,
+      "gas_fraction_channels": 0.0015605534521514767,
+      "pressure_drop_Pa": 762.9807121892883
+    },
+    "coupling_from_mean_beta": {
+      "eta_bubble_V": 0.002620853608365361,
+      "active_area_factor": 0.7895047300512208,
+      "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+    },
+    "diagnostics": {
+      "alpha_min": 7.55035498372e-19,
+      "alpha_max": 1.00000001699,
+      "alpha_bound_tolerance": 1e-07,
+      "bounded_within_tolerance": true,
+      "max_net_volume_flux_m3_s": 5.3263819255e-14,
+      "max_oxygen_balance_residual_m3_s": 4.18555952365e-13,
+      "max_oxygen_balance_relative_to_feed": 7.322423347979308e-06
+    }
+  },
+  {
+    "case": "runs/check/w1mm",
+    "width_mm": 1,
+    "cells": 53408,
+    "interval_s": [
+      1.17647058824e-06,
+      0.00100181818182
+    ],
+    "samples": 171,
+    "requested_interval_complete": false,
+    "status": "Short transient verification only; not a paper comparison",
+    "time_weighted_means": {
+      "beta_bottom_solid": 0.0017202689831399178,
+      "beta_bottom_with_mouths": 0.11130146580032595,
+      "beta_bottom_threshold": 0.15999999999999998,
+      "beta_top": 2.2286345787654948e-10,
+      "beta_side": 5.422489397083717e-05,
+      "gas_fraction_channels": 0.0015680652581968127,
+      "pressure_drop_Pa": 679.5629462659431
+    },
+    "coupling_from_mean_beta": {
+      "eta_bubble_V": 0.0026169166205569218,
+      "active_area_factor": 0.7897850846886492,
+      "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+    },
+    "diagnostics": {
+      "alpha_min": 2.7959427329e-20,
+      "alpha_max": 1.00000001809,
+      "alpha_bound_tolerance": 1e-07,
+      "bounded_within_tolerance": true,
+      "max_net_volume_flux_m3_s": 6.39358106025e-14,
+      "max_oxygen_balance_residual_m3_s": 7.28164468322e-13,
+      "max_oxygen_balance_relative_to_feed": 1.2738866748597246e-05
+    }
+  },
+  {
+    "case": "runs/check/w0.5mm",
+    "width_mm": 0.5,
+    "cells": 53408,
+    "interval_s": [
+      1.19760479042e-06,
+      0.001
+    ],
+    "samples": 169,
+    "requested_interval_complete": false,
+    "status": "Short transient verification only; not a paper comparison",
+    "time_weighted_means": {
+      "beta_bottom_solid": 0.001823553191828514,
+      "beta_bottom_with_mouths": 0.11142415979008455,
+      "beta_bottom_threshold": 0.16,
+      "beta_top": 1.9169930266261044e-10,
+      "beta_side": 4.1584578974565326e-05,
+      "gas_fraction_channels": 0.0015604398481450143,
+      "pressure_drop_Pa": 629.5550387345511
+    },
+    "coupling_from_mean_beta": {
+      "eta_bubble_V": 0.0026199787035818376,
+      "active_area_factor": 0.7895670238047572,
+      "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+    },
+    "diagnostics": {
+      "alpha_min": 6.22643783989e-19,
+      "alpha_max": 1.00000001802,
+      "alpha_bound_tolerance": 1e-07,
+      "bounded_within_tolerance": true,
+      "max_net_volume_flux_m3_s": 1.98635801952e-13,
+      "max_oxygen_balance_residual_m3_s": 4.39577399713e-13,
+      "max_oxygen_balance_relative_to_feed": 7.690182869733952e-06
+    }
+  }
+]
