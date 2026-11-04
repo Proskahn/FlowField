@@ -2,7 +2,7 @@
  * Steady homogeneous-mixture PEM electrolyzer, OpenCFD OpenFOAM v2312.
  * Based on Zhuang et al., IJHE 49 (2024) 337-352, Sections 2, 3.1-3.3.1.
  * See docs/model.md for closure assumptions and corrections to printed units.
- * This implementation is serial; it rejects decomposed/parallel execution.
+ * MPI partitions all fields, including the monolithic coupled charge graph.
  */
 #include "fvCFD.H"
 #include "ChargeNetwork.H"
@@ -16,16 +16,22 @@ static volScalarField auxiliary(const word& name, const fvMesh& mesh,
                                const dimensionSet& dims, scalar value=0,
                                IOobject::writeOption write=IOobject::NO_WRITE)
 {
+    wordList patchTypes(mesh.boundary().size(),"zeroGradient");
+    forAll(mesh.boundary(), p)
+        if (mesh.boundary()[p].coupled()) patchTypes[p]=mesh.boundary()[p].type();
     return volScalarField(IOobject(name,mesh.time().timeName(),mesh,
-        IOobject::NO_READ,write),mesh,dimensionedScalar(name,dims,value),"zeroGradient");
+        IOobject::NO_READ,write),mesh,dimensionedScalar(name,dims,value),patchTypes);
 }
 
 // Distance-weighted harmonic coefficient. Exactly zero across an inactive
 // material interface; there is no small artificial conductivity or leakage.
 static void harmonic(surfaceScalarField& face, const volScalarField& cell,
+                     const vectorField& neighbourCentres,
                      const boolList* active=nullptr)
 {
     const fvMesh& mesh=cell.mesh();
+    scalarField neighbourValue;
+    syncTools::swapBoundaryCellList(mesh,cell.primitiveField(),neighbourValue);
     forAll(mesh.neighbour(),f)
     {
         label o=mesh.owner()[f], n=mesh.neighbour()[f];
@@ -35,15 +41,29 @@ static void harmonic(surfaceScalarField& face, const volScalarField& cell,
         face[f]=(dO+dN)/(dO/cell[o]+dN/cell[n]);
     }
     forAll(mesh.boundary(),p)
-        forAll(mesh.boundary()[p],f)
+    {
+        const auto& patch=mesh.boundary()[p];
+        forAll(patch,f)
         {
-            label c=mesh.boundary()[p].faceCells()[f];
-            face.boundaryFieldRef()[p][f]=(active && !(*active)[c]) ? 0 : cell[c];
+            label c=patch.faceCells()[f], b=patch.start()-mesh.nInternalFaces()+f;
+            scalar value=(active && !(*active)[c]) ? 0 : cell[c];
+            if (patch.coupled())
+            {
+                if (value<=0 || neighbourValue[b]<=0) value=0;
+                else
+                {
+                    scalar dO=mag(patch.Cf()[f]-mesh.C()[c]);
+                    scalar dN=mag(patch.Cf()[f]-neighbourCentres[b]);
+                    value=(dO+dN)/(dO/value+dN/neighbourValue[b]);
+                }
+            }
+            face.boundaryFieldRef()[p][f]=value;
         }
+    }
 }
 
 static void pressureGradient(volVectorField& grad, const volScalarField& p,
-                             const boolList& fluid)
+                             const boolList& fluid, const boolList& neighbourFluid)
 {
     const fvMesh& mesh=p.mesh();
     surfaceScalarField pf(fvc::interpolate(p));
@@ -53,13 +73,22 @@ static void pressureGradient(volVectorField& grad, const volScalarField& p,
         if (fluid[o] && !fluid[n]) pf[f]=p[o];
         if (!fluid[o] && fluid[n]) pf[f]=p[n];
     }
+    forAll(mesh.boundary(),patchi)
+    {
+        const auto& patch=mesh.boundary()[patchi];
+        if (!patch.coupled()) continue;
+        forAll(patch,f)
+        {
+            label c=patch.faceCells()[f], b=patch.start()-mesh.nInternalFaces()+f;
+            if (fluid[c] && !neighbourFluid[b]) pf.boundaryFieldRef()[patchi][f]=p[c];
+        }
+    }
     grad=fvc::surfaceIntegrate(pf*mesh.Sf());
     forAll(fluid,c) if (!fluid[c]) grad[c]=vector::zero;
 }
 
 int main(int argc, char *argv[])
 {
-    argList::noParallel();
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
@@ -111,24 +140,33 @@ int main(int argc, char *argv[])
         sigmaS[c]=(mat[c]==1 || mat[c]==4 || mat[c]==7) ? 0 : props.get<scalar>("electronConductivity");
     }
     const labelList solids(solidList);
+    boolList neighbourFluid;
+    vectorField neighbourCentres;
+    syncTools::swapBoundaryCellList(mesh,fluid,neighbourFluid);
+    syncTools::swapBoundaryCellPositions(mesh,mesh.C().primitiveField(),neighbourCentres);
     scalarField solidZero(solids.size(),0);
     vectorField solidU(solids.size(),vector::zero);
     eps.correctBoundaryConditions(); sigmaS.correctBoundaryConditions();
     surfaceScalarField epsF(IOobject("epsF",runTime.timeName(),mesh),fvc::interpolate(eps));
-    harmonic(epsF,eps,&fluid);
+    harmonic(epsF,eps,neighbourCentres,&fluid);
     surfaceScalarField phi(IOobject("phi",runTime.timeName(),mesh,IOobject::READ_IF_PRESENT,IOobject::AUTO_WRITE),epsF*fvc::flux(U));
     surfaceScalarField massPhi(IOobject("massPhi",runTime.timeName(),mesh,IOobject::READ_IF_PRESENT,IOobject::AUTO_WRITE),fvc::interpolate(rho)*phi);
     volVectorField gradP(IOobject("gradP",runTime.timeName(),mesh),fvc::grad(p));
     ChargeNetwork charge(mesh,mat);
-    fileName outDir=runTime.path()/"postProcessing"/"pem";
-    mkDir(outDir);
-    std::ofstream history((outDir/("history_"+runTime.timeName()+".csv")).c_str());
-    history << "iteration,voltage_V,current_anode_A,current_cathode_A,charge_residual,dp_anode_Pa,dp_cathode_Pa,Tmax_K,gas_volume_max,O2_source_mol_s,H2_source_mol_s,O2_out_mol_s,H2_out_mol_s,mass_error,gas_error,field_change,heat_W,bounded_cells\n";
-    history << std::setprecision(12);
+    const label totalCells=returnReduce(mesh.nCells(),sumOp<label>());
+    fileName outDir=runTime.globalPath()/"postProcessing"/"pem";
+    std::ofstream history;
+    if (Pstream::master())
+    {
+        mkDir(outDir);
+        history.open((outDir/("history_"+runTime.timeName()+".csv")).c_str());
+        history << "iteration,voltage_V,current_anode_A,current_cathode_A,charge_residual,dp_anode_Pa,dp_cathode_Pa,Tmax_K,gas_volume_max,O2_source_mol_s,H2_source_mol_s,O2_out_mol_s,H2_out_mol_s,mass_error,gas_error,field_change,heat_W,bounded_cells\n";
+        history << std::setprecision(12);
+    }
     bool converged=false;
     label stable=0;
-    Info << "Steady coupled PEM model: " << mesh.nCells() << " cells, " << targetI
-         << " A. Time labels are outer iterations, not physical seconds." << endl;
+    Info << "Steady coupled PEM model: " << totalCells << " cells, " << targetI
+         << " A, " << Pstream::nProcs() << " processes. Time labels are outer iterations, not physical seconds." << endl;
     while (runTime.loop())
     {
         Info << "\nIteration = " << runTime.timeName() << endl;
@@ -182,10 +220,11 @@ int main(int argc, char *argv[])
                 Sm[c]=-iv[c]*MH/(2*F);
             }
         }
+        reduce(Ia,sumOp<scalar>()); reduce(Ic,sumOp<scalar>());
         // SIMPLE momentum/pressure coupling, intrinsic pore velocity U.
         volScalarField epsMu("epsMu",eps*mu);
         surfaceScalarField muF(IOobject("muF",runTime.timeName(),mesh),fvc::interpolate(epsMu));
-        harmonic(muF,epsMu,&fluid);
+        harmonic(muF,epsMu,neighbourCentres,&fluid);
         volScalarField pseudo("pseudo",eps*rho/dimensionedScalar("dt",dimTime,props.get<scalar>("flowPseudoDt")));
         fvVectorMatrix UEqn(fvm::div(massPhi,U)-fvm::laplacian(muF,U)+fvm::Sp(drag+pseudo,U)==pseudo*U);
         // Internal fluid/solid faces are exact no-slip walls at the face location.
@@ -196,11 +235,22 @@ int main(int argc, char *argv[])
             label c=fluid[o] ? o : n;
             UEqn.diag()[c]+=epsMu[c]*mesh.magSf()[f]/mag(mesh.Cf()[f]-mesh.C()[c]);
         }
+        forAll(mesh.boundary(),patchi)
+        {
+            const auto& patch=mesh.boundary()[patchi];
+            if (!patch.coupled()) continue;
+            forAll(patch,f)
+            {
+                label c=patch.faceCells()[f], b=patch.start()-mesh.nInternalFaces()+f;
+                if (fluid[c] && !neighbourFluid[b])
+                    UEqn.diag()[c]+=epsMu[c]*patch.magSf()[f]/mag(patch.Cf()[f]-mesh.C()[c]);
+            }
+        }
         UEqn.relax();
         const scalar uConstraint=gMax(mag(UEqn.diag()));
         forAll(solids,s) UEqn.diag()[solids[s]]=uConstraint;
         UEqn.setValues(solids,solidU);
-        pressureGradient(gradP,p,fluid);
+        pressureGradient(gradP,p,fluid,neighbourFluid);
         solve(UEqn==-eps*gradP);
         volScalarField rAU("rAU",1.0/UEqn.A());
         volVectorField HbyA("HbyA",rAU*UEqn.H());
@@ -220,13 +270,13 @@ int main(int argc, char *argv[])
         phi=massPhi/rhoF;
         p.primitiveFieldRef()=0.3*p.primitiveField()+0.7*oldP;
         p.correctBoundaryConditions();
-        pressureGradient(gradP,p,fluid);
+        pressureGradient(gradP,p,fluid,neighbourFluid);
         U=HbyA-rAU*eps*gradP;
         U.correctBoundaryConditions();
         forAll(solids,s) U[solids[s]]=vector::zero;
         // Molar gas transport. Water is recovered from total mixture mass.
         surfaceScalarField DF(IOobject("DF",runTime.timeName(),mesh),fvc::interpolate(D));
-        harmonic(DF,D,&fluid);
+        harmonic(DF,D,neighbourCentres,&fluid);
         forAll(mesh.boundary(),patchi) if (mesh.boundary()[patchi].name().ends_with("Inlet"))
             DF.boundaryFieldRef()[patchi]=0; // Pure-water advective feed, no diffusive gas sink.
         fvScalarMatrix CEqn(fvm::div(phi,C)-fvm::laplacian(DF,C)==Sgas);
@@ -244,9 +294,10 @@ int main(int argc, char *argv[])
             C[c]=min(max(C[c],0.0),limit);
         }
         C.correctBoundaryConditions();
+        reduce(bounded,sumOp<label>());
         // Stationary solids conduct heat; only fluid carries sensible enthalpy.
         surfaceScalarField kF(IOobject("kF",runTime.timeName(),mesh),fvc::interpolate(k));
-        harmonic(kF,k);
+        harmonic(kF,k,neighbourCentres);
         surfaceScalarField heatPhi("heatPhi",massPhi*fvc::interpolate(cp));
         fvScalarMatrix TEqn(fvm::div(heatPhi,T)-fvm::Sp(fvc::div(heatPhi),T)-fvm::laplacian(kF,T)==heat);
         TEqn.solve();
@@ -255,7 +306,7 @@ int main(int argc, char *argv[])
         scalar tmin=gMin(T.primitiveField()),tmax=gMax(T.primitiveField());
         if (!std::isfinite(tmin) || !std::isfinite(tmax) || tmin<273.15 || tmax>373.15)
             FatalErrorInFunction << "Temperature left the liquid-water validity range: " << tmin << ' ' << tmax << exit(FatalError);
-        scalar inflow[2]={0,0},outflow[2]={0,0},gasOut[2]={0,0},dp[2]={0,0};
+        scalar inflow[2]={0,0},outflow[2]={0,0},gasOut[2]={0,0},dp[2]={0,0},inletArea[2]={0,0};
         forAll(mesh.boundary(),patchi)
         {
             const auto& patch=mesh.boundary()[patchi];
@@ -265,13 +316,21 @@ int main(int argc, char *argv[])
             if (inlet)
             {
                 inflow[side]-=sum(massPhi.boundaryField()[patchi]);
-                dp[side]=sum(p.boundaryField()[patchi]*mesh.magSf().boundaryField()[patchi])/sum(mesh.magSf().boundaryField()[patchi]);
+                dp[side]+=sum(p.boundaryField()[patchi]*mesh.magSf().boundaryField()[patchi]);
+                inletArea[side]+=sum(mesh.magSf().boundaryField()[patchi]);
             }
             else
             {
                 outflow[side]+=sum(massPhi.boundaryField()[patchi]);
                 gasOut[side]+=sum(phi.boundaryField()[patchi]*C.boundaryField()[patchi]);
             }
+        }
+        for (label side=0; side<2; ++side)
+        {
+            reduce(inflow[side],sumOp<scalar>()); reduce(outflow[side],sumOp<scalar>());
+            reduce(gasOut[side],sumOp<scalar>()); reduce(dp[side],sumOp<scalar>());
+            reduce(inletArea[side],sumOp<scalar>());
+            dp[side]/=max(inletArea[side],SMALL);
         }
         scalar sourceA=Ia*(MO/4-MW/2)/F,sourceC=Ic*MH/(2*F);
         scalar massError=max(mag(outflow[0]-inflow[0]-sourceA)/max(inflow[0],SMALL),
@@ -282,16 +341,20 @@ int main(int argc, char *argv[])
             max(gMax(mag(C.primitiveField()-oldC))/max(gMax(C.primitiveField()),1.0),
             max(gMax(mag(U.primitiveField()-oldU))/max(gMax(mag(U.primitiveField())),0.01),
                 gMax(mag(p.primitiveField()-oldP))/max(gMax(mag(p.primitiveField())),1.0))));
-        scalar heatW=sum(heat.primitiveField()*mesh.V());
+        scalar heatW=gSum(heat.primitiveField()*mesh.V());
+        scalar gasMax=gMax(fgas.primitiveField());
         Info << "PEM: V=" << voltage << " V; Ia=" << Ia << "; Ic=" << Ic
              << " A; dP=" << dp[0] << ", " << dp[1] << " Pa; Tmax=" << tmax
              << " K; change=" << change << "; charge=" << chargeError
              << "; gas balance=" << gasError << "; bounded=" << bounded << endl;
+        if (Pstream::master())
+        {
         history << runTime.value() << ',' << voltage << ',' << Ia << ',' << Ic << ',' << chargeError
-                << ',' << dp[0] << ',' << dp[1] << ',' << tmax << ',' << gMax(fgas.primitiveField())
+                << ',' << dp[0] << ',' << dp[1] << ',' << tmax << ',' << gasMax
                 << ',' << Ia/(4*F) << ',' << Ic/(2*F) << ',' << gasOut[0] << ',' << gasOut[1]
                 << ',' << massError << ',' << gasError << ',' << change << ',' << heatW << ',' << bounded << '\n';
         history.flush();
+        }
         if (change<props.get<scalar>("outerTolerance") && chargeError<1e-6
             && massError<props.get<scalar>("balanceTolerance") && gasError<props.get<scalar>("balanceTolerance")
             && !bounded && runTime.value()>=props.get<label>("minimumIterations")) ++stable;
@@ -307,9 +370,13 @@ int main(int argc, char *argv[])
         runTime.printExecutionTime(Info);
     }
     runTime.writeNow();
-    std::ofstream status((outDir/"status.json").c_str());
-    status << "{\"converged\":" << (converged ? "true" : "false")
-           << ",\"iteration\":" << runTime.value() << ",\"cells\":" << mesh.nCells() << "}\n";
+    if (Pstream::master())
+    {
+        std::ofstream status((outDir/"status.json").c_str());
+        status << "{\"converged\":" << (converged ? "true" : "false")
+               << ",\"iteration\":" << runTime.value() << ",\"cells\":" << totalCells
+               << ",\"processes\":" << Pstream::nProcs() << "}\n";
+    }
     if (!converged) WarningInFunction << "Iteration limit reached; this is not a converged result." << endl;
     Info << "End" << endl;
     return converged ? 0 : 2;

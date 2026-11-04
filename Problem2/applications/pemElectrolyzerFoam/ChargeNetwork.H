@@ -2,6 +2,10 @@
 // Each active potential is a graph node; CL cells link the two graphs through
 // Butler-Volmer current. OpenFOAM's lduMatrix/PCG/DIC solves the Jacobian.
 #include "lduPrimitiveMesh.H"
+#include "processorGAMGInterface.H"
+#include "processorGAMGInterfaceField.H"
+#include "processorFvPatch.H"
+#include "syncTools.H"
 #include <vector>
 #include <algorithm>
 
@@ -16,14 +20,22 @@ class ChargeNetwork
     const Foam::labelList& material_;
     Foam::labelList s_, e_;
     std::vector<ChargeEdge> edges_;
+    Foam::lduInterfacePtrsList interfaces_;
     Foam::autoPtr<Foam::lduPrimitiveMesh> graph_;
+    Foam::PtrList<Foam::lduInterfaceField> ownedInterfaceFields_;
+    Foam::lduInterfaceFieldPtrsList interfaceFields_;
+    Foam::List<Foam::labelList> interfaceFaces_, interfaceTypes_;
+    Foam::vectorField neighbourCentres_;
     Foam::label nodes_;
     Foam::dictionary controls_;
 
 public:
     ChargeNetwork(const Foam::fvMesh& mesh, const Foam::labelList& material)
     : mesh_(mesh), material_(material), s_(mesh.nCells(), -1),
-      e_(mesh.nCells(), -1), nodes_(0)
+      e_(mesh.nCells(), -1), interfaces_(mesh.boundary().size()),
+      ownedInterfaceFields_(mesh.boundary().size()),
+      interfaceFields_(mesh.boundary().size()),
+      interfaceFaces_(mesh.boundary().size()), interfaceTypes_(mesh.boundary().size()), nodes_(0)
     {
         using namespace Foam;
         forAll(material_, c)
@@ -47,6 +59,43 @@ public:
         labelList lower(edges_.size()), upper(edges_.size());
         forAll(lower, f) { lower[f] = edges_[f].a; upper[f] = edges_[f].b; }
         graph_.reset(new lduPrimitiveMesh(nodes_, lower, upper, UPstream::worldComm, true));
+        // Processor faces carry one edge for each potential that conducts on
+        // BOTH sides. A CL face may carry two edges. Both ranks use face order,
+        // then electronic/ionic order, so their interface addressing agrees.
+        labelList neighbourMaterial;
+        syncTools::swapBoundaryCellList(mesh_, material_, neighbourMaterial);
+        syncTools::swapBoundaryCellPositions(mesh_, mesh_.C().primitiveField(), neighbourCentres_);
+        forAll(mesh_.boundary(), p)
+        {
+            const auto& patch=mesh_.boundary()[p];
+            if (!patch.coupled()) continue;
+            if (!isA<processorFvPatch>(patch))
+                FatalErrorInFunction << "Only processor coupled patches are supported." << exit(FatalError);
+            const auto& proc=refCast<const processorFvPatch>(patch);
+            DynamicList<label> cells, faces, types;
+            forAll(patch, f)
+            {
+                label c=patch.faceCells()[f], m=neighbourMaterial[patch.start()-mesh_.nInternalFaces()+f];
+                if (s_[c]>=0 && m!=1 && m!=4 && m!=7)
+                { cells.append(s_[c]); faces.append(f); types.append(0); }
+                if (e_[c]>=0 && m>=3 && m<=5)
+                { cells.append(e_[c]); faces.append(f); types.append(1); }
+            }
+            interfaceFaces_[p]=labelList(faces);
+            interfaceTypes_[p]=labelList(types);
+            labelList addressing(cells), identity(cells.size());
+            forAll(identity, i) identity[i]=i;
+            auto* interface=new processorGAMGInterface
+            (
+                p, interfaces_, addressing, identity, UPstream::worldComm,
+                proc.myProcNo(), proc.neighbProcNo(), tensorField(), UPstream::msgType()
+            );
+            interfaces_.set(p,interface);
+            ownedInterfaceFields_.set(p,new processorGAMGInterfaceField(*interface,false,0));
+            interfaceFields_.set(p,&ownedInterfaceFields_[p]);
+        }
+        // addInterfaces transfers ownership of the interface objects to graph_.
+        graph_->addInterfaces(interfaces_,lduPrimitiveMesh::nonBlockingSchedule<processorGAMGInterface>(interfaces_));
         controls_.add("solver", word("PCG"));
         controls_.add("preconditioner", word("DIC"));
         controls_.add("tolerance", 1e-11);
@@ -77,6 +126,26 @@ public:
         const scalar heatSign=props.get<scalar>("reversibleHeatSign");
         scalarField potential(nodes_, 0), eq(mesh_.nCells(),0), pref(mesh_.nCells(),0);
         scalarField conductance(edges_.size(), 0), fixedDiag(nodes_,0), injection(nodes_,0);
+        FieldField<Field,scalar> interfaceCoeffs(interfaces_.size());
+        scalarField neighbourSigmaS, neighbourSigmaE;
+        syncTools::swapBoundaryCellList(mesh_,sigmaS.primitiveField(),neighbourSigmaS);
+        syncTools::swapBoundaryCellList(mesh_,sigmaE.primitiveField(),neighbourSigmaE);
+        forAll(interfaces_, p)
+        {
+            interfaceCoeffs.set(p,new scalarField(interfaceFaces_[p].size(),0));
+            if (!interfaces_.set(p)) continue;
+            const auto& patch=mesh_.boundary()[p];
+            forAll(interfaceFaces_[p], i)
+            {
+                label f=interfaceFaces_[p][i], c=patch.faceCells()[f];
+                label b=patch.start()-mesh_.nInternalFaces()+f;
+                const auto& sigma=interfaceTypes_[p][i]==0 ? sigmaS : sigmaE;
+                scalar sigmaN=interfaceTypes_[p][i]==0 ? neighbourSigmaS[b] : neighbourSigmaE[b];
+                scalar dO=mag(patch.Cf()[f]-mesh_.C()[c]);
+                scalar dN=mag(patch.Cf()[f]-neighbourCentres_[b]);
+                interfaceCoeffs[p][i]=patch.magSf()[f]/(dO/sigma[c]+dN/sigmaN);
+            }
+        }
         forAll(material_, c)
         {
             if (s_[c] >= 0) potential[s_[c]]=phiS[c];
@@ -140,13 +209,32 @@ public:
                 residual[edge.a]+=flux;
                 residual[edge.b]-=flux;
             }
+            scalarField cellS(mesh_.nCells(),0), cellE(mesh_.nCells(),0), nbrS, nbrE;
+            forAll(material_, c)
+            {
+                if (s_[c]>=0) cellS[c]=x[s_[c]];
+                if (e_[c]>=0) cellE[c]=x[e_[c]];
+            }
+            syncTools::swapBoundaryCellList(mesh_,cellS,nbrS);
+            syncTools::swapBoundaryCellList(mesh_,cellE,nbrE);
+            forAll(interfaces_, p) if (interfaces_.set(p))
+            {
+                const auto& patch=mesh_.boundary()[p];
+                const auto& cells=interfaces_[p].faceCells();
+                forAll(interfaceFaces_[p], i)
+                {
+                    label b=patch.start()-mesh_.nInternalFaces()+interfaceFaces_[p][i];
+                    scalar neighbour=interfaceTypes_[p][i]==0 ? nbrS[b] : nbrE[b];
+                    residual[cells[i]]+=interfaceCoeffs[p][i]*(x[cells[i]]-neighbour);
+                }
+            }
         };
         scalarField residual(nodes_,0), deriv(edges_.size(),0);
         chargeError=GREAT;
         for (label iter=0; iter<props.get<label>("maxChargeNewton"); ++iter)
         {
             assemble(potential,residual,deriv);
-            chargeError=sum(mag(residual))/current;
+            chargeError=gSum(mag(residual))/current;
             if (chargeError<1e-7) break;
             lduMatrix A(graph_());
             A.diag()=fixedDiag;
@@ -157,30 +245,44 @@ public:
                 A.diag()[edges_[f].b]+=deriv[f];
             }
             scalarField delta(nodes_,0);
-            FieldField<Field,scalar> coeffs(0);
-            lduInterfaceFieldPtrsList interfaces(0);
-            auto solver=lduMatrix::solver::New("charge",A,coeffs,coeffs,interfaces,controls_);
+            forAll(interfaces_, p) if (interfaces_.set(p))
+                forAll(interfaceCoeffs[p], i)
+                    A.diag()[interfaces_[p].faceCells()[i]]+=interfaceCoeffs[p][i];
+            auto solver=lduMatrix::solver::New("charge",A,interfaceCoeffs,interfaceCoeffs,interfaceFields_,controls_);
             solver->solve(delta,-residual);
             scalar step=min(1.0,0.2/max(gMax(mag(delta)),SMALL));
             scalarField trial(nodes_), trialRes(nodes_), trialDeriv(edges_.size());
-            scalar norm=sum(sqr(residual));
+            scalar norm=gSum(sqr(residual));
             for (label ls=0; ls<16; ++ls)
             {
                 trial=potential+step*delta;
                 assemble(trial,trialRes,trialDeriv);
-                if (sum(sqr(trialRes))<norm) break;
+                if (gSum(sqr(trialRes))<norm) break;
                 step*=0.5;
             }
             potential=trial;
         }
         assemble(potential,residual,deriv);
-        chargeError=sum(mag(residual))/current;
+        chargeError=gSum(mag(residual))/current;
         iv.primitiveFieldRef()=0;
         heat.primitiveFieldRef()=0;
         forAll(material_, c)
         {
             if (s_[c]>=0) phiS[c]=potential[s_[c]];
             if (e_[c]>=0) phiE[c]=potential[e_[c]];
+        }
+        phiS.correctBoundaryConditions(); phiE.correctBoundaryConditions();
+        forAll(interfaces_, p) if (interfaces_.set(p))
+        {
+            const auto& patch=mesh_.boundary()[p];
+            forAll(interfaceFaces_[p], i)
+            {
+                label f=interfaceFaces_[p][i], c=patch.faceCells()[f];
+                const auto& potentialField=interfaceTypes_[p][i]==0 ? phiS : phiE;
+                scalar jump=potentialField[c]-potentialField.boundaryField()[p][f];
+                // Each rank receives half of this shared face's Joule loss.
+                heat[c]+=0.5*interfaceCoeffs[p][i]*sqr(jump)/mesh_.V()[c];
+            }
         }
         for (label f=0; f<label(edges_.size()); ++f)
         {
@@ -223,6 +325,9 @@ public:
                 }
             }
         }
+        reduce(voltageIntegral,sumOp<scalar>());
+        reduce(terminalArea,sumOp<scalar>());
+        iv.correctBoundaryConditions(); heat.correctBoundaryConditions(); coverage.correctBoundaryConditions();
         return voltageIntegral/terminalArea;
     }
 };

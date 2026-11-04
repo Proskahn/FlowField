@@ -63,6 +63,8 @@ def analyze(case, start=0.2, end=1.0, allow_short=False):
                 coupling_from_mean_beta=dict(eta_bubble_V=eta,active_area_factor=(1-beta)**p['bubble_omega2'],
                     note="Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"),
                 diagnostics=dict(alpha_min=amin,alpha_max=amax,alpha_bound_tolerance=1e-7,
+                                 sampling_interval_steps=p.get('metrics_execute_interval_steps',1),
+                                 scope="Extrema and instantaneous conservation checks apply only to recorded diagnostic samples",
                                  bounded_within_tolerance=(amin>=-1e-7 and amax<=1+1e-7),
                                  max_net_volume_flux_m3_s=max(abs(r['net_volume_flux_m3_s']) for r in rows),
                                  max_oxygen_balance_residual_m3_s=residual,

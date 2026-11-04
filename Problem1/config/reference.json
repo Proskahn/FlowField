@@ -7,7 +7,7 @@
   "manifold_width_mm": 1.0,
   "manifold_length_mm": 4.0,
   "pore_width_mm": 0.1,
-  "pore_pitch_mm": 0.25,
+  "pore_pitch_mm": 0.5,
   "pore_length_mm": 0.1,
   "water_inlet_velocity_m_s": 0.1,
   "water_inlet_alpha": 0.9,
@@ -26,6 +26,7 @@
   "electron_transfer_number": 4,
   "end_time_s": 1.0,
   "write_interval_s": 0.01,
+  "metrics_execute_interval_steps": 10,
   "max_Co": 0.25,
   "max_alpha_Co": 0.15
 }

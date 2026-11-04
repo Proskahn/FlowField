@@ -23,6 +23,8 @@ def geometry():
     d.text((65,40),'Anode flow-field VOF reconstruction',font=font(40),fill=ink)
     d.text((65,100),'Li et al. (2025), Fig. 3 topology  |  Plan view  |  Dimensions in mm',font=font(23),fill=muted)
     scale=51
+    pitch=p['pore_pitch_mm']
+    half_opening=p['pore_width_mm']/2
     for col,w in enumerate([2,1,0.5]):
         left=55+col*550
         d.rounded_rectangle((left,162,left+520,877),radius=16,fill='white',outline='#dce4ec',width=2)
@@ -38,9 +40,9 @@ def geometry():
             xa=2*c*w
             box(xa,0,xa+w,8,blue,ink,2)
             for ix in range(round(w/p['pore_pitch_mm'])):
-                for iy in range(32):
-                    cx=xa+(ix+.5)*.25;cy=(iy+.5)*.25
-                    box(cx-.05,cy-.05,cx+.05,cy+.05,red)
+                for iy in range(round(p['channel_length_mm']/pitch)):
+                    cx=xa+(ix+.5)*pitch;cy=(iy+.5)*pitch
+                    box(cx-half_opening,cy-half_opening,cx+half_opening,cy+half_opening,red)
             d.text(pt(xa+w/2,4),f'Ch{c+1}',font=font(20),fill=ink,anchor='mm',stroke_width=2,stroke_fill=blue)
         # Draw over common internal edges to make manifold/channel connections clear.
         for c in range(n):
@@ -58,9 +60,11 @@ def geometry():
         a,b=pt(4.4,0),pt(4.4,8);d.line((a,b),fill=muted,width=2)
         for q in [a,b]:d.line((q[0]-6,q[1],q[0]+6,q[1]),fill=muted,width=2)
         d.text(pt(4.58,4),'8',font=font(22),fill=muted,anchor='lm')
-        d.text((left+25,842),'256 oxygen openings below channels',font=font(20),fill=muted)
+        count=n*round(w/pitch)*round(p['channel_length_mm']/pitch)
+        d.text((left+25,842),f'{count} oxygen openings below channels',font=font(20),fill=muted)
     d.rectangle((65,918,84,937),fill=red)
-    d.text((98,914),'Estimated pores: 0.1 mm square, 0.25 mm pitch, 0.1 mm passage length.',font=font(23),fill=ink)
+    d.text((98,914),f"Estimated pores: {p['pore_width_mm']:g} mm square, {pitch:g} mm pitch, "
+           f"{p['pore_length_mm']:g} mm passage length.",font=font(23),fill=ink)
     d.text((65,960),'No oxygen openings beneath manifolds. Pore layout is an assumption; this is not the authors\' CAD.',font=font(22),fill=muted)
     im.save(ROOT/'docs/geometry.png')
 

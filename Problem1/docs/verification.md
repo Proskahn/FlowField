@@ -1,5 +1,54 @@
 # Verification record
 
+## 64-opening update, 4 November 2026
+
+New default cases use 64 openings at 0.5 mm pitch, diagnostics every 10 solver
+steps plus the final step, and the unchanged 0.01 s field-write interval.
+Total Faraday-law oxygen feed is unchanged; local opening velocity is four
+times the legacy value. All three generated medium meshes contain 192,512 cells
+and pass `checkMesh -allTopology -allGeometry`. Coarse meshes contain 32,352 cells.
+
+Eleven Python tests pass, including conservation of the imposed gas feed when
+the opening count changes, geometric invariants across the three layouts,
+independent diagnostic/field-write intervals, and rejection of invalid sampling
+intervals and attempts to overwrite an existing generated case.
+
+Three separate four-process OpenCFD v2312 startup runs completed 23 steps at a
+fixed 1 µs step: coarse with every-step diagnostics, coarse with every-10-step
+diagnostics, and medium with every-10-step diagnostics. The sampled runs record
+steps **10, 20, and 23**. The last sample is retained even though step 23 is not
+a multiple of 10. Every-step sampling records 23 rows, without duplicating the
+final sample. All three pass the existing 10⁻⁷ sampled cell-alpha bound tolerance.
+
+At matching times, every diagnostic column in the two coarse runs is identical.
+All twelve reconstructed field files (`alpha.water`, `U`, `p`, `p_rgh`, `phi`,
+and `alphaPhi0.water` at 10 and 20 µs) are byte-identical. Thus the sampling change
+did not change the computed solution in this test. Sparse diagnostics miss
+intervening extrema; their lower maximum residual is not evidence of improved
+numerical conservation.
+
+Details: [openings64_verification.json](../results/openings64_verification.json).
+Short-run evidence is in `runs/openings64-check/`; new 1 s cases are clean initial
+conditions in `cases/openings64/`. These tests do not establish 1 s stability,
+stationarity, convergence, or runtime speedup. Production cases retain adaptive
+time stepping; only the sampling tests used a fixed step for exact comparison.
+The previous 256-opening results and their verification record are preserved.
+
+## Production-case audit, 4 November 2026
+
+The server copy of `cases/w1mm` now contains saved fields and diagnostics through
+1 s. The [production audit](w1mm_stability_2026-11-04.md) found closely bounded
+fields and small instantaneous conservation errors, but also overlapping solver
+histories, an incomplete log, and six missing local processor meshes. The existing
+10⁻⁷ alpha tolerance is exceeded slightly during startup. This is not a full-run
+stability or convergence sign-off. The audit includes a diagnostic figure and
+machine-readable evidence, plus a tested ParaView subset-export workflow.
+
+The sections below record the earlier, separate startup tests. Statements about
+clean `cases/` directories describe their state at that time.
+
+## Original startup verification
+
 Verified on 23 October 2026 using the installed ARM64 Docker image
 `opencfd/openfoam-default:2312` and OpenCFD OpenFOAM v2312. The existing image was
 used; no solver installation or image download was needed.
@@ -94,13 +143,15 @@ python3 scripts/analyze.py runs/new-check/w2mm runs/new-check/w1mm \
 
 ## What these checks do not establish
 
-The longest test is about 1 ms. The paper assesses bubble evolution up to 1 s and
+The longest original startup test is about 1 ms. The paper assesses bubble evolution up to 1 s and
 selects a quasi-steady comparison after 0.2 s. The completed tests do **not** cover
 that interval, resolved bubble detachment cycles, long-time stability, mesh/time
 independence, or the paper's coverage/current-density rankings. Startup pressure
 drops are dominated by initialization and should not be used as operating values.
 
-The 1 s production runs and grid/time-step sensitivity studies remain to be run.
+At the time of the startup checks, the 1 s production runs and grid/time-step
+sensitivity studies remained to be run. The later `w1mm` copy is assessed above;
+grid/time-step sensitivity and clean full-run verification remain outstanding.
 The estimates for pore geometry and oxygen generation also prevent a claim of
 exact reproduction even after those runs finish. The case metadata and model
 specification record these limitations explicitly.

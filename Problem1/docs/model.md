@@ -37,7 +37,7 @@ and changing phase composition. The physical reference pressure is assumed to be
 | Each manifold | 4 mm long × 1 mm wide × 1 mm high | Fig. 3 and channel height |
 | Outlet-manifold offset | `−w` relative to inlet manifold | Reconstructed from Fig. 3; see coordinates below |
 | Oxygen opening size | 0.1 mm square width | Table 1 calls this a pore diameter; Fig. 3 depicts squares. Square cross-section is an explicit approximation, not a diameter-to-area identity |
-| Pore pitch | 0.25 mm | Estimated; 256 regularly arranged openings, not an extracted CAD layout |
+| Pore pitch | 0.5 mm | Revised estimate: 64 openings; the original 0.25 mm / 256-opening estimate is retained in `config/legacy_256.json` |
 | Pore passage length | 0.1 mm | Estimated; not equated to the 0.2 mm physical PTL thickness |
 | Water/oxygen inlet speed | 0.1 m/s | Section 2.4; treated as mixture velocity |
 | Inlet water fraction | 0.9 | Section 2.4; uniform fraction BC, not resolved inlet bubbles |
@@ -79,9 +79,10 @@ with velocity `(−0.1, 0, 0) m/s`. The outlet manifold spans `x = −w…4−w`
 `y = −1…0`; its outlet is on `x = −w`. Both have `z = 0…1 mm`. This preserves
 the opposed, offset manifold arrangement in Fig. 3.
 
-Pore centers in each channel are spaced at 0.25 mm, starting 0.125 mm from the
-channel edges. There are 32 rows along the length and a total of 8 columns across
-all channels: 8×32, 2×4×32, or 4×2×32. Each passage extends from `z = −0.1` to
+Pore centers in each channel are spaced at 0.5 mm, starting 0.25 mm from the
+channel edges. There are 16 rows along the length and a total of 4 columns across
+all channels: 4×16, 2×2×16, or 4×1×16. Thus all three arrangements have 64
+openings. Each passage extends from `z = −0.1` to
 `z = 0 mm`. The generator builds a conformal mesh connecting every passage to the
 channel and records its mouth as an internal face zone. Channel walls have separate
 bottom, top, and side patches; manifold and pore walls have separate patches.
@@ -92,6 +93,15 @@ across every pore even on the coarse mesh. The exact pore geometry remains fixed
 through refinement. Fine resolution has four cells across a pore; a meaningful
 interface/curvature convergence study may require further refinement. Similarity
 to the paper's cell count is not proof of equivalent resolution.
+
+On 4 November 2026 the default opening count was reduced from 256 to 64 at the
+user's request. The original count and pitch were estimates, not reported pore
+layout data. Opening width and length remain 0.1 mm. The new cases have 32,352
+cells on the coarse mesh and 192,512 on the medium mesh, for each channel width.
+The original 256-opening solutions are retained separately and must not be
+resumed on the new mesh. Reducing openings changes gas-release spacing and
+bubble dynamics; it is a geometry/feed-distribution sensitivity, not merely a
+faster discretization of the same problem.
 
 ## Estimated oxygen boundary condition
 
@@ -105,13 +115,20 @@ U_pore  = Q_O2 / A_open
 ```
 
 Default `j = 2.02 A/cm² = 20200 A/m²`, `A_MEA = 32×10⁻⁶ m²`,
-`eta_F = 1`, and `A_open = 256 × (0.1 mm)² = 2.56 mm²`. Thus:
+`eta_F = 1`, and `A_open = 64 × (0.1 mm)² = 0.64 mm²`. Thus:
 
 - Total cell current: 0.6464 A.
 - Oxygen volume flow: approximately 4.71609 × 10⁻⁸ m³/s = 47.1609 µL/s.
-- Oxygen inlet velocity: approximately 0.0184222 m/s in each pore.
+- Oxygen inlet velocity: approximately 0.0736888 m/s in each pore.
 - Main inlet mixture volume flow: 100 µL/s, of which 10 µL/s is oxygen at
   the uniform inlet fraction of 0.9. This oxygen is additional to electrolysis gas.
+
+The total oxygen feed is unchanged from the 256-opening model. The open area is
+one quarter as large, so the velocity and gas flow per opening are four times
+larger. The generator recalculates this from the actual opening count rather
+than retaining the old inlet velocity, which would incorrectly reduce total gas
+production by a factor of four. Gas-filled passage volume decreases from 0.256
+to 0.064 mm³; the channel/manifold volumes remain 16/8 mm³.
 
 Generation is based on the **full MEA area**, including the area underneath ribs.
 All produced oxygen is assumed to emerge through the openings beneath the channels.
@@ -165,6 +182,15 @@ over unequal time steps.
 
 ## Metrics and coupling interface
 
+New cases sample CSV diagnostics every **10 completed solver steps**, and also
+at the final step if it is not a sampling step. `--metrics-every N` overrides
+the configured interval. ParaView fields remain on the separate **0.01 s** write
+interval; they are not written every 10 steps. Sampled extrema do not bound
+unrecorded intervening steps. Set `--metrics-every 1` for detailed stability tests.
+The final-sample behavior uses v2312 `writeControl onEnd` on the function object;
+the wrapper executes diagnostics at that time without duplicating a sample
+already taken on the same step.
+
 The `channels` cell zone excludes both manifolds and all inlet passages. Channel
 gas fraction is `sum((1−alpha)*V)/sum(V)` over this zone. Raw alpha is used for
 volume/conservation diagnostics; phase fractions are clipped only when computing
@@ -180,7 +206,7 @@ nonzero interpolated mouth coverage even with an initially water-filled channel.
 
 Gas inventory includes the full fluid domain. The oxygen flux is computed as
 `phi − alphaPhi0.water`, using the solver's compressed water flux, rather than
-approximating phase flux as `phi*(1−alpha)`. The per-step residual is
+approximating phase flux as `phi*(1−alpha)`. At each sampled step the residual is
 `(V_O2(t)−V_O2(t−dt))/dt + sum_boundary(phi−alphaPhi0.water)`. Processor boundaries
 are excluded from external flux sums. Internal mouth faces duplicated by domain
 decomposition are counted with half weight. These formulas assume the supplied

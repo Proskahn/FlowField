@@ -1,6 +1,6 @@
 # Verification record
 
-Verification performed on 2026-10-25 with OpenCFD OpenFOAM v2312 in
+Initial serial verification performed on 2026-10-25 with OpenCFD OpenFOAM v2312 in
 `opencfd/openfoam-default:2312`, Linux ARM64, double precision, 32-bit labels.
 The custom application was compiled with `wmake`. Simulations used one CPU
 per case; the existing Problem1 simulation was not modified or interrupted.
@@ -92,6 +92,80 @@ Consequently these tests **do not establish mesh independence**, particularly
 for pressure drop. The fine mesh options are provided for a subsequent mesh
 study; they have not been run here.
 
+## MPI verification, 2026-11-04
+
+The updated application was built and tested with OpenCFD v2312 in the Linux
+ARM64 container. Both geometries converged on 1, 2, 4, and 16 processes on coarse
+meshes. Both medium meshes also converged on 16 processes and were compared
+against serial results. The charge graph itself uses MPI; it is not gathered
+onto one process.
+
+`scripts/compare_runs.py` independently repeats the saved-field conservation
+checks and compares every cell's `U`, `p`, `T`, `Cgas`, `phiS`, `phiE`, `iVol`,
+and `heatSource`, as well as integral quantities. For each field, the comparison
+uses `max(abs(MPI-serial))/max(abs(serial))`, with a small denominator floor.
+The acceptance tolerance is 1e-4. All 11 comparisons passed. Full values are in
+[the machine-readable MPI verification record](mpi_verification.json).
+
+| Geometry and mesh | Cells | Process comparisons | Largest normalized difference |
+|---|---:|---|---:|
+| Straight, coarse | 9,600 | 1 vs 2, 4, 16 | 3.01e-7 |
+| Five-channel, coarse | 11,616 | 1 vs 2, 4, 16 | 1.59e-6 |
+| Straight, medium | 73,600 | 1 vs 16 | 2.79e-5 |
+| Five-channel, medium | 89,056 | 1 vs 16 | 9.57e-7 |
+
+The largest difference is **0.00279%**, within the 0.01% comparison tolerance.
+The medium straight serial reference was additionally continued from its
+converged iteration 108 to iteration 134 before comparison. Converged solutions
+need not stop on identical iterations; the comparison includes the remaining
+outer-iteration error.
+
+The 16-process medium results were:
+
+| Quantity | Straight channel | Five-channel field |
+|---|---:|---:|
+| Converged iteration | 108 | 96 |
+| Cell voltage | 2.277679 V | 2.251873 V |
+| Anode pressure drop | 206.979719 Pa | 106.830580 Pa |
+| Cathode pressure drop | 232.062941 Pa | 130.880097 Pa |
+| Maximum temperature | 334.941706 K | 335.580986 K |
+| Largest independent relative conservation error | 2.77e-7 | 7.13e-8 |
+
+Additional checks:
+
+- A two-way split through the membrane passed, exercising ionic conduction
+  across a processor boundary; its maximum normalized field difference was
+  1.05e-7.
+- A deliberate stop at iteration 10 returned status 2, reconstructed the
+  checkpoint, and resumed successfully. A later restart from the converged
+  checkpoint also passed; the final difference from the uninterrupted coarse
+  serial run was 9.89e-6.
+- An existing serial checkpoint was decomposed and continued on two processes;
+  its maximum normalized difference was 9.84e-6.
+- Fifteen Python tests passed, including geometry invariants, preservation of
+  decomposed results during case generation, rejection of mismatched process
+  counts, and rejection of inconsistent/incomplete restart checkpoints.
+- Shell syntax checks and native OpenFOAM automatic selection passed.
+
+Outputs are retained locally under `runs/mpi-validation/`, which is ignored by
+Git. The 16-process tests enabled MPI oversubscription only in their test
+containers. They establish correctness, **not a server speedup benchmark**.
+The server launcher does not enable oversubscription. Rebuild the source on the
+x86_64 university server and use the number of cores assigned to the job.
+
+To reproduce a serial/MPI comparison using a new output directory:
+
+```bash
+python3 scripts/generate_cases.py --mesh coarse --output runs/mpi_check/serial
+python3 scripts/generate_cases.py --mesh coarse --output runs/mpi_check/mpi16
+./scripts/run_case.sh runs/mpi_check/serial/singleChannel run
+./scripts/run_case.sh runs/mpi_check/mpi16/singleChannel parallel 16
+python3 scripts/compare_runs.py runs/mpi_check/serial/singleChannel \
+    runs/mpi_check/mpi16/singleChannel --output runs/mpi_check/comparison.json
+```
+
+Repeat for `parallelFlow`, or select `--mesh medium` for the medium comparisons.
+
 ## Reproduce the checks
 
 From `Problem2`:
@@ -126,6 +200,7 @@ and material/kinetic closures must also be reconciled before a paper-level
 quantitative comparison.
 
 The thermal check above verifies source power, not a separately benchmarked
-conjugate-heat-transfer solution. There is no MPI test because this version
-deliberately supports serial solves only. Any changed operating condition,
-geometry or closure requires its own convergence and conservation checks.
+conjugate-heat-transfer solution. MPI comparisons test numerical consistency
+between process counts, not agreement with the paper's missing inputs. Any
+changed operating condition, geometry or closure requires its own convergence
+and conservation checks.

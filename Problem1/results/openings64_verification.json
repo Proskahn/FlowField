@@ -1,0 +1,201 @@
+{
+  "date": "2026-11-04",
+  "OpenFOAM": "OpenCFD v2312, installed ARM64 Docker image",
+  "unit_tests_passed": 11,
+  "medium_mesh_checks": [
+    {
+      "width_mm": 2.0,
+      "cells": 192512,
+      "openings": 64,
+      "checkMesh_pass": true,
+      "oxygen_flow_m3_s": 4.716085132943106e-08,
+      "oxygen_velocity_m_s": 0.07368883020223602,
+      "capillary_max_delta_t_s": 6.148290482279954e-06
+    },
+    {
+      "width_mm": 1.0,
+      "cells": 192512,
+      "openings": 64,
+      "checkMesh_pass": true,
+      "oxygen_flow_m3_s": 4.716085132943106e-08,
+      "oxygen_velocity_m_s": 0.07368883020223602,
+      "capillary_max_delta_t_s": 6.148290482279954e-06
+    },
+    {
+      "width_mm": 0.5,
+      "cells": 192512,
+      "openings": 64,
+      "checkMesh_pass": true,
+      "oxygen_flow_m3_s": 4.716085132943106e-08,
+      "oxygen_velocity_m_s": 0.07368883020223602,
+      "capillary_max_delta_t_s": 6.148290482279954e-06
+    }
+  ],
+  "startup_runs": [
+    {
+      "case": "Problem1/runs/openings64-check/every1/w1mm",
+      "width_mm": 1,
+      "cells": 32352,
+      "interval_s": [
+        1e-05,
+        2.3e-05
+      ],
+      "samples": 23,
+      "requested_interval_complete": true,
+      "status": "Requested sampling window complete; stationarity and grid independence still require assessment",
+      "time_weighted_means": {
+        "beta_bottom_solid": 4.953733477427308e-06,
+        "beta_bottom_with_mouths": 0.026792475561603846,
+        "beta_bottom_threshold": 0.04,
+        "beta_top": 5.546785393441154e-13,
+        "beta_side": 1.3668739592373077e-11,
+        "gas_fraction_channels": 5.242352916447308e-05,
+        "pressure_drop_Pa": 163.35513762515384
+      },
+      "coupling_from_mean_beta": {
+        "eta_bubble_V": 0.0006023028572338811,
+        "active_area_factor": 0.9471328856235115,
+        "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+      },
+      "diagnostics": {
+        "alpha_min": -2.56819811109e-23,
+        "alpha_max": 1.00000000007,
+        "alpha_bound_tolerance": 1e-07,
+        "sampling_interval_steps": 1,
+        "scope": "Extrema and instantaneous conservation checks apply only to recorded diagnostic samples",
+        "bounded_within_tolerance": true,
+        "max_net_volume_flux_m3_s": 1.80758078994e-14,
+        "max_oxygen_balance_residual_m3_s": 6.650662712e-13,
+        "max_oxygen_balance_relative_to_feed": 1.163499590597542e-05
+      },
+      "solver_time_steps": 23,
+      "deltaT_s": 1e-06,
+      "processes": 4
+    },
+    {
+      "case": "Problem1/runs/openings64-check/every10/w1mm",
+      "width_mm": 1,
+      "cells": 32352,
+      "interval_s": [
+        1e-05,
+        2.3e-05
+      ],
+      "samples": 3,
+      "requested_interval_complete": true,
+      "status": "Requested sampling window complete; stationarity and grid independence still require assessment",
+      "time_weighted_means": {
+        "beta_bottom_solid": 5.100235453113846e-06,
+        "beta_bottom_with_mouths": 0.02679257638208077,
+        "beta_bottom_threshold": 0.04,
+        "beta_top": 5.765434971054615e-13,
+        "beta_side": 1.3462361505342306e-11,
+        "gas_fraction_channels": 5.2418100694896145e-05,
+        "pressure_drop_Pa": 182.00246086465387
+      },
+      "coupling_from_mean_beta": {
+        "eta_bubble_V": 0.0006023051547653446,
+        "active_area_factor": 0.9471326893850281,
+        "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+      },
+      "diagnostics": {
+        "alpha_min": -2.56819811109e-23,
+        "alpha_max": 1.00000000005,
+        "alpha_bound_tolerance": 1e-07,
+        "sampling_interval_steps": 10,
+        "scope": "Extrema and instantaneous conservation checks apply only to recorded diagnostic samples",
+        "bounded_within_tolerance": true,
+        "max_net_volume_flux_m3_s": 1.04458106818e-15,
+        "max_oxygen_balance_residual_m3_s": 7.91710942451e-16,
+        "max_oxygen_balance_relative_to_feed": 1.3850579969290324e-08
+      },
+      "solver_time_steps": 23,
+      "deltaT_s": 1e-06,
+      "processes": 4
+    },
+    {
+      "case": "Problem1/runs/openings64-check/medium/w1mm",
+      "width_mm": 1,
+      "cells": 192512,
+      "interval_s": [
+        1e-05,
+        2.3e-05
+      ],
+      "samples": 3,
+      "requested_interval_complete": true,
+      "status": "Requested sampling window complete; stationarity and grid independence still require assessment",
+      "time_weighted_means": {
+        "beta_bottom_solid": 1.0920956808857693e-05,
+        "beta_bottom_with_mouths": 0.020486233144249997,
+        "beta_bottom_threshold": 0.03918269230769231,
+        "beta_top": 2.076306176266154e-12,
+        "beta_side": 2.333948625978461e-13,
+        "gas_fraction_channels": 4.986613469643077e-05,
+        "pressure_drop_Pa": 155.4224948813077
+      },
+      "coupling_from_mean_beta": {
+        "eta_bubble_V": 0.00045905766292187947,
+        "active_area_factor": 0.9594472194599405,
+        "note": "Evaluated from mean beta; not an electrochemical solve or mean instantaneous overpotential"
+      },
+      "diagnostics": {
+        "alpha_min": -1.05557315517e-23,
+        "alpha_max": 1.00000000051,
+        "alpha_bound_tolerance": 1e-07,
+        "sampling_interval_steps": 10,
+        "scope": "Extrema and instantaneous conservation checks apply only to recorded diagnostic samples",
+        "bounded_within_tolerance": true,
+        "max_net_volume_flux_m3_s": 5.32996382032e-16,
+        "max_oxygen_balance_residual_m3_s": 1.44244947681e-15,
+        "max_oxygen_balance_relative_to_feed": 2.52349194118337e-08
+      },
+      "solver_time_steps": 23,
+      "deltaT_s": 1e-06,
+      "processes": 4
+    }
+  ],
+  "diagnostic_sampling_equivalence": {
+    "every_step_rows": 23,
+    "every_10_steps_rows": 3,
+    "sample_times_s": [
+      1e-05,
+      2e-05,
+      2.3e-05
+    ],
+    "max_absolute_differences": {
+      "time_s": 0.0,
+      "beta_bottom_solid": 0.0,
+      "beta_bottom_with_mouths": 0.0,
+      "beta_bottom_threshold": 0.0,
+      "beta_top": 0.0,
+      "beta_side": 0.0,
+      "gas_fraction_channels": 0.0,
+      "gas_volume_domain_m3": 0.0,
+      "alpha_min": 0.0,
+      "alpha_max": 0.0,
+      "net_volume_flux_m3_s": 0.0,
+      "net_oxygen_flux_m3_s": 0.0,
+      "oxygen_balance_residual_m3_s": 0.0,
+      "pressure_drop_Pa": 0.0
+    },
+    "saved_field_files_byte_identical": {
+      "1e-05/alpha.water": true,
+      "1e-05/U": true,
+      "1e-05/p": true,
+      "1e-05/p_rgh": true,
+      "1e-05/phi": true,
+      "1e-05/alphaPhi0.water": true,
+      "2e-05/alpha.water": true,
+      "2e-05/U": true,
+      "2e-05/p": true,
+      "2e-05/p_rgh": true,
+      "2e-05/phi": true,
+      "2e-05/alphaPhi0.water": true
+    }
+  },
+  "limitations": [
+    "Only 23 microsecond startup tests; no full 1 s stability or runtime speedup established.",
+    "Production cases keep adaptive time stepping; sampling verification used a fixed 1 microsecond step.",
+    "64 versus 256 openings changes feed distribution and bubble dynamics.",
+    "Diagnostic extrema only cover recorded samples."
+  ]
+}

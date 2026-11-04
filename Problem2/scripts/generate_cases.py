@@ -262,6 +262,9 @@ fluxRequired { default no; p; }
 }
 relaxationFactors { equations { U 0.7; } }
 ''')
+    write(case/'system/decomposeParDict', '''numberOfSubdomains 4;
+method scotch;
+''')
     (case/(case.name+'.foam')).touch()
     report = dict(geometry=m['kind'], mesh_level=m['level'], cells=len(m['ids']),
                   zone_cells={ZONES[i]: n for i, n in sorted(Counter(m['ids']).items())},
@@ -286,7 +289,9 @@ def main():
     kinds = ('single', 'parallel') if args.geometry == 'both' else (args.geometry,)
     for kind in kinds:
         case = args.output.resolve()/('singleChannel' if kind == 'single' else 'parallelFlow')
-        if case.exists() and any(p.is_dir() and p.name.replace('.', '', 1).isdigit() and float(p.name) > 0 for p in case.iterdir()):
+        if case.exists() and any(p.is_dir() and
+            ((p.name.replace('.', '', 1).isdigit() and float(p.name) > 0)
+             or p.name.startswith('processor')) for p in case.iterdir()):
             raise SystemExit(f'{case} contains results; use a new --output directory.')
         m = geometry(config['geometry'], kind, args.mesh)
         mesh(case, m)

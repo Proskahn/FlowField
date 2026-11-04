@@ -75,18 +75,88 @@ This is a **steady solver**: time-folder names such as `100` denote iteration
 numbers, not 100 seconds of electrolysis. `deltaT=1` in `controlDict` only
 advances that iteration counter. There is no physical VOF time step here.
 
-Press Ctrl-C to interrupt. The same run command resumes the most recent saved
-iteration. Only the latest two periodic result directories are retained;
+Press Ctrl-C to interrupt. For a serial case, the same run command resumes the
+most recent saved iteration. For a parallel case, use `resume N` with the original
+process count. Only the latest two periodic processor result directories are retained;
 the initial `0` directory and all CSV histories remain. The default maximum
 is 1000 iterations. To extend a run, edit `endTime` in that case's
 `system/controlDict`, for example to 2000, then run the same command again.
 The solver returns status 2 if it reaches the limit without convergence.
 
-**CPU count:** the present custom coupled charge solver uses **one CPU core**.
-Do not use `decomposePar`, `mpirun`, or `-parallel`; parallel execution is
-explicitly rejected. Two independent cases can run in separate terminals on
-two cores if enough RAM is available. There is no GPU backend. This differs
-from the standard parallel `interFoam` solver used in Problem1.
+**CPU count:** the solver supports serial and MPI runs. The coupled electrical
+potentials, flow, gas transport, and heat equations are all partitioned between
+processes. The launcher handles decomposition and reconstructs the latest saved
+iteration for analysis and ParaView. There is no GPU backend.
+
+## Run on multiple CPU cores on the university server
+
+Copy the updated `Problem2` source and scripts to the server, then **rebuild
+there**. An older solver binary rejects MPI; the Mac's binary is not portable
+to the server's CPU architecture.
+
+```bash
+module load mpi/openmpi-x86_64
+source "$HOME/OpenFOAM/OpenFOAM-v2312/etc/bashrc"
+export FLOWFIELD_NATIVE=1
+
+cd ~/FlowField/Problem2
+./scripts/build.sh
+
+# Generate a separate case once, preserving previous results.
+python3 scripts/generate_cases.py --geometry both --mesh medium --output runs/mpi16
+
+# Use 16 MPI processes for one simulation.
+./scripts/run_case.sh runs/mpi16/singleChannel parallel 16
+```
+
+Run the five-channel geometry with the same number of processes:
+
+```bash
+./scripts/run_case.sh runs/mpi16/parallelFlow parallel 16
+```
+
+`parallelFlow` is the geometry name; `parallel 16` selects the process count.
+Use a CPU count allocated to your job. Having 256 logical CPUs visible on a
+shared server does not mean they are all assigned to you. Performance depends
+on mesh size and MPI overhead; 16 processes need not outperform 4 or 8. The
+validation record checks numerical agreement, not speedup on your server.
+
+Reload the MPI module and OpenFOAM environment in each new login or batch job.
+The updated launcher automatically selects a loaded v2312 environment;
+`FLOWFIELD_NATIVE=1` explicitly requires native execution, while `0` forces Docker.
+
+| Task | Command from `Problem2` |
+|---|---|
+| Check the original mesh | `./scripts/run_case.sh CASE check` |
+| Serial run or restart | `./scripts/run_case.sh CASE run` |
+| Create a decomposition and run | `./scripts/run_case.sh CASE parallel N` |
+| Continue an existing parallel run | `./scripts/run_case.sh CASE resume N` |
+| Continue using the existing partition count | `./scripts/run_case.sh CASE resume` |
+
+Replace `CASE` with the case directory and `N` with your process count. Omitted
+`N` defaults to 4 for a new parallel run. To restart the example above:
+
+```bash
+./scripts/run_case.sh runs/mpi16/singleChannel resume 16
+```
+
+Do not regenerate the case when resuming. A mismatched process count, missing
+checkpoint fields, or differing latest iteration numbers between ranks is rejected
+before starting the solver. To change process count while retaining progress,
+stop the solver, reconstruct its latest checkpoint, and decompose a separate
+copy; `resume N` does not repartition it. `parallel N` can also decompose the
+latest saved iteration of a serial case that has no processor directories.
+
+Decomposition defaults to Scotch, as recorded in `system/decomposeParDict`.
+The launcher uses uncollated `processor0`, `processor1`, ... directories. Global
+histories and status remain in the case's `postProcessing/pem/` directory, and
+only one process writes them. An iteration-limit stop returns status 2 and also
+reconstructs the latest checkpoint; raise `endTime` before resuming that run.
+
+To compare a reconstructed MPI run with a converged serial run using the same
+mesh and inputs, run `python3 scripts/compare_runs.py SERIAL_CASE MPI_CASE`.
+This repeats the conservation checks and compares full cell fields as well as
+voltage, pressure drops, production rates, and heat.
 
 ## Cases and mesh sizes
 

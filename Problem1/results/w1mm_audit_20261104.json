@@ -1,0 +1,279 @@
+{
+  "case": "Problem1/cases/w1mm",
+  "date": "2026-11-04",
+  "verdict": "Numerically bounded in available evidence; full-run certification blocked by overlapping histories and incomplete local meshes.",
+  "data_integrity": {
+    "missing_processor_meshes": [
+      1,
+      10,
+      11,
+      12,
+      14,
+      15
+    ],
+    "available_processor_count": 16,
+    "saved_positive_times_per_processor": 100,
+    "final_time_s": 1.0,
+    "final_checkpoint_step_index": 475785,
+    "log_launch_headers": 10,
+    "log_End_markers": 0,
+    "last_log_completed_step_s": 0.913256241197,
+    "metrics_rows": 567916,
+    "metrics_nonincreasing_time_transitions": 11577,
+    "last_monotonic_metrics_segment_start_row_zero_based": 490446,
+    "last_monotonic_metrics_segment_time_s": 0.84000399361,
+    "interleaving_evidence_log_line": 9042339,
+    "paraview_cells_read_with_missing_meshes": 126707,
+    "expected_cells": 202888
+  },
+  "csv_extrema_including_all_histories": {
+    "all_values_finite": true,
+    "alpha_min": -1.81058728497e-24,
+    "alpha_max": 1.00000013193,
+    "alpha_upper_tolerance": 1e-07,
+    "alpha_tolerance_exceedance_rows": 232,
+    "oxygen_feed_m3_s": 5.716085132943106e-08,
+    "max_abs_oxygen_residual_m3_s": 4.6492756355e-11,
+    "max_abs_oxygen_residual_percent_feed": 0.08133671083212461,
+    "max_abs_net_mixture_flux_m3_s": 4.66112700836e-11,
+    "max_abs_net_mixture_flux_percent_total_inlet": 0.03167368879869894,
+    "max_pressure_drop_Pa": 790495.144248,
+    "final_pressure_drop_Pa": 316.177351775
+  },
+  "selected_unmixed_log_intervals": [
+    {
+      "date": "Oct 28 2026",
+      "launch_time": "12:40:22",
+      "processes": 16,
+      "restart_time": 0.0,
+      "completed_steps": 137774,
+      "first_time": 1.20004800192e-06,
+      "last_time": 0.324882018878,
+      "clock_seconds": 161569.0,
+      "courant": {
+        "min": 0.01078347873,
+        "median": 0.1785445675,
+        "p99": 0.252456323701,
+        "max": 0.3641286828,
+        "time_of_max": 0.240856554386
+      },
+      "interface_courant": {
+        "min": 0.0,
+        "median": 0.14728646039999999,
+        "p99": 0.16168022713999988,
+        "max": 0.2543828117,
+        "time_of_max": 0.0512052147389
+      },
+      "deltaT_s": {
+        "min": 3.342713047e-07,
+        "median": 2.5096445265e-06,
+        "p99": 3.996147587e-06,
+        "max": 4.042369754e-06,
+        "time_of_max": 0.149862559428
+      },
+      "final_pressure_residual": {
+        "min": 1.618317644e-09,
+        "median": 8.487929164e-09,
+        "p99": 9.978141426149999e-09,
+        "max": 9.999994463e-09,
+        "time_of_max": 0.144447441906
+      },
+      "final_local_continuity": {
+        "min": 1.165781707e-13,
+        "median": 1.0331824600000001e-11,
+        "p99": 3.3673654817199975e-11,
+        "max": 1.279716884e-10,
+        "time_of_max": 0.00141332917918
+      }
+    },
+    {
+      "date": "Nov 03 2026",
+      "launch_time": "10:31:36",
+      "processes": 16,
+      "restart_time": 0.84,
+      "completed_steps": 32256,
+      "first_time": 0.84000399361,
+      "last_time": 0.913256241197,
+      "clock_seconds": 24731.0,
+      "courant": {
+        "min": 0.09143253989,
+        "median": 0.17882818905,
+        "p99": 0.25165684984000003,
+        "max": 0.3751484505,
+        "time_of_max": 0.873335831869
+      },
+      "interface_courant": {
+        "min": 0.05083927068,
+        "median": 0.14651164965000002,
+        "p99": 0.15903605633000004,
+        "max": 0.2577366504,
+        "time_of_max": 0.911937753466
+      },
+      "deltaT_s": {
+        "min": 3.472031909e-07,
+        "median": 2.294865993e-06,
+        "p99": 3.999719854e-06,
+        "max": 4.010901014e-06,
+        "time_of_max": 0.889671106117
+      },
+      "final_pressure_residual": {
+        "min": 1.526563096e-09,
+        "median": 7.860233659e-09,
+        "p99": 9.9622900872e-09,
+        "max": 9.999993109e-09,
+        "time_of_max": 0.866412557278
+      },
+      "final_local_continuity": {
+        "min": 1.232035303e-13,
+        "median": 7.623173536e-12,
+        "p99": 3.0495608137e-11,
+        "max": 3.555540931e-11,
+        "time_of_max": 0.911886408255
+      }
+    }
+  ],
+  "saved_field_checks": [
+    {
+      "time_s": 0.01,
+      "cells": 202888,
+      "alpha_min": 5.521042798e-05,
+      "alpha_max": 1.000000031,
+      "speed_max_m_s": 1.5917140798727945,
+      "pressure_min_Pa": -76.01125042,
+      "pressure_max_Pa": 1487.820915,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 62.2297419474,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 62.2297419474,
+      "pressure_drop_difference_Pa": 0.0
+    },
+    {
+      "time_s": 0.2,
+      "cells": 202888,
+      "alpha_min": 2.184023854e-18,
+      "alpha_max": 1.0,
+      "speed_max_m_s": 2.158048529651108,
+      "pressure_min_Pa": -149.9563448,
+      "pressure_max_Pa": 1601.609172,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 104.53208401042498,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 104.532084011,
+      "pressure_drop_difference_Pa": -5.750138143412187e-10
+    },
+    {
+      "time_s": 0.5,
+      "cells": 202888,
+      "alpha_min": -3.792651755e-26,
+      "alpha_max": 0.9999999999,
+      "speed_max_m_s": 2.1541129895347795,
+      "pressure_min_Pa": -187.6219099,
+      "pressure_max_Pa": 1542.903085,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 68.0119036663975,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 68.0119036665,
+      "pressure_drop_difference_Pa": -1.0250289506075205e-10
+    },
+    {
+      "time_s": 0.66,
+      "cells": 202888,
+      "alpha_min": 2.105411927e-21,
+      "alpha_max": 1.0,
+      "speed_max_m_s": 4.415816163260924,
+      "pressure_min_Pa": -270.09498,
+      "pressure_max_Pa": 1522.244219,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 51.1241045730195,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 51.124104573,
+      "pressure_drop_difference_Pa": 1.950439809661475e-11
+    },
+    {
+      "time_s": 0.84,
+      "cells": 202888,
+      "alpha_min": 1.402045396e-19,
+      "alpha_max": 1.0,
+      "speed_max_m_s": 1.4077960301646555,
+      "pressure_min_Pa": -220.6833466,
+      "pressure_max_Pa": 1569.797202,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 77.766255845805,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 77.7662558465,
+      "pressure_drop_difference_Pa": -6.949960607016692e-10
+    },
+    {
+      "time_s": 0.85,
+      "cells": 202888,
+      "alpha_min": -2.483470345e-29,
+      "alpha_max": 0.9999999906,
+      "speed_max_m_s": 1.7930389457418563,
+      "pressure_min_Pa": -201.4529895,
+      "pressure_max_Pa": 1537.803399,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 109.426640762125,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 109.426640761,
+      "pressure_drop_difference_Pa": 1.1250023135289666e-09
+    },
+    {
+      "time_s": 0.9,
+      "cells": 202888,
+      "alpha_min": -1.054668355e-32,
+      "alpha_max": 0.9999994882,
+      "speed_max_m_s": 2.9733548852990728,
+      "pressure_min_Pa": -130.7836881,
+      "pressure_max_Pa": 1627.676045,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 168.82320280157504,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 168.823202802,
+      "pressure_drop_difference_Pa": -4.249613994034007e-10
+    },
+    {
+      "time_s": 0.95,
+      "cells": 202888,
+      "alpha_min": 1.76667313e-21,
+      "alpha_max": 0.9999999619,
+      "speed_max_m_s": 1.3206776221119125,
+      "pressure_min_Pa": -51.44129952,
+      "pressure_max_Pa": 1654.541003,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 181.51142046254998,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 181.511420465,
+      "pressure_drop_difference_Pa": -2.4500081963196862e-09
+    },
+    {
+      "time_s": 1.0,
+      "cells": 202888,
+      "alpha_min": 2.356404242e-23,
+      "alpha_max": 1.0,
+      "speed_max_m_s": 1.449144670437216,
+      "pressure_min_Pa": -446.8315722,
+      "pressure_max_Pa": 1776.874516,
+      "all_finite": true,
+      "inlet_faces": 400,
+      "pressure_drop_Pa_equal_face_area": 316.17735177625,
+      "outlet_pressure_Pa": 0,
+      "csv_pressure_drop_Pa": 316.177351775,
+      "pressure_drop_difference_Pa": 1.250043624168029e-09
+    }
+  ],
+  "limitations": [
+    "Mixed/interleaved log portions excluded from CFL/residual statistics; maxima apply only to the stated intervals.",
+    "CSV extrema include all histories; rows were not sorted into a fabricated continuous trajectory.",
+    "No full-run phase-flux integration or 0.2\u20131 s average is certified.",
+    "Saved fields checked at nine times without full geometric reconstruction; mesh files missing on six ranks.",
+    "Mesh/time-step independence and physical validation not established."
+  ]
+}

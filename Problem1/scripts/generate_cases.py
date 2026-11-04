@@ -59,6 +59,9 @@ def validate(p, width, h):
         raise ValueError("Pores must be separated and fit inside a channel")
     if h <= 0:
         raise ValueError("Mesh spacing must be positive")
+    interval = p.get("metrics_execute_interval_steps", 10)
+    if isinstance(interval, bool) or not isinstance(interval, int) or interval < 1:
+        raise ValueError("metrics_execute_interval_steps must be a positive integer")
     for length in (width, p["channel_length_mm"]):
         if abs(length/p["pore_pitch_mm"]-round(length/p["pore_pitch_mm"])) > 1e-8:
             raise ValueError("Channel width and length must be multiples of pore pitch")
@@ -283,7 +286,8 @@ PIMPLE
 relaxationFactors { equations { ".*" 1; } }
 """)
     write(case/"system/decomposeParDict","numberOfSubdomains 4;\nmethod scotch;\n")
-    metrics = (ROOT/"templates/bubbleMetrics").read_text()
+    metrics = (ROOT/"templates/bubbleMetrics").read_text().replace(
+        "__METRICS_INTERVAL__", str(p.get("metrics_execute_interval_steps", 10)))
     (case/"system/bubbleMetrics").write_text(metrics)
     (case/"flowfield.foam").touch()
 
@@ -291,6 +295,7 @@ relaxationFactors { equations { ".*" 1; } }
 def generate(case, width, level, p, end_time=None, write_interval=None):
     if case.exists() and any(case.iterdir()):
         raise FileExistsError(f"Refusing to overwrite {case}; use a new --output directory")
+    p = {"metrics_execute_interval_steps": 10, **p}
     m = build_mesh(p,width,LEVELS[level])
     stats = write_mesh(case,m)
     d = properties(p,m)
@@ -302,6 +307,7 @@ def generate(case, width, level, p, end_time=None, write_interval=None):
                  total_volume_m3=volume(range(len(m['cells']))), pore_count=m['pore_count'],
                  channel_count=len(m['channels']),channel_width_mm=width,mesh_level=level,
                  end_time_s=end_time or p['end_time_s'],write_interval_s=write_interval or p['write_interval_s'])
+    stats['metrics_execute_interval_steps'] = p['metrics_execute_interval_steps']
     meta = dict(paper_doi="10.1016/j.ijheatmasstransfer.2025.127446",parameters=p,derived=d,mesh=stats,
                 status="Reconstructed VOF submodel; estimated oxygen feed; not a validated reproduction")
     (case/"case_metadata.json").write_text(json.dumps(meta,indent=2)+"\n")
@@ -317,6 +323,10 @@ def main():
     parser.add_argument("--mesh",choices=LEVELS,default="medium")
     parser.add_argument("--end-time",type=float)
     parser.add_argument("--write-interval",type=float)
+    parser.add_argument("--metrics-every",type=int,
+                        help="Sample diagnostics every N solver steps, plus the final step; default from config (10)")
+    parser.add_argument("--pore-pitch",type=float,
+                        help="Estimated opening spacing in mm; 0.5 gives 64 openings, 0.25 gives 256")
     parser.add_argument("--current-density",type=float,help="A/cm2; uniform Faraday-law feed for all selected cases")
     parser.add_argument("--inlet-alpha",type=float,help="Water fraction at mixture inlet; paper 0.9, pure-water sensitivity 1")
     args=parser.parse_args()
@@ -325,6 +335,8 @@ def main():
     p=json.loads(args.config.read_text())
     if args.current_density is not None: p['current_density_A_cm2']=args.current_density
     if args.inlet_alpha is not None: p['water_inlet_alpha']=args.inlet_alpha
+    if args.metrics_every is not None: p['metrics_execute_interval_steps']=args.metrics_every
+    if args.pore_pitch is not None: p['pore_pitch_mm']=args.pore_pitch
     for w in args.widths:
         generate(args.output/f"w{w:g}mm",w,args.mesh,p,args.end_time,args.write_interval)
 

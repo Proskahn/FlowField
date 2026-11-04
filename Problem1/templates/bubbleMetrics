@@ -1,12 +1,14 @@
-// v2312 coded function object; runs after each completed solver time step.
+// v2312 coded function object; sampled diagnostics plus the final solver step.
 bubbleMetrics
 {
     type coded;
     libs (utilityFunctionObjects);
     name liBubbleMetrics;
     executeControl timeStep;
-    executeInterval 1;
-    writeControl none;
+    executeInterval __METRICS_INTERVAL__;
+    // The time-control wrapper executes once at the final step if it was not
+    // sampled already. This preserves the requested analysis window endpoint.
+    writeControl onEnd;
     codeInclude
     #{
         #include "fvCFD.H"

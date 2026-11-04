@@ -112,6 +112,23 @@ are approximately the ideal-gas molarity at 60 C and 1 atm (36.579 mol/m3),
 also an explicit estimate. A ratio floor of 1e-6 keeps the log and exchange
 current finite near a pure-water inlet. The floor is not a gas source.
 
+### Parallel solution
+
+The MPI implementation partitions the charge graph with the finite-volume mesh.
+Processor faces carry electronic and/or ionic conduction edges only when both
+adjacent cells conduct that potential. The Newton Jacobian uses
+[OpenFOAM v2312 processor interfaces](https://api.openfoam.com/2312/classFoam_1_1processorGAMGInterface.html);
+residual norms and line-search decisions are global.
+There is no gathered serial charge solve. Each side of a processor face receives
+half of its Joule loss, as for an ordinary internal face. Terminal current,
+voltage, inlet pressure averages, gas fluxes, and convergence checks use global
+reductions. Distance-weighted harmonic transport and internal no-slip conditions
+also apply where a material interface coincides with a partition boundary.
+
+The implementation supports the generated orthogonal meshes with physical
+boundary patches and MPI processor patches. Periodic/transformed coupled
+boundaries are outside this model's supported geometry.
+
 ### Mixture flow and porous resistance
 
 ```
