@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "problem": "P001",
+  "model_revision": "ppfc-reconstruction-v1",
+  "replication_status": "provisional_geometry_reconstruction",
+  "paper_doi": "10.1016/j.ijhydene.2025.03.237",
+  "config": {
+    "mesh": "coarse",
+    "inlet_velocity_m_s": 0.5,
+    "density_kg_m3": 1290.4769,
+    "dynamic_viscosity_pa_s": 0.0025491,
+    "turbulence_intensity": 0.05,
+    "port_width_m": 0.01,
+    "port_length_m": 0.015,
+    "sphere_cap_height_m": 0.003,
+    "turbulence_length_m": 0.001,
+    "max_iterations": 2000,
+    "residual_tolerance": 1e-06,
+    "mass_balance_tolerance": 0.0001,
+    "stability_tolerance": 0.0001,
+    "stability_window": 20
+  },
+  "config_sha256": "b22c0e458e1d8396dc312251f57de3f21bc5b647b58f8912ef456f70a13f3bff",
+  "geometry": {
+    "normalized_design": [
+      0.6666666666666666,
+      0.8,
+      0.6,
+      0.6666666666666666,
+      0.5,
+      0.5
+    ],
+    "spacings_mm": {
+      "x1_1": 35.0,
+      "x1_2": 32.0,
+      "x2": 30.0,
+      "x3": 30.0,
+      "h1_1": 15.0,
+      "h1_2": 15.0
+    },
+    "spacings_m": {
+      "x1_1": 0.035,
+      "x1_2": 0.032,
+      "x2": 0.03,
+      "x3": 0.03,
+      "h1_1": 0.015,
+      "h1_2": 0.015
+    },
+    "diameter_m": 0.4,
+    "height_m": 0.0075,
+    "sphere_diameter_m": 0.015,
+    "prism_side_m": 0.013,
+    "region_boundaries_y_m": [
+      -0.135,
+      -0.045,
+      0.045,
+      0.135
+    ]
+  },
+  "objective": "negative area-weighted speed uniformity on z=3.75 mm plane, including ports",
+  "input_sha256": {
+    "0/U": "4b5444005f2d76458eb3b5b98d9081d0de1e4c11de47af4b21b9e965cd3756a3",
+    "0/p": "32315196fd8f77bdf3301f4e7f1e869359f3275e84056f85979fa22d6fecc9eb",
+    "0/k": "eba70d56076d1b9e0bf29d5c35d7be7de3a9b274a6018ed107075ad94e04ec96",
+    "0/epsilon": "c79eea1b3984758db16aef0f4d6d1340cd7d14dedef4e2044e2a61902cf2544f",
+    "0/nut": "5048eebe2e7b0ed2bcdcd6a53f3747b9135ad0684065aafe0a22628f6b216c0d",
+    "constant/transportProperties": "836a939a816e655c05c187d35ee021a8b7d3014d7cecc89d20ad8917e79889da",
+    "constant/turbulenceProperties": "043edc5777143909ae85123b7f57405969a8064cea12c5a53a3c901be7f243c5",
+    "system/controlDict": "59d367a4fe970b0dae70fbbeb6cd5d215f5e76c6c13e77273c2deb2c2399ccdf",
+    "system/fvSchemes": "ef6e5fede10114e09a725f74e9a8fd8e726a1d0c50fef9d302b570f791dc4680",
+    "system/fvSolution": "e206ca5206e49c47589196a9be14f2d84de46f9ea940c9aa44d1de79608ca000",
+    "layout.svg": "891bd30c646fd7902513154054be449c7f82ace02508ca04728b38a132079525",
+    "units.json": "3d5a7de2e8683d6593bb115deb5f32a3b59273a598658ffbb24afc5108fb67af"
+  }
+}

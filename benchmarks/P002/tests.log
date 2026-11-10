@@ -1,0 +1,55 @@
+test_failure_writes_partial_summary_and_retains_completed_evaluations (test_framework.ExperimentTests.test_failure_writes_partial_summary_and_retains_completed_evaluations) ... ok
+test_seeded_run_uses_declared_bounds_preserves_raw_and_never_double_evaluates (test_framework.ExperimentTests.test_seeded_run_uses_declared_bounds_preserves_raw_and_never_double_evaluates) ... ok
+test_contract_is_abstract_and_scalar_call_preserves_raw_result (test_framework.FrameworkTests.test_contract_is_abstract_and_scalar_call_preserves_raw_result) ... ok
+test_invalid_bounds_and_nonfinite_objective (test_framework.FrameworkTests.test_invalid_bounds_and_nonfinite_objective) ... ok
+test_invalid_design_does_not_evaluate_and_clears_last_result (test_framework.FrameworkTests.test_invalid_design_does_not_evaluate_and_clears_last_result) ... ok
+test_registry_and_legacy_api (test_framework.FrameworkTests.test_registry_and_legacy_api) ... ok
+test_source_root_import_and_cli (test_framework.FrameworkTests.test_source_root_import_and_cli) ... ok
+test_decode_is_pure_and_uses_physical_dimensions (test_framework.P000InterfaceTests.test_decode_is_pure_and_uses_physical_dimensions) ... ok
+test_direct_raw_evaluation_and_penalty_schema (test_framework.P000InterfaceTests.test_direct_raw_evaluation_and_penalty_schema) ... ok
+test_raw_contract_is_persisted_and_scalar_calls_backend_once (test_framework.P000InterfaceTests.test_raw_contract_is_persisted_and_scalar_calls_backend_once) ... ok
+test_generic_dimensions_and_heterogeneous_bounds (test_ioh_adapter.IOHTests.test_generic_dimensions_and_heterogeneous_bounds) ... ok
+test_real_native_logger_tracks_every_evaluation_and_reset (test_ioh_adapter.IOHTests.test_real_native_logger_tracks_every_evaluation_and_reset) ... ok
+test_edited_input_is_rejected_before_running (test_p000.CaseTests.test_edited_input_is_rejected_before_running) ... ok
+test_failure_penalty_is_explicit_and_bounds_still_raise (test_p000.CaseTests.test_failure_penalty_is_explicit_and_bounds_still_raise) ... ok
+test_failure_record_and_no_resume (test_p000.CaseTests.test_failure_record_and_no_resume) ... ok
+test_generation_is_complete_and_refuses_existing_destination (test_p000.CaseTests.test_generation_is_complete_and_refuses_existing_destination) ... ok
+test_density_conversion_conservation_and_reference (test_p000.MetricsTests.test_density_conversion_conservation_and_reference) ... ok
+test_flux_sign_and_magnitude_failures (test_p000.MetricsTests.test_flux_sign_and_magnitude_failures) ... ok
+test_mesh_failure (test_p000.MetricsTests.test_mesh_failure) ... ok
+test_parser_rejects_malformed_tables (test_p000.MetricsTests.test_parser_rejects_malformed_tables) ... ok
+test_stale_samples_and_restarts_are_rejected (test_p000.MetricsTests.test_stale_samples_and_restarts_are_rejected) ... ok
+test_unconverged_is_rejected_even_with_output (test_p000.MetricsTests.test_unconverged_is_rejected_even_with_output) ... ok
+test_decode_bounds (test_p000.ModelTests.test_decode_bounds) ... ok
+test_invalid_config (test_p000.ModelTests.test_invalid_config) ... ok
+test_rectangular_reference_is_symmetric (test_p000.ModelTests.test_rectangular_reference_is_symmetric) ... ok
+test_square_reference_and_scaling (test_p000.ModelTests.test_square_reference_and_scaling) ... ok
+test_native_version_guard (test_p000.RuntimeTests.test_native_version_guard) ... ok
+test_timeout_cleans_up_only_own_container (test_p000.RuntimeTests.test_timeout_cleans_up_only_own_container) ... ok
+test_all_six_parameters_change_layout_with_fixed_population (test_p001.DefinitionTests.test_all_six_parameters_change_layout_with_fixed_population) ... ok
+test_conforming_hex_subdivision_preserves_shared_faces_and_volume (test_p001.DefinitionTests.test_conforming_hex_subdivision_preserves_shared_faces_and_volume) ... ok
+test_equations5_and6_area_weights_and_zero_flow (test_p001.DefinitionTests.test_equations5_and6_area_weights_and_zero_flow) ... ok
+test_generated_case_no_overwrite_and_tamper_guard (test_p001.DefinitionTests.test_generated_case_no_overwrite_and_tamper_guard) ... ok
+test_invalid_coordinates_and_config (test_p001.DefinitionTests.test_invalid_coordinates_and_config) ... ok
+test_raw_contract_and_failure_policy (test_p001.DefinitionTests.test_raw_contract_and_failure_policy) ... ok
+test_table6_bounds_units_and_baseline (test_p001.DefinitionTests.test_table6_bounds_units_and_baseline) ... ok
+test_accepted_metric_and_pressure_units (test_p001.MetricTests.test_accepted_metric_and_pressure_units) ... ok
+test_stale_and_unstable_uniformity (test_p001.MetricTests.test_stale_and_unstable_uniformity) ... ok
+test_unconverged_and_failed_mesh (test_p001.MetricTests.test_unconverged_and_failed_mesh) ... ok
+test_wrong_flux_and_undefined_uniformity_are_rejected (test_p001.MetricTests.test_wrong_flux_and_undefined_uniformity_are_rejected) ... ok
+test_baseline_and_asymmetric_geometry (test_p002.P002Tests.test_baseline_and_asymmetric_geometry) ... ok
+test_case_provenance_and_reuse_rejected (test_p002.P002Tests.test_case_provenance_and_reuse_rejected) ... ok
+test_config_is_validated_and_immutable (test_p002.P002Tests.test_config_is_validated_and_immutable) ... ok
+test_mesh_exception_is_confined_to_orthogonal_catalyst_cells (test_p002.P002Tests.test_mesh_exception_is_confined_to_orthogonal_catalyst_cells) ... ok
+test_published_design_mapping_and_bounds (test_p002.P002Tests.test_published_design_mapping_and_bounds) ... ok
+test_raw_keeps_both_objectives_and_calls_once (test_p002.P002Tests.test_raw_keeps_both_objectives_and_calls_once) ... ok
+test_refinement (test_p002.P002Tests.test_refinement) ... ok
+test_saved_pressure_uses_pa_and_zero_gradient_owner_values (test_p002.P002Tests.test_saved_pressure_uses_pa_and_zero_gradient_owner_values) ... ok
+test_scalarization_units_and_identity (test_p002.P002Tests.test_scalarization_units_and_identity) ... ok
+test_stale_fields_rejected_before_runtime (test_p002.P002Tests.test_stale_fields_rejected_before_runtime) ... ok
+test_strict_history_and_nonfinite_field_rejection (test_p002.P002Tests.test_strict_history_and_nonfinite_field_rejection) ... ok
+
+----------------------------------------------------------------------
+Ran 50 tests in 1.256s
+
+OK

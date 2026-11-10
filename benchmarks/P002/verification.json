@@ -1,0 +1,410 @@
+{
+  "report_date": "2026-11-07",
+  "simulation_date": "2026-11-06",
+  "problem": "P002",
+  "paper_validated": false,
+  "numerical_tests_passed": 50,
+  "python": "3.13.12 (v3.13.12:1cbe4818347, Feb  3 2026, 13:36:53) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "openfoam_version": "2312",
+  "ioh_version": "0.3.22",
+  "wheel_sha256": "df8ee777ce56c1b50264bebc9faf9d4660f271aac725cd425a5af8e55d0057ee",
+  "wheel_resource_check": "all 16 P002 Python/data/C++ resources matched; case generated from isolated wheel install",
+  "runs": {
+    "coarse": {
+      "status": "passed",
+      "problem": "P002",
+      "ioh_enabled": true,
+      "paper_validated": false,
+      "scalarization": "total_power_w",
+      "config_sha256": "5dfff0b94bf035e0802eb2e426f19dfbe57cc01d0aeed0eb2a3e97d7c6589c5e",
+      "evaluations": [
+        {
+          "label": "baseline",
+          "design": [
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.5555555555555556,
+            0.5555555555555556
+          ],
+          "objective": 2.720189030545779,
+          "objectives": {
+            "voltage_V": 2.2480438894340113,
+            "pressure_sum_Pa": 223.69732250163747
+          },
+          "metrics": {
+            "iteration": 88.0,
+            "voltage_V": 2.2480438894340113,
+            "current_anode_A": 1.21,
+            "current_cathode_A": 1.21,
+            "charge_residual": 4.5460581638e-12,
+            "dp_anode_Pa": 99.48174161263749,
+            "dp_cathode_Pa": 124.215580889,
+            "Tmax_K": 336.127899203,
+            "gas_volume_max": 0.912599726497,
+            "O2_source_mol_s": 3.13519157113e-06,
+            "H2_source_mol_s": 6.27038314225e-06,
+            "O2_out_mol_s": 3.13519162483e-06,
+            "H2_out_mol_s": 6.27038302105e-06,
+            "mass_error": 4.87248182966e-07,
+            "gas_error": 1.93294477027e-08,
+            "field_change": 4.63502521956e-06,
+            "heat_W": 0.935719901012,
+            "bounded_cells": 0.0,
+            "pressure_sum_Pa": 223.69732250163747,
+            "cells": 11616,
+            "electrical_power_W": 2.7201331062151537,
+            "pumping_power_W": 5.592433062540936e-05,
+            "field_verification": {
+              "passed": true,
+              "iteration": 88.0,
+              "voltage_V": 2.2480438894340113,
+              "electrical_power_W": 2.7201331062151537,
+              "joule_heat_W": 0.3206601685863287,
+              "total_heat_source_W": 0.9357199010120241,
+              "membrane_currents_A": {
+                "11": 1.209999995744797
+              },
+              "checks": {
+                "anode_current_relative_error": 3.4416913763379853e-15,
+                "cathode_current_relative_error": 1.7208456881689926e-14,
+                "membrane_plane_current_relative_error": 3.516696600591729e-09,
+                "electrical_power_identity_relative_error": 3.2302692867099093e-10,
+                "heat_source_identity_relative_error": 1.1418427897835985e-10,
+                "gas_stoichiometry_relative_error": 8.393286066166183e-14,
+                "oxygen_out_relative_error": 1.7129580198727012e-08,
+                "hydrogen_out_relative_error": 1.9328697531406647e-08,
+                "net_reaction_mass_relative_error": 2.047803866280974e-15
+              }
+            }
+          },
+          "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p002/trial-04/cases/P002-de4cfd50e38347a9b052de9f1d625801",
+          "mesh_validation": {
+            "accepted": true,
+            "openfoam_all_checks_passed": false,
+            "min_determinant": 2.2732067384e-06,
+            "max_aspect_ratio": 50.0,
+            "max_nonorthogonality": 0.0,
+            "max_skewness": 2.16842000085e-14,
+            "warnings": [
+              {
+                "kind": "orthogonal_thin_catalyst_layer_determinant",
+                "cells": 1936,
+                "policy": "Only CL cells; determinant > 1e-8, aspect <= 100, nonorthogonality/skewness < 1e-6"
+              }
+            ]
+          }
+        },
+        {
+          "label": "paper_table5",
+          "design": [
+            0.1220833333333334,
+            0.03233333333333338,
+            0.15866666666666668,
+            0.1095833333333334,
+            0.07816666666666666,
+            0.830777777777778,
+            0.9976666666666667
+          ],
+          "objective": 2.712847331714924,
+          "objectives": {
+            "voltage_V": 2.241995429966388,
+            "pressure_sum_Pa": 131.44582237755833
+          },
+          "metrics": {
+            "iteration": 96.0,
+            "voltage_V": 2.241995429966388,
+            "current_anode_A": 1.21,
+            "current_cathode_A": 1.21,
+            "charge_residual": 4.85404740378e-12,
+            "dp_anode_Pa": 65.6816171696,
+            "dp_cathode_Pa": 65.76420520795833,
+            "Tmax_K": 335.970310689,
+            "gas_volume_max": 0.862270481431,
+            "O2_source_mol_s": 3.13519157113e-06,
+            "H2_source_mol_s": 6.27038314225e-06,
+            "O2_out_mol_s": 3.13519132084e-06,
+            "H2_out_mol_s": 6.27038269072e-06,
+            "mass_error": 1.90667508502e-07,
+            "gas_error": 7.98315021138e-08,
+            "field_change": 7.03966937917e-06,
+            "heat_W": 0.928090075439,
+            "bounded_cells": 0.0,
+            "pressure_sum_Pa": 131.44582237755833,
+            "cells": 16016,
+            "electrical_power_W": 2.7128144702593295,
+            "pumping_power_W": 3.286145559438958e-05,
+            "field_verification": {
+              "passed": true,
+              "iteration": 96.0,
+              "voltage_V": 2.241995429966388,
+              "electrical_power_W": 2.7128144702593295,
+              "joule_heat_W": 0.3151356050290414,
+              "total_heat_source_W": 0.9280900754393395,
+              "membrane_currents_A": {
+                "12": 1.2100000005487137
+              },
+              "checks": {
+                "anode_current_relative_error": 2.4202861936828413e-14,
+                "cathode_current_relative_error": 3.397282455352979e-14,
+                "membrane_plane_current_relative_error": 4.534823627722062e-10,
+                "electrical_power_identity_relative_error": 4.099078040712287e-11,
+                "heat_source_identity_relative_error": 3.6356172400380645e-10,
+                "gas_stoichiometry_relative_error": 1.2712053631958042e-13,
+                "oxygen_out_relative_error": 7.983134986400131e-08,
+                "hydrogen_out_relative_error": 7.200934659667979e-08,
+                "net_reaction_mass_relative_error": 2.4817511691643317e-14
+              }
+            }
+          },
+          "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p002/trial-04/cases/P002-fc4ad56449b640f79bbd4cfb90ee4be5",
+          "mesh_validation": {
+            "accepted": true,
+            "openfoam_all_checks_passed": false,
+            "min_determinant": 2.2732067384e-06,
+            "max_aspect_ratio": 50.0,
+            "max_nonorthogonality": 0.0,
+            "max_skewness": 5.8356369296e-14,
+            "warnings": [
+              {
+                "kind": "orthogonal_thin_catalyst_layer_determinant",
+                "cells": 2304,
+                "policy": "Only CL cells; determinant > 1e-8, aspect <= 100, nonorthogonality/skewness < 1e-6"
+              }
+            ]
+          }
+        }
+      ],
+      "ioh_evaluations": 2,
+      "ioh_files": [
+        "ioh/IOHprofiler_f1121_P002_pem-reconstruction-v1_total_power_w_5dfff0b94bf0_failure_raise.json",
+        "ioh/data_f1121_P002_pem-reconstruction-v1_total_power_w_5dfff0b94bf0_failure_raise/IOHprofiler_f1121_DIM7.dat"
+      ],
+      "relative_change_percent": {
+        "voltage_V": -0.26905433190390626,
+        "pressure_sum_Pa": -41.239429731396925
+      }
+    },
+    "medium": {
+      "status": "passed",
+      "problem": "P002",
+      "ioh_enabled": true,
+      "paper_validated": false,
+      "scalarization": "total_power_w",
+      "config_sha256": "fc7c9d2e9d1a7403f68bde308f745d454b6be4d52bd13faa8c4ecbeff10259ac",
+      "evaluations": [
+        {
+          "label": "baseline",
+          "design": [
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.25000000000000006,
+            0.5555555555555556,
+            0.5555555555555556
+          ],
+          "objective": 2.7248257278923345,
+          "objectives": {
+            "voltage_V": 2.251872975383776,
+            "pressure_sum_Pa": 237.71071186056247
+          },
+          "metrics": {
+            "iteration": 96.0,
+            "voltage_V": 2.251872975383776,
+            "current_anode_A": 1.21,
+            "current_cathode_A": 1.21,
+            "charge_residual": 1.43362505648e-11,
+            "dp_anode_Pa": 106.830623416,
+            "dp_cathode_Pa": 130.8800884445625,
+            "Tmax_K": 335.580986113,
+            "gas_volume_max": 0.787022018165,
+            "O2_source_mol_s": 3.13519157113e-06,
+            "H2_source_mol_s": 6.27038314225e-06,
+            "O2_out_mol_s": 3.13519187578e-06,
+            "H2_out_mol_s": 6.27038341944e-06,
+            "mass_error": 2.02614120738e-07,
+            "gas_error": 9.71725731262e-08,
+            "field_change": 6.64706854249e-06,
+            "heat_W": 0.942632592476,
+            "bounded_cells": 0.0,
+            "pressure_sum_Pa": 237.71071186056247,
+            "cells": 89056,
+            "electrical_power_W": 2.724766300214369,
+            "pumping_power_W": 5.9427677965140617e-05,
+            "field_verification": {
+              "passed": true,
+              "iteration": 96.0,
+              "voltage_V": 2.251872975383776,
+              "electrical_power_W": 2.724766300214369,
+              "joule_heat_W": 0.31568477318861515,
+              "total_heat_source_W": 0.9426325924583501,
+              "membrane_currents_A": {
+                "21": 1.2099999948955293,
+                "22": 1.2099999939130066,
+                "23": 1.209999992924044
+              },
+              "checks": {
+                "anode_current_relative_error": 4.5315973196125015e-12,
+                "cathode_current_relative_error": 5.653477685996222e-12,
+                "membrane_plane_current_relative_error": 5.847897610600228e-09,
+                "electrical_power_identity_relative_error": 4.5097386747337823e-10,
+                "heat_source_identity_relative_error": 9.66846142079621e-10,
+                "gas_stoichiometry_relative_error": 1.1283196599265466e-12,
+                "oxygen_out_relative_error": 9.717179416668387e-08,
+                "hydrogen_out_relative_error": 4.420596977361413e-08,
+                "net_reaction_mass_relative_error": 1.1282697934857385e-12
+              }
+            }
+          },
+          "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p002/medium-01/cases/P002-c8b84620545c4a2dabdfb26da7158ca0",
+          "mesh_validation": {
+            "accepted": true,
+            "openfoam_all_checks_passed": false,
+            "min_determinant": 6.90904687802e-06,
+            "max_aspect_ratio": 37.5000000375,
+            "max_nonorthogonality": 0.0,
+            "max_skewness": 4.77810422807e-14,
+            "warnings": [
+              {
+                "kind": "orthogonal_thin_catalyst_layer_determinant",
+                "cells": 11616,
+                "policy": "Only CL cells; determinant > 1e-8, aspect <= 100, nonorthogonality/skewness < 1e-6"
+              }
+            ]
+          }
+        },
+        {
+          "label": "paper_table5",
+          "design": [
+            0.1220833333333334,
+            0.03233333333333338,
+            0.15866666666666668,
+            0.1095833333333334,
+            0.07816666666666666,
+            0.830777777777778,
+            0.9976666666666667
+          ],
+          "objective": 2.7167773054382907,
+          "objectives": {
+            "voltage_V": 2.2452402741069344,
+            "pressure_sum_Pa": 146.2950755998225
+          },
+          "metrics": {
+            "iteration": 163.0,
+            "voltage_V": 2.2452402741069344,
+            "current_anode_A": 1.21,
+            "current_cathode_A": 1.21,
+            "charge_residual": 1.47625562747e-11,
+            "dp_anode_Pa": 73.693216472635,
+            "dp_cathode_Pa": 72.6018591271875,
+            "Tmax_K": 335.519076594,
+            "gas_volume_max": 0.768126556156,
+            "O2_source_mol_s": 3.13519157113e-06,
+            "H2_source_mol_s": 6.27038314225e-06,
+            "O2_out_mol_s": 3.13519203224e-06,
+            "H2_out_mol_s": 6.27038339485e-06,
+            "mass_error": 1.03017882932e-06,
+            "gas_error": 1.47075279867e-07,
+            "field_change": 6.85305978233e-06,
+            "heat_W": 0.933735487588,
+            "bounded_cells": 0.0,
+            "pressure_sum_Pa": 146.2950755998225,
+            "cells": 103488,
+            "electrical_power_W": 2.7167407316693906,
+            "pumping_power_W": 3.6573768899955625e-05,
+            "field_verification": {
+              "passed": true,
+              "iteration": 163.0,
+              "voltage_V": 2.2452402741069344,
+              "electrical_power_W": 2.7167407316693906,
+              "joule_heat_W": 0.3117354872589309,
+              "total_heat_source_W": 0.9337354875706462,
+              "membrane_currents_A": {
+                "22": 1.2099999991277413,
+                "23": 1.209999998813479,
+                "24": 1.2099999984974086
+              },
+              "checks": {
+                "anode_current_relative_error": 4.606648396077162e-12,
+                "cathode_current_relative_error": 5.691114246531015e-12,
+                "membrane_plane_current_relative_error": 1.2418110983958286e-09,
+                "electrical_power_identity_relative_error": 8.924069932522282e-11,
+                "heat_source_identity_relative_error": 2.594252392739903e-10,
+                "gas_stoichiometry_relative_error": 1.1142198275138071e-12,
+                "oxygen_out_relative_error": 1.4707555684445595e-07,
+                "hydrogen_out_relative_error": 4.028476729978081e-08,
+                "net_reaction_mass_relative_error": 1.1126724797193652e-12
+              }
+            }
+          },
+          "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p002/medium-01/cases/P002-5277013c25634ff4a8030a815a9557c4",
+          "mesh_validation": {
+            "accepted": true,
+            "openfoam_all_checks_passed": false,
+            "min_determinant": 6.90904687802e-06,
+            "max_aspect_ratio": 37.5000000375,
+            "max_nonorthogonality": 0.0,
+            "max_skewness": 7.57969289409e-14,
+            "warnings": [
+              {
+                "kind": "orthogonal_thin_catalyst_layer_determinant",
+                "cells": 12432,
+                "policy": "Only CL cells; determinant > 1e-8, aspect <= 100, nonorthogonality/skewness < 1e-6"
+              }
+            ]
+          }
+        }
+      ],
+      "ioh_evaluations": 2,
+      "ioh_files": [
+        "ioh/IOHprofiler_f1121_P002_pem-reconstruction-v1_total_power_w_fc7c9d2e9d1a_failure_raise.json",
+        "ioh/data_f1121_P002_pem-reconstruction-v1_total_power_w_fc7c9d2e9d1a_failure_raise/IOHprofiler_f1121_DIM7.dat"
+      ],
+      "relative_change_percent": {
+        "voltage_V": -0.29454153717135556,
+        "pressure_sum_Pa": -38.45667515158636
+      }
+    }
+  },
+  "coarse_relative_to_medium_percent": {
+    "baseline": {
+      "voltage_V": -0.17004005073208983,
+      "pressure_sum_Pa": -5.895144248756045
+    },
+    "paper_table5": {
+      "voltage_V": -0.14452101977535659,
+      "pressure_sum_Pa": -10.150207149065638
+    }
+  },
+  "implementation_sha256": {
+    "metrics.py": "81e1fbfd3a4a851fa75f168e3d491691a54e93a6c024b58df86c9cb4548f4627",
+    "verification.py": "b7c2fa6e95e33515fd56a4bd53abcb02c6bb2abe3161d00ac688948439eb62e8",
+    "config.py": "276c09d7b9a9ab176ebea27c3b2a477a208a2dfb6ab12cc620e96c234d6dfd52",
+    "mesh_checks.py": "c3ded365e1692d259a85233e1be405be9d2febd512e7b51ab2b3c54e64d191b9",
+    "evaluation.py": "062427f7a06f00d8ad7df993fedf6bce20a381d6c11b2b061fbd00b12dc8e069",
+    "__init__.py": "fe46a274c54eab13380f2ec005f5b7cf4f5530c67f05dfcf5226dec052ae04af",
+    "runtime.py": "11a960bfa48382da64c5aaa05f51ed5dfd357b06d60260a41383631acb6f901f",
+    "cli.py": "52844ecfc392586e0bbbc0018c8e14951023d88b0427803915055bfdc90ae6f3",
+    "geometry.py": "beb97517fed6b5b15b7b309381bb0de10a62d15e11b3063cc3b4c3828d96689b",
+    "case.py": "735d28f9b431a9adbfcb35092400f43ad7350fd13625f065a45fa684d06b5bea",
+    "solver/pemElectrolyzerFoam.C": "89d1644de3cc8cc85f17eed22182f1a229fcbc81e2c9277832a096d162bc5957",
+    "solver/ChargeNetwork.H": "2e8f53d5e623ed8932358bb12c3f6f57c6f70166a1bf19e0479f669085650cfb",
+    "data/reference.json": "1e5b7fac4c281be1061cbd5cb182dba31974732d827c2b876469de65ccc3851f",
+    "data/legacy-source.json": "5c6e3727e3b607eb561ae9ed42e0143d594b8403c8a43c992eb005fdbeaec912",
+    "solver/Make/options": "f8a8c5d173658f2e0639e8ea5e9c7c793783bf1827dfbf9ec17e115ddb4d8dab",
+    "solver/Make/files": "31ae6740d218f814ebb01896c28d27ab7f226404e8f7da2bcc6c41139280d278"
+  },
+  "full_run_archive": "/Users/zhuang/FlowField/runs/p002-initial-20261106",
+  "mesh_policy": "Sole small-determinant warning accepted only for orthogonal catalyst-layer cells; see model report",
+  "not_verified": [
+    "paper-level pressure scale",
+    "exact source CAD/COMSOL parameters",
+    "mesh independence",
+    "polarization curves",
+    "40x40 Pareto GA",
+    "P002 MPI/native runs"
+  ]
+}

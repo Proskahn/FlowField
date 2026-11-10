@@ -1,0 +1,16 @@
+{
+	"version": "0.3.22", 
+	"suite": "unknown_suite", 
+	"function_id": 1121, 
+	"function_name": "P001_ppfc-reconstruction-v1_b22c0e458e1d_failure_raise", 
+	"maximization": false, 
+	"algorithm": {"name": "P001-smoke", "info": "One reconstructed-geometry baseline; no optimization"},
+	"attributes": ["evaluations", "raw_y"],
+	"scenarios": [
+		{"dimension": 6,
+		"path": "data_f1121_P001_ppfc-reconstruction-v1_b22c0e458e1d_failure_raise/IOHprofiler_f1121_DIM6.dat",
+		"runs": [
+			{"instance": 1, "evals": 1, "best": {"evals": 1, "y": -0.6408177621262, "x": [0.6666666666666666, 0.8, 0.6, 0.6666666666666666, 0.5, 0.5]}}
+		]}
+	]
+}

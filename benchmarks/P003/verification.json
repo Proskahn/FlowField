@@ -1,0 +1,224 @@
+{
+  "status": "passed_numerical_checks",
+  "paper_validated": false,
+  "model_revision": "depth-averaged-cathode-v1",
+  "date": "2026-11-07",
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "tests": {
+    "passed": 62,
+    "failed": 0
+  },
+  "ioh": {
+    "version": "0.3.22",
+    "dimension": 2145,
+    "actual_cfd_evaluations": 2,
+    "directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p003/verified/coarse-ioh/ioh"
+  },
+  "cases": [
+    {
+      "label": "uniform-coarse",
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p003/verified/coarse-ioh/cases/P003-c6e69f4d4c8d453aabf3500c1bee56f6",
+      "config_sha256": "98a7221a4e37214dad9f32a06c3485bb58fa677c2b79c51151182d0886431695",
+      "wall_time_s": 36.87541991705075,
+      "objective": -0.20591456421965912,
+      "objectives": {
+        "negative_power_domain_W": -0.20591456421965912,
+        "current_std_A_m2": 219.99994368285604
+      },
+      "constraints": {
+        "channel_volume": 0.0
+      },
+      "unpenalized_objective": -0.20591456421965912,
+      "feasible": true,
+      "metrics": {
+        "mean_current_A_m2": 2059.2708458640195,
+        "current_std_A_m2": 219.99994368285604,
+        "power_domain_W": 0.20591456421965912,
+        "power_mirrored_full_cell_W": 0.41182912843931824,
+        "inlet_flow_half_cell_m3_s": 2.708870777544e-07,
+        "outlet_flow_half_cell_m3_s": 2.708870777577e-07,
+        "prescribed_pressure_drop_Pa": 5.0,
+        "saved_pressure_drop_Pa": 5.0,
+        "volume_fraction": 0.5,
+        "min_oxygen": 0.0525598793374,
+        "max_water": 0.220329766616,
+        "min_nitrogen": 0.727110354046,
+        "reaction_net_mass_kg_s": 5.335386950645821e-09,
+        "reaction_net_mass_relative_to_inlet": 0.019695981790180315,
+        "nitrogen_transport_equation_solved": false,
+        "checks": {
+          "kinetic_relative_error": 3.7738267058185144e-12,
+          "volume_relative_error": 1.2182151508664755e-11,
+          "oxygen_relative_error": 3.5462766688412716e-07,
+          "water_relative_error": 9.528446091606258e-06,
+          "impermeable_boundary_relative_error": 0.0,
+          "history_power_relative_error": 4.218847493575595e-15,
+          "history_std_relative_error": 7.286294646445866e-14,
+          "history_mean_relative_error": 3.907985046680551e-14
+        },
+        "iteration": 1053.0,
+        "cells": 2176
+      }
+    },
+    {
+      "label": "parallel-coarse",
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p003/verified/coarse-ioh/cases/P003-1b7e59b84388413f8c8a4386639bf1da",
+      "config_sha256": "98a7221a4e37214dad9f32a06c3485bb58fa677c2b79c51151182d0886431695",
+      "wall_time_s": 18.874772292096168,
+      "objective": -0.23614367584858129,
+      "objectives": {
+        "negative_power_domain_W": -0.23614367584858129,
+        "current_std_A_m2": 30.71336117536444
+      },
+      "constraints": {
+        "channel_volume": 0.0
+      },
+      "unpenalized_objective": -0.23614367584858129,
+      "feasible": true,
+      "metrics": {
+        "mean_current_A_m2": 2361.580342570641,
+        "current_std_A_m2": 30.71336117536444,
+        "power_domain_W": 0.23614367584858129,
+        "power_mirrored_full_cell_W": 0.47228735169716257,
+        "inlet_flow_half_cell_m3_s": 1.4503421565680001e-06,
+        "outlet_flow_half_cell_m3_s": 1.4503421565709999e-06,
+        "prescribed_pressure_drop_Pa": 5.0,
+        "saved_pressure_drop_Pa": 5.0,
+        "volume_fraction": 0.5,
+        "min_oxygen": 0.187848288861,
+        "max_water": 0.0677724603436,
+        "min_nitrogen": 0.744379250796,
+        "reaction_net_mass_kg_s": 6.118643872397698e-09,
+        "reaction_net_mass_relative_to_inlet": 0.0042187588940229654,
+        "nitrogen_transport_equation_solved": false,
+        "checks": {
+          "kinetic_relative_error": 2.8083049176001372e-12,
+          "volume_relative_error": 2.0683168927527888e-12,
+          "oxygen_relative_error": 3.1834426606277456e-07,
+          "water_relative_error": 6.961144717682614e-06,
+          "impermeable_boundary_relative_error": 0.0,
+          "history_power_relative_error": 3.68594044175552e-14,
+          "history_std_relative_error": 9.950211209561397e-13,
+          "history_mean_relative_error": 2.5091040356528538e-14
+        },
+        "iteration": 253.0,
+        "cells": 2176
+      }
+    },
+    {
+      "label": "uniform-medium",
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p003/verified/medium-uniform/P003-4f9b2250b5024e4b9a92b00776c83e4b",
+      "config_sha256": "bc4c2685d106036c00e5a2a56f52224429ba149e39d6c1cb4d3d771ad9ae7a73",
+      "wall_time_s": 141.317306375131,
+      "objective": -0.2062479642048869,
+      "objectives": {
+        "negative_power_domain_W": -0.2062479642048869,
+        "current_std_A_m2": 219.7515009283029
+      },
+      "constraints": {
+        "channel_volume": -1.1102230246251565e-16
+      },
+      "unpenalized_objective": -0.2062479642048869,
+      "feasible": true,
+      "metrics": {
+        "mean_current_A_m2": 2062.6050484358134,
+        "current_std_A_m2": 219.7515009283029,
+        "power_domain_W": 0.2062479642048869,
+        "power_mirrored_full_cell_W": 0.4124959284097738,
+        "inlet_flow_half_cell_m3_s": 2.72429559565e-07,
+        "outlet_flow_half_cell_m3_s": 2.724295595642e-07,
+        "prescribed_pressure_drop_Pa": 5.0,
+        "saved_pressure_drop_Pa": 5.0,
+        "volume_fraction": 0.4999999999999999,
+        "min_oxygen": 0.0522072978696,
+        "max_water": 0.220699713062,
+        "min_nitrogen": 0.727092989069,
+        "reaction_net_mass_kg_s": 5.344025571897657e-09,
+        "reaction_net_mass_relative_to_inlet": 0.019616173738381006,
+        "nitrogen_transport_equation_solved": false,
+        "checks": {
+          "kinetic_relative_error": 3.8524855087408564e-12,
+          "volume_relative_error": 2.936427604992018e-12,
+          "oxygen_relative_error": 3.093885192070237e-07,
+          "water_relative_error": 9.84109570518483e-06,
+          "impermeable_boundary_relative_error": 0.0,
+          "history_power_relative_error": 1.509903313490213e-14,
+          "history_std_relative_error": 5.871839794902406e-14,
+          "history_mean_relative_error": 5.484501741648273e-14
+        },
+        "iteration": 3833.0,
+        "cells": 8320
+      }
+    },
+    {
+      "label": "parallel-medium",
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p003/verified/medium-parallel/P003-8c2935162a55439680817e9d7e2c7cde",
+      "config_sha256": "bc4c2685d106036c00e5a2a56f52224429ba149e39d6c1cb4d3d771ad9ae7a73",
+      "wall_time_s": 48.000291750067845,
+      "objective": -0.2359598392649805,
+      "objectives": {
+        "negative_power_domain_W": -0.2359598392649805,
+        "current_std_A_m2": 31.904154676511514
+      },
+      "constraints": {
+        "channel_volume": -0.007014003373234379
+      },
+      "unpenalized_objective": -0.2359598392649805,
+      "feasible": true,
+      "metrics": {
+        "mean_current_A_m2": 2359.7418649551937,
+        "current_std_A_m2": 31.904154676511514,
+        "power_domain_W": 0.2359598392649805,
+        "power_mirrored_full_cell_W": 0.471919678529961,
+        "inlet_flow_half_cell_m3_s": 1.41609658641738e-06,
+        "outlet_flow_half_cell_m3_s": 1.416096586422e-06,
+        "prescribed_pressure_drop_Pa": 5.0,
+        "saved_pressure_drop_Pa": 5.0,
+        "volume_fraction": 0.4929859966267656,
+        "min_oxygen": 0.184944894284,
+        "max_water": 0.0709410811375,
+        "min_nitrogen": 0.744082735392,
+        "reaction_net_mass_kg_s": 6.113880540998996e-09,
+        "reaction_net_mass_relative_to_inlet": 0.004317417752179365,
+        "nitrogen_transport_equation_solved": false,
+        "checks": {
+          "kinetic_relative_error": 2.7932786493658518e-12,
+          "volume_relative_error": 3.262589045911902e-12,
+          "oxygen_relative_error": 3.52457812757653e-08,
+          "water_relative_error": 8.957949383968956e-06,
+          "impermeable_boundary_relative_error": 0.0,
+          "history_power_relative_error": 4.440892098500626e-14,
+          "history_std_relative_error": 7.674643921006197e-13,
+          "history_mean_relative_error": 3.9745984281580604e-14
+        },
+        "iteration": 740.0,
+        "cells": 8320
+      }
+    }
+  ],
+  "medium_relative_change_percent": {
+    "uniform": {
+      "mean_current_A_m2": 0.16191180380620285,
+      "current_std_A_m2": -0.11292855370512722,
+      "inlet_flow_half_cell_m3_s": 0.5694187494607927,
+      "volume_fraction": -2.220446049250313e-14
+    },
+    "parallel": {
+      "mean_current_A_m2": -0.07784946301873097,
+      "current_std_A_m2": 3.8771188029469883,
+      "inlet_flow_half_cell_m3_s": -2.3612062847057302,
+      "volume_fraction": -1.4028006746468757
+    }
+  },
+  "kinetics_at_inlet_A_m2": 2419.928222176857,
+  "wheel_sha256": "1685a03301b533ec61da2430b7f9785a7a451e638246c7ee90c868b2de4ff2f9",
+  "wheel_resource_check": "12 P003 Python/C++/Make files matched isolated installation; case generation passed"
+}

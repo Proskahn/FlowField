@@ -1,0 +1,22 @@
+{
+  "verified_on": "2026-11-06",
+  "basis": "User-supplied four-level screenshot",
+  "tests": {
+    "passed": 28,
+    "skipped": 0
+  },
+  "wheel_build_and_isolated_import": "passed",
+  "level_packages": [
+    "level1_small_continuous",
+    "level2_medium_parametric",
+    "level3_discrete_combinatorial",
+    "level4_high_dimensional_topology"
+  ],
+  "canonical_p000_module": "flowfield.problems.level1_small_continuous.p000",
+  "legacy_import_compatibility": true,
+  "registered_problem_ids": [
+    "P000"
+  ],
+  "p000_numerical_logic": "unchanged; moved with relative-import-depth adjustments only",
+  "new_cfd_runs": 0
+}

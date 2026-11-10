@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="860" viewBox="0 0 1240 860"><rect width="1240" height="860" fill="#f7f9fc"/>
+<text x="48" y="58.66" font-family="Arial,sans-serif" font-size="31" fill="#172b46">P002 · Reconstructed five-channel PEM flow field</text>
+<text x="48" y="98.06" font-family="Arial,sans-serif" font-size="21" fill="#172b46">11 × 11 mm footprint · widths shared by both electrodes · independent heights</text>
+<text x="80" y="151.5" font-family="Arial,sans-serif" font-size="25" fill="#172b46">Baseline</text>
+<rect x="80" y="190" width="440" height="440" fill="#dce4ee" stroke="#8191a5" stroke-width="2"/>
+<rect x="80" y="570.0" width="400" height="40" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<rect x="120" y="210.0" width="400" height="40" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<rect x="120.0" y="250.0" width="40" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="128.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">1</text>
+<rect x="200.0" y="250.0" width="40" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="208.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">2</text>
+<rect x="280.0" y="250.0" width="40" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="288.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">3</text>
+<rect x="360.0" y="250.0" width="40" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="368.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">4</text>
+<rect x="440.0" y="250.0" width="40" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="448.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">5</text>
+<text x="78" y="665.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">Inlet →</text>
+<text x="400" y="177.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">→ Outlet</text>
+<text x="80" y="701.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">W1–W5 [mm]</text>
+<text x="80" y="732.06" font-family="Arial,sans-serif" font-size="21" fill="#172b46">1, 1, 1, 1, 1</text>
+<text x="80" y="766.06" font-family="Arial,sans-serif" font-size="21" fill="#172b46">Ha = 1.0000 mm    Hc = 1.0000 mm</text>
+<text x="720" y="151.5" font-family="Arial,sans-serif" font-size="25" fill="#172b46">Published Table 5 design</text>
+<rect x="720" y="190" width="440" height="440" fill="#dce4ee" stroke="#8191a5" stroke-width="2"/>
+<rect x="720" y="570.0" width="400" height="40" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<rect x="760" y="210.0" width="400" height="40" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<rect x="763.07" y="250.0" width="33.86" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="768.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">1</text>
+<rect x="845.2239999999999" y="250.0" width="29.552" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="848.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">2</text>
+<rect x="922.192" y="250.0" width="35.616" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="928.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">3</text>
+<rect x="1003.37" y="250.0" width="33.26" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="1008.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">4</text>
+<rect x="1084.124" y="250.0" width="31.752" height="320" fill="#128aa2" stroke="#128aa2" stroke-width="2"/>
+<text x="1088.0" y="407.2" font-family="Arial,sans-serif" font-size="20" fill="#ffffff">5</text>
+<text x="718" y="665.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">Inlet →</text>
+<text x="1040" y="177.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">→ Outlet</text>
+<text x="720" y="701.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">W1–W5 [mm]</text>
+<text x="720" y="732.06" font-family="Arial,sans-serif" font-size="21" fill="#172b46">0.8465, 0.7388, 0.8904, 0.8315, 0.7938</text>
+<text x="720" y="766.06" font-family="Arial,sans-serif" font-size="21" fill="#172b46">Ha = 1.2477 mm    Hc = 1.3979 mm</text>
+<text x="48" y="817.2" font-family="Arial,sans-serif" font-size="20" fill="#172b46">Assumed: 1 mm manifold widths, 2 mm branch-center spacing and same-direction feeds.</text>
+<text x="48" y="842.48" font-family="Arial,sans-serif" font-size="18" fill="#52647b">Diagram describes the implemented geometry; source CAD and paper validation remain unavailable.</text>
+</svg>

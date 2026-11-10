@@ -1,9 +1,0 @@
-bin/
-applications/pemElectrolyzerFoam/Make/linux*/
-tmp/
-__pycache__/
-*.pyc
-cases/*/[1-9]*/
-cases/*/log.*
-cases/*/postProcessing/
-runs/

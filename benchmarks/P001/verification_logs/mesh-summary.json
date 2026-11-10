@@ -1,0 +1,18 @@
+{
+  "gmsh_version": "4.13.1",
+  "cells": 228000,
+  "element_types": [
+    5
+  ],
+  "mesh": "coarse",
+  "source_tetrahedra": 57000,
+  "subdivision": "barycentric-four-hexes-per-tetrahedron-planar-boundary",
+  "minimum_size_m": 0.003,
+  "maximum_size_m": 0.006,
+  "fluid_volumes": 1,
+  "patch_surface_counts": {
+    "inlet": 1,
+    "outlet": 1,
+    "walls": 277
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "suite_version": "0.2.0",
+  "verified_on": "2026-11-06",
+  "tests": {
+    "passed": 28,
+    "skipped": 0
+  },
+  "wheel_build_and_isolated_import": "passed",
+  "smoke": {
+    "status": "passed",
+    "interface": "P000Problem",
+    "objective_pa": 13.453637543662667,
+    "iterations": 97
+  },
+  "random_search": {
+    "status": "completed",
+    "evaluations": 2,
+    "seed": 42,
+    "ioh_and_raw_records_match": true,
+    "best_objective_pa": 23.260980651068106,
+    "records": [
+      {
+        "x": [
+          0.6394267984578837,
+          0.025010755222666936
+        ],
+        "objective_pa": 32.25818430741053,
+        "iterations": 109,
+        "reference_relative_error": 0.0627417321877849
+      },
+      {
+        "x": [
+          0.27502931836911926,
+          0.22321073814882275
+        ],
+        "objective_pa": 23.260980651068106,
+        "iterations": 98,
+        "reference_relative_error": 0.05292362196933398
+      }
+    ]
+  }
+}

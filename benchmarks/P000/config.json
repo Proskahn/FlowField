@@ -1,0 +1,17 @@
+{
+  "width_m": 0.001,
+  "height_m": 0.001,
+  "length_m": 0.05,
+  "flow_rate_m3_s": 1e-08,
+  "density_kg_m3": 998.2,
+  "kinematic_viscosity_m2_s": 1e-06,
+  "cells": [
+    50,
+    8,
+    8
+  ],
+  "max_iterations": 3000,
+  "residual_tolerance": 1e-07,
+  "mass_balance_tolerance": 1e-05,
+  "reference_tolerance": 0.08
+}

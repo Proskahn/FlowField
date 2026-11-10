@@ -1,0 +1,1083 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _c39a0f64-20231220 OPENFOAM=2312 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : /case/bin/flowfieldP002Foam -case /case
+Date   : Nov 06 2026
+Time   : 12:42:58
+Host   : afeff0df4730
+PID    : 7
+I/O    : uncollated
+Case   : /case
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Steady coupled PEM model: 16016 cells, 1.21 A, 1 processes. Time labels are outer iterations, not physical seconds.
+
+Iteration = 1
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1, Final residual = 0.000665850745885, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0, Final residual = 0, No Iterations 0
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0, Final residual = 0, No Iterations 0
+DICPCG:  Solving for p, Initial residual = 1, Final residual = 0.000907203618232, No Iterations 115
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 0.00103349113688, Final residual = 6.69162977741e-08, No Iterations 38
+DILUPBiCGStab:  Solving for T, Initial residual = 0.999999999875, Final residual = 8.87214797671e-05, No Iterations 25
+PEM: V=2.31959462192 V; Ia=1.21; Ic=1.21 A; dP=96.9761270223, 88.5194573496 Pa; Tmax=334.124794073 K; change=1; charge=4.65651042613e-12; gas balance=0.384534222836; bounded=0
+ExecutionTime = 0.44 s  ClockTime = 1 s
+
+
+Iteration = 2
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00312889942513, Final residual = 2.94981588203e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00194317014573, Final residual = 1.31779864699e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.168788653607, Final residual = 1.46081994663e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.00036673793047, Final residual = 2.60885316456e-07, No Iterations 124
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 0.000380919095271, Final residual = 2.18749459231e-08, No Iterations 36
+DILUPBiCGStab:  Solving for T, Initial residual = 0.151864291182, Final residual = 1.14106392107e-05, No Iterations 24
+PEM: V=2.26830407426 V; Ia=1.21000000016; Ic=1.2100000003 A; dP=323.007740504, 315.226798065 Pa; Tmax=334.599617085 K; change=0.703495500878; charge=7.53270631673e-10; gas balance=0.0975124605939; bounded=0
+ExecutionTime = 0.7 s  ClockTime = 1 s
+
+
+Iteration = 3
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00264663276371, Final residual = 1.87349924728e-07, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00154815384382, Final residual = 9.37783231039e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.116822890689, Final residual = 1.28874531606e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.00012348934244, Final residual = 1.16248662146e-07, No Iterations 123
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 0.000199931632273, Final residual = 1.0573721093e-08, No Iterations 36
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0737635755156, Final residual = 6.81578315482e-06, No Iterations 26
+PEM: V=2.25735469068 V; Ia=1.21000000085; Ic=1.21000000001 A; dP=276.339100368, 280.46618482 Pa; Tmax=334.852329681 K; change=0.529290183321; charge=1.42750887554e-09; gas balance=0.0327922267367; bounded=0
+ExecutionTime = 0.93 s  ClockTime = 1 s
+
+
+Iteration = 4
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00102870523343, Final residual = 7.17806336572e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000744482932602, Final residual = 4.68484519947e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0428205439993, Final residual = 1.75680638991e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000175903637339, Final residual = 1.59632175788e-07, No Iterations 123
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 0.000125942938517, Final residual = 1.17567838822e-08, No Iterations 37
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0565048905771, Final residual = 5.37290722193e-06, No Iterations 22
+PEM: V=2.25350412376 V; Ia=1.21; Ic=1.21 A; dP=113.126004333, 119.807065149 Pa; Tmax=335.029259983 K; change=1.30003296254; charge=9.83907919678e-12; gas balance=0.0103210480842; bounded=0
+ExecutionTime = 1.16 s  ClockTime = 2 s
+
+
+Iteration = 5
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000306727495374, Final residual = 2.57791032634e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000288019204262, Final residual = 2.07203818109e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0673215913294, Final residual = 3.68209389194e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000313857517839, Final residual = 2.72365118191e-07, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.20510099891e-05, Final residual = 6.06370237561e-09, No Iterations 38
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0473718546873, Final residual = 2.82817477904e-06, No Iterations 23
+PEM: V=2.25143877997 V; Ia=1.21; Ic=1.21 A; dP=-12.2794050212, -8.37088312555 Pa; Tmax=335.168626629 K; change=4.37524712652; charge=5.11899059844e-12; gas balance=0.0026452697435; bounded=0
+ExecutionTime = 1.4 s  ClockTime = 2 s
+
+
+Iteration = 6
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000438369382096, Final residual = 2.81609345058e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000203637994951, Final residual = 1.86002933716e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0811954032377, Final residual = 5.53273917845e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.00243433807692, Final residual = 1.975282274e-06, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.81077414999e-05, Final residual = 6.73572212818e-09, No Iterations 38
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0384021640199, Final residual = 3.20674482547e-06, No Iterations 23
+PEM: V=2.24988214891 V; Ia=1.21; Ic=1.21 A; dP=-40.2687881855, -38.0658354206 Pa; Tmax=335.282337469 K; change=0.66079457306; charge=4.91302574352e-12; gas balance=0.000551392355557; bounded=0
+ExecutionTime = 1.64 s  ClockTime = 2 s
+
+
+Iteration = 7
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000534630924466, Final residual = 4.40839314696e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000311642018697, Final residual = 2.84120871003e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.053013499453, Final residual = 5.27229089014e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000713400488191, Final residual = 5.9657956512e-07, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.20709930149e-05, Final residual = 2.82076992121e-09, No Iterations 38
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0296539222518, Final residual = 2.4648459538e-06, No Iterations 26
+PEM: V=2.24874016899 V; Ia=1.21000005228; Ic=1.21000000259 A; dP=3.12405292549, 5.5609046845 Pa; Tmax=335.371473937 K; change=1.41922044581; charge=9.06975388856e-08; gas balance=0.000489848846461; bounded=0
+ExecutionTime = 1.84 s  ClockTime = 2 s
+
+
+Iteration = 8
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000310674158978, Final residual = 3.54050798598e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000316806866185, Final residual = 2.86624027129e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0323696117104, Final residual = 4.21756452601e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.00083685119176, Final residual = 7.47483744509e-07, No Iterations 123
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.00424479725e-05, Final residual = 1.85559193743e-09, No Iterations 39
+DILUPBiCGStab:  Solving for T, Initial residual = 0.023311119337, Final residual = 1.93537436423e-06, No Iterations 24
+PEM: V=2.24807847376 V; Ia=1.21000000729; Ic=1.21000000021 A; dP=61.8956418235, 64.4729761135 Pa; Tmax=335.437083902 K; change=0.947150104037; charge=1.23998521541e-08; gas balance=0.000473569087111; bounded=0
+ExecutionTime = 2.03 s  ClockTime = 2 s
+
+
+Iteration = 9
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000216683277853, Final residual = 2.06289616814e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000198271230656, Final residual = 2.06741701616e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0279838409967, Final residual = 3.42477377738e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000232613522531, Final residual = 1.99108292971e-07, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.97153809591e-05, Final residual = 8.78188953609e-10, No Iterations 36
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0181175770884, Final residual = 1.55898570961e-06, No Iterations 24
+PEM: V=2.24763529837 V; Ia=1.21000000322; Ic=1.21000000005 A; dP=95.519967554, 96.9930141687 Pa; Tmax=335.489319119 K; change=0.365884466582; charge=5.40979015213e-09; gas balance=0.000198254332716; bounded=0
+ExecutionTime = 2.23 s  ClockTime = 3 s
+
+
+Iteration = 10
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000292744517151, Final residual = 2.59898337966e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00012997786682, Final residual = 1.3032897603e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0215262021182, Final residual = 3.19084468513e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000140676639596, Final residual = 1.29065849032e-07, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.58601821623e-05, Final residual = 2.56834771309e-09, No Iterations 37
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0179507840605, Final residual = 7.43095924859e-07, No Iterations 24
+PEM: V=2.24716672502 V; Ia=1.21000000411; Ic=1.21000000007 A; dP=95.4706380923, 95.3360151049 Pa; Tmax=335.544038434 K; change=0.0832342852229; charge=6.91577817225e-09; gas balance=0.000218449877982; bounded=0
+ExecutionTime = 2.42 s  ClockTime = 3 s
+
+
+Iteration = 11
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000203615983716, Final residual = 2.49520462418e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000167391507184, Final residual = 1.77802749222e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0164121383312, Final residual = 3.28322465777e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.73383881109e-05, Final residual = 9.43021407041e-08, No Iterations 121
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.58797814701e-05, Final residual = 1.67220093689e-09, No Iterations 38
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0197003885817, Final residual = 1.38795260907e-06, No Iterations 26
+PEM: V=2.24660827006 V; Ia=1.21000000498; Ic=1.21000000011 A; dP=76.3602408697, 75.3808521573 Pa; Tmax=335.597920257 K; change=0.263838714073; charge=8.40681881701e-09; gas balance=0.000504455530275; bounded=0
+ExecutionTime = 2.62 s  ClockTime = 3 s
+
+
+Iteration = 12
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000115924423457, Final residual = 1.8041717233e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 0.000157064572459, Final residual = 1.91297238703e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0172210920948, Final residual = 3.99669305778e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.01085599556e-05, Final residual = 7.9183147732e-08, No Iterations 125
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.46882456444e-05, Final residual = 2.42828645556e-09, No Iterations 41
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0199996055291, Final residual = 1.88931681398e-06, No Iterations 27
+PEM: V=2.24599482117 V; Ia=1.21000000469; Ic=1.21000000011 A; dP=57.5342444666, 56.9312475022 Pa; Tmax=335.644089423 K; change=0.319410737074; charge=7.93843319362e-09; gas balance=0.000508273903961; bounded=0
+ExecutionTime = 2.82 s  ClockTime = 3 s
+
+
+Iteration = 13
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000105156690399, Final residual = 1.34088781962e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 9.92726499101e-05, Final residual = 1.68026033631e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0181018750131, Final residual = 4.93283266582e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.32497558105e-05, Final residual = 8.07105270182e-08, No Iterations 128
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.16656991887e-05, Final residual = 1.66013179404e-09, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0183420828099, Final residual = 8.8064730975e-07, No Iterations 25
+PEM: V=2.2453971219 V; Ia=1.21000000339; Ic=1.21000000007 A; dP=49.8161633268, 50.2937681053 Pa; Tmax=335.684030165 K; change=0.138564586897; charge=5.72202330373e-09; gas balance=0.000328175953689; bounded=0
+ExecutionTime = 3.01 s  ClockTime = 3 s
+
+
+Iteration = 14
+DILUPBiCGStab:  Solving for Ux, Initial residual = 0.000105813190026, Final residual = 1.60253509939e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.36340538294e-05, Final residual = 1.49397381083e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0162900314903, Final residual = 5.20984886819e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 0.000102471555222, Final residual = 9.90814173506e-08, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.81292937152e-05, Final residual = 5.94261951823e-10, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0159233427935, Final residual = 1.39635987351e-06, No Iterations 27
+PEM: V=2.24487668552 V; Ia=1.2100000018; Ic=1.21000000003 A; dP=52.9744114286, 54.3611805401 Pa; Tmax=335.719687778 K; change=0.107542029954; charge=3.02150058125e-09; gas balance=0.000142797868544; bounded=0
+ExecutionTime = 3.2 s  ClockTime = 4 s
+
+
+Iteration = 15
+DILUPBiCGStab:  Solving for Ux, Initial residual = 6.84932688308e-05, Final residual = 1.45363084683e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.03268959541e-05, Final residual = 1.28489412763e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0140982045501, Final residual = 4.88265522724e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.53373873161e-05, Final residual = 6.1135999314e-08, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.49120127052e-05, Final residual = 8.68022780022e-10, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0138778893118, Final residual = 8.56560258894e-07, No Iterations 25
+PEM: V=2.24446010914 V; Ia=1.21000000076; Ic=1.21000000001 A; dP=60.6807081661, 62.2769974697 Pa; Tmax=335.754230536 K; change=0.125055299855; charge=1.27061573768e-09; gas balance=5.74222216332e-05; bounded=0
+ExecutionTime = 3.39 s  ClockTime = 4 s
+
+
+Iteration = 16
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.45058193779e-05, Final residual = 9.5768161125e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.18586253535e-05, Final residual = 1.03544672928e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0131507210247, Final residual = 4.43157330173e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.06981900616e-05, Final residual = 5.61758387444e-08, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.22847055806e-05, Final residual = 4.00075984394e-10, No Iterations 41
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0122669675562, Final residual = 9.76799258547e-07, No Iterations 25
+PEM: V=2.24412987576 V; Ia=1.21000000032; Ic=1.21 A; dP=66.7868795117, 67.9452450281 Pa; Tmax=335.785340814 K; change=0.09176404067; charge=5.448416151e-10; gas balance=6.74357480318e-05; bounded=0
+ExecutionTime = 3.58 s  ClockTime = 4 s
+
+
+Iteration = 17
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.55488374981e-05, Final residual = 9.62318907967e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.97271474579e-05, Final residual = 8.02491442282e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.0116073580076, Final residual = 3.95783833369e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.58631338431e-05, Final residual = 4.27529177292e-08, No Iterations 97
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.05708743824e-05, Final residual = 6.71017407324e-10, No Iterations 41
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0111294471477, Final residual = 7.60862917688e-07, No Iterations 25
+PEM: V=2.24385074741 V; Ia=1.21000000017; Ic=1.21 A; dP=68.7554891837, 69.2107351629 Pa; Tmax=335.812860365 K; change=0.0301030192802; charge=2.90720865229e-10; gas balance=0.000133786505188; bounded=0
+ExecutionTime = 3.77 s  ClockTime = 4 s
+
+
+Iteration = 18
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.63638798905e-05, Final residual = 1.17193027584e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.29904586445e-05, Final residual = 6.51978312518e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00976167848179, Final residual = 3.73889808554e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.62710401911e-05, Final residual = 3.13343198581e-08, No Iterations 128
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.60775226127e-06, Final residual = 5.6502725978e-10, No Iterations 37
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0103315748582, Final residual = 4.95799295876e-07, No Iterations 25
+PEM: V=2.24359525494 V; Ia=1.21000000011; Ic=1.21 A; dP=67.459652266, 67.5184241613 Pa; Tmax=335.837800406 K; change=0.0417344199302; charge=1.89497144082e-10; gas balance=0.000118485159785; bounded=0
+ExecutionTime = 3.96 s  ClockTime = 4 s
+
+
+Iteration = 19
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.44312650084e-05, Final residual = 1.03105967764e-08, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.11921358757e-05, Final residual = 7.51553215426e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00860964460454, Final residual = 3.80449401808e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.04834533646e-05, Final residual = 2.48165770051e-08, No Iterations 128
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 8.87143558574e-06, Final residual = 4.49442312091e-10, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00946805211733, Final residual = 4.41293987785e-07, No Iterations 25
+PEM: V=2.24335398912 V; Ia=1.21000000008; Ic=1.21 A; dP=65.2465114221, 65.2442320362 Pa; Tmax=335.860688681 K; change=0.0394328947914; charge=1.4336407987e-10; gas balance=0.000120739788002; bounded=0
+ExecutionTime = 4.15 s  ClockTime = 4 s
+
+
+Iteration = 20
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.94473805525e-05, Final residual = 7.48575151376e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.24671446833e-05, Final residual = 8.71826513385e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00792364386574, Final residual = 3.92236485488e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.71393642907e-05, Final residual = 1.72822400427e-08, No Iterations 123
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 8.06385939334e-06, Final residual = 7.52248954559e-10, No Iterations 33
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00854191163662, Final residual = 5.99835154217e-07, No Iterations 25
+PEM: V=2.24312400165 V; Ia=1.21000000006; Ic=1.21 A; dP=63.8953509046, 64.0710595244 Pa; Tmax=335.881336903 K; change=0.022572914811; charge=1.07443202221e-10; gas balance=8.87851681953e-05; bounded=0
+ExecutionTime = 4.34 s  ClockTime = 5 s
+
+
+Iteration = 21
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.63641676361e-05, Final residual = 6.90211077013e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.62998296262e-05, Final residual = 8.65369126143e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00710563089971, Final residual = 3.81198263817e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.44197703314e-05, Final residual = 2.41121905288e-08, No Iterations 123
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 7.1858182284e-06, Final residual = 7.18008580072e-10, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00759624321863, Final residual = 5.46998446254e-07, No Iterations 26
+PEM: V=2.24291402299 V; Ia=1.21000000004; Ic=1.21 A; dP=63.8694285168, 64.259645545 Pa; Tmax=335.899367703 K; change=0.0169428089257; charge=7.17103545653e-11; gas balance=5.69485538496e-05; bounded=0
+ExecutionTime = 4.52 s  ClockTime = 5 s
+
+
+Iteration = 22
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.15268307495e-05, Final residual = 6.52305790681e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.81463643511e-05, Final residual = 7.60801252681e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00623728370467, Final residual = 3.45492135239e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.18947513101e-05, Final residual = 1.98346812276e-08, No Iterations 128
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.28336163592e-06, Final residual = 5.2479240294e-10, No Iterations 33
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0066593315696, Final residual = 4.05469932117e-07, No Iterations 24
+PEM: V=2.24273167166 V; Ia=1.21000000002; Ic=1.21 A; dP=64.6461280183, 65.1361863948 Pa; Tmax=335.91452793 K; change=0.0203755219323; charge=4.21134192421e-11; gas balance=3.57739802854e-05; bounded=0
+ExecutionTime = 4.71 s  ClockTime = 5 s
+
+
+Iteration = 23
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.85762929819e-05, Final residual = 5.17428982768e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.58097626837e-05, Final residual = 6.36797161034e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00531286150876, Final residual = 2.9888344197e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.84199241843e-05, Final residual = 1.73057582888e-08, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.40600081062e-06, Final residual = 5.13093272096e-10, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00571697091911, Final residual = 5.53226987235e-07, No Iterations 25
+PEM: V=2.2425824763 V; Ia=1.21000000001; Ic=1.21 A; dP=65.4615218241, 65.9059067767 Pa; Tmax=335.926972178 K; change=0.0157451975859; charge=2.15580279118e-11; gas balance=2.80555083548e-05; bounded=0
+ExecutionTime = 4.9 s  ClockTime = 5 s
+
+
+Iteration = 24
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.61699064567e-05, Final residual = 4.27957230325e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.51145435501e-05, Final residual = 4.92220609706e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00443455988376, Final residual = 2.53777166091e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.50203690743e-05, Final residual = 1.37090714945e-08, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.63421634847e-06, Final residual = 1.00709995511e-10, No Iterations 36
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00488570193733, Final residual = 4.65311302958e-07, No Iterations 25
+PEM: V=2.24246525988 V; Ia=1.21; Ic=1.21 A; dP=65.8605052783, 66.1797449636 Pa; Tmax=335.936926078 K; change=0.00695794941874; charge=1.10885586394e-11; gas balance=2.6080852324e-05; bounded=0
+ExecutionTime = 5.09 s  ClockTime = 5 s
+
+
+Iteration = 25
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.36037256947e-05, Final residual = 4.05647038693e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.32655529312e-05, Final residual = 3.61518813758e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00370662009472, Final residual = 2.20062543147e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.24668719016e-05, Final residual = 1.20252046601e-08, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.9765320333e-06, Final residual = 1.85459790036e-10, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00418617108293, Final residual = 3.79464070097e-07, No Iterations 25
+PEM: V=2.24237473212 V; Ia=1.21; Ic=1.21 A; dP=65.8244345786, 66.0274438628 Pa; Tmax=335.944816003 K; change=0.00646670052624; charge=6.94665992679e-12; gas balance=2.41870827538e-05; bounded=0
+ExecutionTime = 5.28 s  ClockTime = 6 s
+
+
+Iteration = 26
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.1227087123e-05, Final residual = 3.51101463158e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.05150917465e-05, Final residual = 2.84138084995e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00321706860887, Final residual = 2.00777935981e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.08481671209e-05, Final residual = 7.90411419621e-09, No Iterations 119
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.42350868834e-06, Final residual = 2.57898911586e-10, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00358205802033, Final residual = 2.59063408999e-07, No Iterations 24
+PEM: V=2.24230424343 V; Ia=1.21; Ic=1.21 A; dP=65.5927687821, 65.7386164394 Pa; Tmax=335.951118213 K; change=0.00721418550883; charge=5.4181695694e-12; gas balance=1.72407237146e-05; bounded=0
+ExecutionTime = 5.47 s  ClockTime = 6 s
+
+
+Iteration = 27
+DILUPBiCGStab:  Solving for Ux, Initial residual = 9.91638442203e-06, Final residual = 2.60502750183e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 8.45177028191e-06, Final residual = 2.61105280254e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00286788745343, Final residual = 1.89321392667e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.51554081681e-06, Final residual = 8.85835776953e-09, No Iterations 126
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.96752150635e-06, Final residual = 2.85393202903e-10, No Iterations 33
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00306682946796, Final residual = 2.43162749283e-07, No Iterations 25
+PEM: V=2.24224703363 V; Ia=1.21; Ic=1.21 A; dP=65.4101486379, 65.5591628106 Pa; Tmax=335.956248661 K; change=0.00497989860884; charge=4.96257593669e-12; gas balance=1.07440401203e-05; bounded=0
+ExecutionTime = 5.66 s  ClockTime = 6 s
+
+
+Iteration = 28
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.53493243807e-06, Final residual = 2.16158031089e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 7.80650617494e-06, Final residual = 2.65666762153e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00255094890345, Final residual = 1.778507219e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.15651238082e-06, Final residual = 7.40148518904e-09, No Iterations 94
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.60584920749e-06, Final residual = 2.44695341018e-10, No Iterations 33
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00264662884808, Final residual = 1.87993186265e-07, No Iterations 28
+PEM: V=2.24219804537 V; Ia=1.21; Ic=1.21 A; dP=65.3866159483, 65.5642871547 Pa; Tmax=335.960487079 K; change=0.00358404388572; charge=4.97639084904e-12; gas balance=7.40319057239e-06; bounded=0
+ExecutionTime = 5.84 s  ClockTime = 6 s
+
+
+Iteration = 29
+DILUPBiCGStab:  Solving for Ux, Initial residual = 7.21714397993e-06, Final residual = 2.1040935832e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.93080502852e-06, Final residual = 2.5789137051e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00221902635332, Final residual = 1.60393003899e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.82367393537e-06, Final residual = 4.94787441163e-09, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.31680938141e-06, Final residual = 2.31561037018e-10, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00229641367695, Final residual = 1.95663714819e-07, No Iterations 24
+PEM: V=2.24215541023 V; Ia=1.21; Ic=1.21 A; dP=65.4894785519, 65.6884172398 Pa; Tmax=335.963992516 K; change=0.00378176337393; charge=4.82337796168e-12; gas balance=5.0273021774e-06; bounded=0
+ExecutionTime = 6.03 s  ClockTime = 6 s
+
+
+Iteration = 30
+DILUPBiCGStab:  Solving for Ux, Initial residual = 6.35346197357e-06, Final residual = 1.80514241551e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.61639467355e-06, Final residual = 2.30411282834e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00190440430708, Final residual = 1.38928924788e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.63444530742e-06, Final residual = 5.63341583229e-09, No Iterations 122
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.06558945598e-06, Final residual = 1.52378633262e-10, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00199555310395, Final residual = 1.28394496928e-07, No Iterations 24
+PEM: V=2.24211854137 V; Ia=1.21; Ic=1.21 A; dP=65.6215384714, 65.8159603173 Pa; Tmax=335.966838131 K; change=0.00367782934901; charge=4.84101051136e-12; gas balance=6.77739325344e-06; bounded=0
+ExecutionTime = 6.22 s  ClockTime = 7 s
+
+
+Iteration = 31
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.61771945668e-06, Final residual = 1.44662228892e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.53821779105e-06, Final residual = 1.94014830879e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00159879227589, Final residual = 1.15941937195e-06, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.66587724191e-06, Final residual = 4.59979875382e-09, No Iterations 127
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.83710832524e-06, Final residual = 7.72436409576e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00173636247876, Final residual = 1.25763764773e-07, No Iterations 24
+PEM: V=2.24208784709 V; Ia=1.21; Ic=1.21 A; dP=65.7031865677, 65.8730584692 Pa; Tmax=335.969096912 K; change=0.00233343102671; charge=5.05432046413e-12; gas balance=5.57923133052e-06; bounded=0
+ExecutionTime = 6.41 s  ClockTime = 7 s
+
+
+Iteration = 32
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.87494042196e-06, Final residual = 1.2980121284e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.99522402763e-06, Final residual = 1.57233995046e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00133492439562, Final residual = 9.61863498915e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.95552289301e-06, Final residual = 3.91379170217e-09, No Iterations 95
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.62849982011e-06, Final residual = 2.77252452717e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00152045695492, Final residual = 1.40603967565e-07, No Iterations 24
+PEM: V=2.24206343266 V; Ia=1.21; Ic=1.21 A; dP=65.7123144978, 65.8546423009 Pa; Tmax=335.970814542 K; change=0.00147815142284; charge=5.00160911101e-12; gas balance=1.92966110457e-06; bounded=0
+ExecutionTime = 6.59 s  ClockTime = 7 s
+
+
+Iteration = 33
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.13666732397e-06, Final residual = 1.16985409096e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.57937372986e-06, Final residual = 1.24121166074e-09, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00114304998995, Final residual = 8.13814760849e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.51801762647e-06, Final residual = 3.19691005692e-09, No Iterations 120
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.43659536471e-06, Final residual = 7.6646663567e-11, No Iterations 33
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00134333853048, Final residual = 1.08445537522e-07, No Iterations 24
+PEM: V=2.24204504681 V; Ia=1.21; Ic=1.21 A; dP=65.6735148113, 65.7958321469 Pa; Tmax=335.972063212 K; change=0.00148270176078; charge=4.72669486545e-12; gas balance=4.46494465065e-06; bounded=0
+ExecutionTime = 6.77 s  ClockTime = 7 s
+
+
+Iteration = 34
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.50731554738e-06, Final residual = 9.53916013016e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.09156573891e-06, Final residual = 9.84818909048e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00102640732389, Final residual = 7.2221581821e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.20335586768e-06, Final residual = 2.96699938967e-09, No Iterations 120
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.26968253354e-06, Final residual = 3.29767510651e-11, No Iterations 36
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00119193602147, Final residual = 9.60552571954e-08, No Iterations 24
+PEM: V=2.24203145952 V; Ia=1.21000004779; Ic=1.21000000133 A; dP=65.630253511, 65.7461126106 Pa; Tmax=335.972930984 K; change=0.00127986184716; charge=8.11859994825e-08; gas balance=3.45680529336e-06; bounded=0
+ExecutionTime = 6.92 s  ClockTime = 7 s
+
+
+Iteration = 35
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.0110796191e-06, Final residual = 7.601441948e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.61013124319e-06, Final residual = 8.35187373942e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.00094766342682, Final residual = 6.68349120457e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.84344918082e-06, Final residual = 2.50276081148e-09, No Iterations 98
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.12337159548e-06, Final residual = 4.93267810421e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.0010583915591, Final residual = 9.07444641772e-08, No Iterations 24
+PEM: V=2.24202149041 V; Ia=1.2100000291; Ic=1.21000000057 A; dP=65.6102247678, 65.7317620375 Pa; Tmax=335.973517105 K; change=0.00120871477238; charge=4.90463029011e-08; gas balance=2.43528929394e-06; bounded=0
+ExecutionTime = 7.06 s  ClockTime = 7 s
+
+
+Iteration = 36
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.58012013838e-06, Final residual = 7.38601252876e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.28189424825e-06, Final residual = 7.73347686117e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000871022613024, Final residual = 6.22428056543e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.41585080881e-06, Final residual = 2.30111054154e-09, No Iterations 92
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.93669598552e-07, Final residual = 9.59371043743e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000940733629939, Final residual = 7.80634194569e-08, No Iterations 24
+PEM: V=2.24201372705 V; Ia=1.21000001941; Ic=1.21000000027 A; dP=65.6245168196, 65.7437139253 Pa; Tmax=335.97389926 K; change=0.00114372899456; charge=3.25253718679e-08; gas balance=7.1181371099e-06; bounded=0
+ExecutionTime = 7.19 s  ClockTime = 8 s
+
+
+Iteration = 37
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.23191824991e-06, Final residual = 6.84113294908e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.0441015258e-06, Final residual = 7.48020763978e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000781706738088, Final residual = 5.63465304495e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.02238746767e-06, Final residual = 1.64519313602e-09, No Iterations 121
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 8.81497230392e-07, Final residual = 6.27931758e-11, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000837094302723, Final residual = 3.88308949114e-08, No Iterations 24
+PEM: V=2.24200733853 V; Ia=1.21000001302; Ic=1.21000000027 A; dP=65.6546344004, 65.7716855513 Pa; Tmax=335.974136294 K; change=0.00107494542203; charge=2.19714492573e-08; gas balance=3.52244193336e-06; bounded=0
+ExecutionTime = 7.34 s  ClockTime = 8 s
+
+
+Iteration = 38
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.99522818729e-06, Final residual = 5.35317179582e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.78844031852e-06, Final residual = 7.09650946893e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000687159810706, Final residual = 4.87394357258e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.71789353584e-06, Final residual = 1.69512381336e-09, No Iterations 110
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 7.82326206803e-07, Final residual = 5.60060847641e-11, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000744934313065, Final residual = 1.74219341637e-08, No Iterations 26
+PEM: V=2.24200186624 V; Ia=1.21000001004; Ic=1.21000000018 A; dP=65.6834863396, 65.7944778524 Pa; Tmax=335.974268378 K; change=0.000965447079424; charge=1.68919495723e-08; gas balance=1.9390779206e-06; bounded=0
+ExecutionTime = 7.48 s  ClockTime = 8 s
+
+
+Iteration = 39
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.77454806605e-06, Final residual = 4.08251868799e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.5203284651e-06, Final residual = 6.44592228228e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000592868500844, Final residual = 4.02674833912e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.47232469128e-06, Final residual = 1.44722437688e-09, No Iterations 84
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.96954542601e-07, Final residual = 1.51802529466e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00066762365844, Final residual = 5.78308309551e-08, No Iterations 23
+PEM: V=2.24199719738 V; Ia=1.2100000075; Ic=1.21000000015 A; dP=65.6994521282, 65.8008252102 Pa; Tmax=335.974317257 K; change=0.000843467466448; charge=1.26525046556e-08; gas balance=4.04802441931e-06; bounded=0
+ExecutionTime = 7.62 s  ClockTime = 8 s
+
+
+Iteration = 40
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.5305362574e-06, Final residual = 3.88795757818e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.3088695108e-06, Final residual = 5.6398832834e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000506407487571, Final residual = 3.21811134447e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.27013357361e-06, Final residual = 1.07412487898e-09, No Iterations 92
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.23082473651e-07, Final residual = 1.36338319135e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000600465881907, Final residual = 5.19855768463e-08, No Iterations 23
+PEM: V=2.24199329511 V; Ia=1.21000000552; Ic=1.21000000011 A; dP=65.699428923, 65.7956047197 Pa; Tmax=335.974291493 K; change=0.000732412127559; charge=9.31461157231e-09; gas balance=9.02740916854e-07; bounded=0
+ExecutionTime = 7.76 s  ClockTime = 8 s
+
+
+Iteration = 41
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.31017641331e-06, Final residual = 3.7687750224e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.15853591391e-06, Final residual = 4.79831157467e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000438880466465, Final residual = 2.55777851228e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.10700174043e-06, Final residual = 1.06851861736e-09, No Iterations 89
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.5682243229e-07, Final residual = 1.01772503004e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000540755592555, Final residual = 5.34444467578e-08, No Iterations 25
+PEM: V=2.24199045218 V; Ia=1.21000000394; Ic=1.21000000006 A; dP=65.6892729015, 65.7825170156 Pa; Tmax=335.974199538 K; change=0.000647551656307; charge=6.61791076669e-09; gas balance=2.37022179901e-07; bounded=0
+ExecutionTime = 7.9 s  ClockTime = 8 s
+
+
+Iteration = 42
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.14114322974e-06, Final residual = 3.05771112272e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.03064027648e-06, Final residual = 4.01112580581e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000389988250957, Final residual = 2.1148707882e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.58926014833e-07, Final residual = 8.40173408701e-10, No Iterations 119
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.97644527381e-07, Final residual = 1.99810656559e-11, No Iterations 31
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000487347315716, Final residual = 4.8382497097e-08, No Iterations 25
+PEM: V=2.24198841969 V; Ia=1.21000000277; Ic=1.21000000004 A; dP=65.6794402052, 65.769567911 Pa; Tmax=335.974054823 K; change=0.000591956101418; charge=4.65113510493e-09; gas balance=3.39188804097e-06; bounded=0
+ExecutionTime = 8.05 s  ClockTime = 8 s
+
+
+Iteration = 43
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.0134039475e-06, Final residual = 2.39457934494e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 9.15355979786e-07, Final residual = 3.3803548296e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000353667349377, Final residual = 1.85700249734e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.18410822918e-07, Final residual = 7.20604448326e-10, No Iterations 84
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.43645237334e-07, Final residual = 6.28273330591e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000438050647989, Final residual = 3.52876443582e-08, No Iterations 25
+PEM: V=2.2419872123 V; Ia=1.2100000019; Ic=1.21000000003 A; dP=65.6734962922, 65.7637631126 Pa; Tmax=335.973870682 K; change=0.000556919879965; charge=3.19833685956e-09; gas balance=3.51704783851e-06; bounded=0
+ExecutionTime = 8.19 s  ClockTime = 9 s
+
+
+Iteration = 44
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.96828579359e-07, Final residual = 2.34355090195e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 8.1377354759e-07, Final residual = 2.93918591687e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000322032277859, Final residual = 1.70411769735e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.99507994849e-07, Final residual = 6.99188525776e-10, No Iterations 51
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.94612516671e-07, Final residual = 3.42444305514e-11, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000392387751991, Final residual = 2.49614743168e-08, No Iterations 30
+PEM: V=2.24198656366 V; Ia=1.21000000145; Ic=1.21000000003 A; dP=65.6744863379, 65.7645871894 Pa; Tmax=335.973662853 K; change=0.000531655360636; charge=2.45428897346e-09; gas balance=6.17223899251e-06; bounded=0
+ExecutionTime = 8.32 s  ClockTime = 9 s
+
+
+Iteration = 45
+DILUPBiCGStab:  Solving for Ux, Initial residual = 7.77677033785e-07, Final residual = 2.27101556143e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 7.24552229272e-07, Final residual = 2.63003377474e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000291843218571, Final residual = 1.57282917311e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.18837963747e-07, Final residual = 5.93973227498e-10, No Iterations 87
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.50117537086e-07, Final residual = 6.89259983534e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000350443804981, Final residual = 2.34965209314e-08, No Iterations 33
+PEM: V=2.24198631037 V; Ia=1.21000000111; Ic=1.21000000003 A; dP=65.6792156067, 65.7678371609 Pa; Tmax=335.973443459 K; change=0.00050662885143; charge=1.89217841332e-09; gas balance=5.45414268028e-06; bounded=0
+ExecutionTime = 8.46 s  ClockTime = 9 s
+
+
+Iteration = 46
+DILUPBiCGStab:  Solving for Ux, Initial residual = 6.68976073798e-07, Final residual = 1.86235962318e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.4111890093e-07, Final residual = 2.36963366495e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000260695664605, Final residual = 1.42451381062e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.50583408012e-07, Final residual = 5.26049771079e-10, No Iterations 82
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.10670986036e-07, Final residual = 1.35217968985e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000313539154297, Final residual = 1.39777823254e-08, No Iterations 29
+PEM: V=2.24198617238 V; Ia=1.21000000091; Ic=1.21000000002 A; dP=65.6849534311, 65.7722764606 Pa; Tmax=335.973223059 K; change=0.000477570898941; charge=1.54411847384e-09; gas balance=5.2934513298e-06; bounded=0
+ExecutionTime = 8.6 s  ClockTime = 9 s
+
+
+Iteration = 47
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.85713316028e-07, Final residual = 1.31891514851e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.69627652647e-07, Final residual = 2.12603730829e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000230566275002, Final residual = 1.23498781383e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.85762031876e-07, Final residual = 4.28511035349e-10, No Iterations 83
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.7641434349e-07, Final residual = 7.0715007007e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000281015991777, Final residual = 1.39665768049e-08, No Iterations 28
+PEM: V=2.24198618883 V; Ia=1.21000000073; Ic=1.21000000002 A; dP=65.6889676449, 65.7752182678 Pa; Tmax=335.973006649 K; change=0.000442519427312; charge=1.24814291485e-09; gas balance=4.51613423315e-06; bounded=0
+ExecutionTime = 8.74 s  ClockTime = 9 s
+
+
+Iteration = 48
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.21768883171e-07, Final residual = 1.06741400647e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.09388609921e-07, Final residual = 1.87902498622e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000202194172268, Final residual = 1.01498496946e-07, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.21161351405e-07, Final residual = 3.5185343312e-10, No Iterations 81
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.46266913183e-07, Final residual = 1.97463077363e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000252508514415, Final residual = 2.06037799194e-08, No Iterations 28
+PEM: V=2.24198630414 V; Ia=1.21000000059; Ic=1.21000000002 A; dP=65.6901660644, 65.7754956141 Pa; Tmax=335.97279687 K; change=0.000404214172474; charge=1.01447338003e-09; gas balance=3.95029692496e-06; bounded=0
+ExecutionTime = 8.87 s  ClockTime = 9 s
+
+
+Iteration = 49
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.68560426326e-07, Final residual = 1.08533732785e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.57748325034e-07, Final residual = 1.62132991947e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000176194407815, Final residual = 7.97100566595e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.63153787942e-07, Final residual = 3.44941748371e-10, No Iterations 79
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.19865102886e-07, Final residual = 1.78404719193e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000227685054848, Final residual = 1.54503901761e-08, No Iterations 28
+PEM: V=2.24198649767 V; Ia=1.21000000048; Ic=1.21000000001 A; dP=65.6892171289, 65.7734488557 Pa; Tmax=335.972594154 K; change=0.000365801786711; charge=8.14613038472e-10; gas balance=4.03409186955e-06; bounded=0
+ExecutionTime = 9.01 s  ClockTime = 9 s
+
+
+Iteration = 50
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.18725387284e-07, Final residual = 9.82237073542e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.10795470669e-07, Final residual = 1.37230020719e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000154168381942, Final residual = 6.19159878338e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.18591286469e-07, Final residual = 2.54929520295e-10, No Iterations 78
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.96708723844e-07, Final residual = 1.43243588432e-11, No Iterations 35
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000205652129194, Final residual = 9.30662319079e-09, No Iterations 28
+PEM: V=2.24198680092 V; Ia=1.2100000004; Ic=1.21000000001 A; dP=65.68709625, 65.7705631983 Pa; Tmax=335.972398394 K; change=0.000330067610756; charge=6.77094064608e-10; gas balance=3.96900732988e-06; bounded=0
+ExecutionTime = 9.15 s  ClockTime = 9 s
+
+
+Iteration = 51
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.70024615497e-07, Final residual = 7.6232721016e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.6709739477e-07, Final residual = 1.14737690891e-10, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000136657565608, Final residual = 4.98933022047e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.81392312703e-07, Final residual = 2.74090558734e-10, No Iterations 71
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.76413397112e-07, Final residual = 1.30845068031e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00018574534752, Final residual = 1.72326319355e-08, No Iterations 23
+PEM: V=2.24198720208 V; Ia=1.21000000034; Ic=1.21000000001 A; dP=65.6851621077, 65.7681451158 Pa; Tmax=335.972210015 K; change=0.000303521621384; charge=5.75405699727e-10; gas balance=4.38562959714e-06; bounded=0
+ExecutionTime = 9.27 s  ClockTime = 10 s
+
+
+Iteration = 52
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.25201292405e-07, Final residual = 5.72095321576e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.27267730612e-07, Final residual = 9.60506859975e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000122809837079, Final residual = 4.23031270531e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.41486506858e-07, Final residual = 2.36680745374e-10, No Iterations 75
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.58151271295e-07, Final residual = 1.30496770627e-11, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000167436469815, Final residual = 5.57609954169e-09, No Iterations 23
+PEM: V=2.24198768935 V; Ia=1.21000000029; Ic=1.21000000001 A; dP=65.6840947817, 65.7669051143 Pa; Tmax=335.972030283 K; change=0.000281850158612; charge=4.96585197511e-10; gas balance=4.73023577613e-06; bounded=0
+ExecutionTime = 9.4 s  ClockTime = 10 s
+
+
+Iteration = 53
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.87722711006e-07, Final residual = 5.25621634092e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.91954457339e-07, Final residual = 8.12404130614e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 0.000110806928695, Final residual = 3.70340194243e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.03595082101e-07, Final residual = 1.64431343552e-10, No Iterations 77
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.4162132802e-07, Final residual = 6.73767025351e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000150667904544, Final residual = 2.46137492851e-09, No Iterations 26
+PEM: V=2.24198822757 V; Ia=1.21000000025; Ic=1.21000000001 A; dP=65.6839287246, 65.7667943043 Pa; Tmax=335.971860955 K; change=0.000259319429636; charge=4.25122463233e-10; gas balance=4.81421093921e-06; bounded=0
+ExecutionTime = 9.54 s  ClockTime = 10 s
+
+
+Iteration = 54
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.54402090204e-07, Final residual = 5.0138925168e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.60320929431e-07, Final residual = 6.94798891466e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 9.96337760652e-05, Final residual = 3.26857652677e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.7492114334e-07, Final residual = 1.63663050107e-10, No Iterations 71
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.26696310399e-07, Final residual = 1.20547945931e-11, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000135352214467, Final residual = 1.22574106815e-08, No Iterations 26
+PEM: V=2.24198878194 V; Ia=1.21000000021; Ic=1.21000000001 A; dP=65.684317399, 65.7673109278 Pa; Tmax=335.971702648 K; change=0.000236997552238; charge=3.55217402689e-10; gas balance=4.60080432179e-06; bounded=0
+ExecutionTime = 9.67 s  ClockTime = 10 s
+
+
+Iteration = 55
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.23965382839e-07, Final residual = 4.3696650091e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.31971345055e-07, Final residual = 5.97881150025e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 8.90061373424e-05, Final residual = 2.86430114619e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.55299491631e-07, Final residual = 1.44822606413e-10, No Iterations 75
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.13370621631e-07, Final residual = 6.95032461806e-12, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 0.00012123164916, Final residual = 9.67956774518e-09, No Iterations 25
+PEM: V=2.24198932572 V; Ia=1.21000000017; Ic=1.21000000001 A; dP=65.68484932, 65.7678722749 Pa; Tmax=335.971556489 K; change=0.000215192654103; charge=2.91391319313e-10; gas balance=4.20997404248e-06; bounded=0
+ExecutionTime = 9.8 s  ClockTime = 10 s
+
+
+Iteration = 56
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.96544090606e-07, Final residual = 3.3611885191e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.06475278205e-07, Final residual = 5.14826106976e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 7.88680606708e-05, Final residual = 2.46454020531e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.406020427e-07, Final residual = 1.33716295776e-10, No Iterations 76
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.01378591505e-07, Final residual = 9.31443509924e-12, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 0.000108556466289, Final residual = 1.08039088091e-08, No Iterations 23
+PEM: V=2.24198984661 V; Ia=1.21000000014; Ic=1.21000000001 A; dP=65.685184316, 65.7680919507 Pa; Tmax=335.971422256 K; change=0.000197930176581; charge=2.3948509617e-10; gas balance=3.76327103437e-06; bounded=0
+ExecutionTime = 9.93 s  ClockTime = 10 s
+
+
+Iteration = 57
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.7300462034e-07, Final residual = 2.61960700732e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.83874465552e-07, Final residual = 4.4084674494e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 6.93233222172e-05, Final residual = 2.06728237078e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.25709983377e-07, Final residual = 1.08193081578e-10, No Iterations 76
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.04719984803e-08, Final residual = 7.89288508898e-12, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 9.6909330299e-05, Final residual = 7.89115358968e-09, No Iterations 22
+PEM: V=2.24199034032 V; Ia=1.21000000011; Ic=1.21 A; dP=65.6851979808, 65.7679005969 Pa; Tmax=335.97129969 K; change=0.000182742697378; charge=1.93655648601e-10; gas balance=3.3947845185e-06; bounded=0
+ExecutionTime = 10.06 s  ClockTime = 10 s
+
+
+Iteration = 58
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.53807159339e-07, Final residual = 2.34796611649e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.63343342339e-07, Final residual = 3.73877249376e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 6.06170042453e-05, Final residual = 1.67797149425e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.09940627832e-07, Final residual = 8.44926606133e-11, No Iterations 76
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 8.07153697536e-08, Final residual = 8.16226929202e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 8.63507160235e-05, Final residual = 4.69221346701e-09, No Iterations 23
+PEM: V=2.24199080838 V; Ia=1.21000000009; Ic=1.21 A; dP=65.6849152449, 65.7673484905 Pa; Tmax=335.971188054 K; change=0.000168116583293; charge=1.56397848679e-10; gas balance=3.08003260476e-06; bounded=0
+ExecutionTime = 10.2 s  ClockTime = 11 s
+
+
+Iteration = 59
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.36782916362e-07, Final residual = 2.14179161553e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.44366194172e-07, Final residual = 3.15168597122e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 5.29237507628e-05, Final residual = 1.33219064109e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.59517173675e-08, Final residual = 9.37073694558e-11, No Iterations 71
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 7.19733833929e-08, Final residual = 8.14570574304e-12, No Iterations 28
+DILUPBiCGStab:  Solving for T, Initial residual = 7.68567360856e-05, Final residual = 6.19165137576e-09, No Iterations 25
+PEM: V=2.24199125082 V; Ia=1.21000000007; Ic=1.21 A; dP=65.6844432049, 65.7667459161 Pa; Tmax=335.971086665 K; change=0.000154161659385; charge=1.27318676362e-10; gas balance=2.80656433694e-06; bounded=0
+ExecutionTime = 10.33 s  ClockTime = 11 s
+
+
+Iteration = 60
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.20733369804e-07, Final residual = 1.83091584436e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.26845157263e-07, Final residual = 2.64403882958e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 4.62411491892e-05, Final residual = 1.05548703806e-08, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.55281474171e-08, Final residual = 9.31641939425e-11, No Iterations 70
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.41738496403e-08, Final residual = 8.58878330383e-12, No Iterations 32
+DILUPBiCGStab:  Solving for T, Initial residual = 6.82751202119e-05, Final residual = 6.52700961171e-09, No Iterations 26
+PEM: V=2.24199167213 V; Ia=1.21000000006; Ic=1.21 A; dP=65.6839572352, 65.7662465992 Pa; Tmax=335.970994879 K; change=0.000141033707728; charge=1.04567674961e-10; gas balance=2.5780695085e-06; bounded=0
+ExecutionTime = 10.46 s  ClockTime = 11 s
+
+
+Iteration = 61
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.05794945191e-07, Final residual = 1.49792094671e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.11083631197e-07, Final residual = 2.20671428804e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 4.04907800194e-05, Final residual = 8.60107137208e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 7.64068665612e-08, Final residual = 9.98672213171e-11, No Iterations 70
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.70123501083e-08, Final residual = 6.32189979043e-12, No Iterations 30
+DILUPBiCGStab:  Solving for T, Initial residual = 6.01646596561e-05, Final residual = 4.0069994993e-09, No Iterations 25
+PEM: V=2.2419920714 V; Ia=1.21000000005; Ic=1.21 A; dP=65.6835734679, 65.7659207809 Pa; Tmax=335.970911881 K; change=0.000128908652122; charge=8.59968011512e-11; gas balance=2.38427284433e-06; bounded=0
+ExecutionTime = 10.58 s  ClockTime = 11 s
+
+
+Iteration = 62
+DILUPBiCGStab:  Solving for Ux, Initial residual = 9.24473471974e-08, Final residual = 1.27567909665e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 9.72184664096e-08, Final residual = 1.84591986213e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 3.54592858892e-05, Final residual = 7.21850091563e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.6992738193e-08, Final residual = 9.84953145178e-11, No Iterations 69
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.05847479758e-08, Final residual = 8.14805020619e-12, No Iterations 30
+DILUPBiCGStab:  Solving for T, Initial residual = 5.29379750475e-05, Final residual = 5.13046351611e-09, No Iterations 23
+PEM: V=2.24199244504 V; Ia=1.21000000004; Ic=1.21 A; dP=65.6833240387, 65.7657514769 Pa; Tmax=335.970837037 K; change=0.000117916910361; charge=7.04415839767e-11; gas balance=2.2085753685e-06; bounded=0
+ExecutionTime = 10.71 s  ClockTime = 11 s
+
+
+Iteration = 63
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.08453306235e-08, Final residual = 1.18345872424e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 8.51139730635e-08, Final residual = 1.57790629241e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 3.09628850382e-05, Final residual = 6.17638820473e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.79443711277e-08, Final residual = 9.64475622654e-11, No Iterations 66
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.47638325837e-08, Final residual = 3.7361492183e-12, No Iterations 30
+DILUPBiCGStab:  Solving for T, Initial residual = 4.66590492277e-05, Final residual = 3.47250672653e-09, No Iterations 23
+PEM: V=2.24199279101 V; Ia=1.21000000003; Ic=1.21 A; dP=65.6831942278, 65.7656739585 Pa; Tmax=335.97077001 K; change=0.000108028142006; charge=5.73663800415e-11; gas balance=1.96658462125e-06; bounded=0
+ExecutionTime = 10.83 s  ClockTime = 11 s
+
+
+Iteration = 64
+DILUPBiCGStab:  Solving for Ux, Initial residual = 7.07862574e-08, Final residual = 1.09026343676e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 7.45370527494e-08, Final residual = 1.37353981791e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.69256809448e-05, Final residual = 5.3287586148e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.05777789455e-08, Final residual = 9.44920137805e-11, No Iterations 33
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.95353788273e-08, Final residual = 6.28281336155e-12, No Iterations 29
+DILUPBiCGStab:  Solving for T, Initial residual = 4.10176213572e-05, Final residual = 3.12282456227e-09, No Iterations 23
+PEM: V=2.24199310683 V; Ia=1.21000000003; Ic=1.21 A; dP=65.6831804849, 65.7656734358 Pa; Tmax=335.970709866 K; change=9.91231702486e-05; charge=4.59831275686e-11; gas balance=1.78607310073e-06; bounded=0
+ExecutionTime = 10.94 s  ClockTime = 11 s
+
+
+Iteration = 65
+DILUPBiCGStab:  Solving for Ux, Initial residual = 6.18022580824e-08, Final residual = 9.57262358769e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.52957091821e-08, Final residual = 1.20018797969e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.32793659714e-05, Final residual = 4.56582466068e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.51039035228e-08, Final residual = 9.51800934462e-11, No Iterations 63
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.49628274842e-08, Final residual = 9.09450382254e-12, No Iterations 30
+DILUPBiCGStab:  Solving for T, Initial residual = 3.59832411605e-05, Final residual = 1.90856233865e-09, No Iterations 23
+PEM: V=2.24199339753 V; Ia=1.21000000002; Ic=1.21 A; dP=65.6830518669, 65.7655461323 Pa; Tmax=335.970656235 K; change=9.1053371512e-05; charge=3.77364953715e-11; gas balance=1.35958333236e-06; bounded=0
+ExecutionTime = 11.07 s  ClockTime = 11 s
+
+
+Iteration = 66
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.38326681878e-08, Final residual = 8.08256588926e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.71764493897e-08, Final residual = 1.05153217686e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.99999539286e-05, Final residual = 3.87767341771e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.067609961e-08, Final residual = 7.53031483709e-11, No Iterations 61
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.08672396125e-08, Final residual = 7.65367739877e-12, No Iterations 28
+DILUPBiCGStab:  Solving for T, Initial residual = 3.15103500383e-05, Final residual = 2.95503574668e-09, No Iterations 23
+PEM: V=2.24199364997 V; Ia=1.21000000002; Ic=1.21 A; dP=65.6829364798, 65.7654198813 Pa; Tmax=335.970608547 K; change=8.3715472824e-05; charge=2.87598560502e-11; gas balance=1.18776148655e-06; bounded=0
+ExecutionTime = 11.19 s  ClockTime = 12 s
+
+
+Iteration = 67
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.69414079233e-08, Final residual = 6.84356919661e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.00612232608e-08, Final residual = 9.2635343719e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.71338765198e-05, Final residual = 3.27471027498e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.62100144354e-08, Final residual = 9.6854827761e-11, No Iterations 25
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.72014322655e-08, Final residual = 8.75199642211e-12, No Iterations 27
+DILUPBiCGStab:  Solving for T, Initial residual = 2.75637824125e-05, Final residual = 2.44683215199e-09, No Iterations 22
+PEM: V=2.2419938781 V; Ia=1.21000000001; Ic=1.21 A; dP=65.6829000486, 65.7653998512 Pa; Tmax=335.970566602 K; change=7.69230100757e-05; charge=2.36980621617e-11; gas balance=1.14174375082e-06; bounded=0
+ExecutionTime = 11.29 s  ClockTime = 12 s
+
+
+Iteration = 68
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.10690228729e-08, Final residual = 5.93759176833e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.3845603904e-08, Final residual = 8.23245522427e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.4693891601e-05, Final residual = 2.76685148962e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.1754349452e-08, Final residual = 7.6742279128e-11, No Iterations 65
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.40825671395e-08, Final residual = 5.62400820744e-12, No Iterations 34
+DILUPBiCGStab:  Solving for T, Initial residual = 2.4094641964e-05, Final residual = 1.83466150923e-09, No Iterations 23
+PEM: V=2.24199409076 V; Ia=1.21000000001; Ic=1.21 A; dP=65.6826936505, 65.765171296 Pa; Tmax=335.970529631 K; change=7.06454707668e-05; charge=1.96175625532e-11; gas balance=7.43513362487e-07; bounded=0
+ExecutionTime = 11.42 s  ClockTime = 12 s
+
+
+Iteration = 69
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.60867157064e-08, Final residual = 5.38577382875e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.84663111326e-08, Final residual = 7.46554663565e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.26273633367e-05, Final residual = 2.35913659666e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.793389718e-08, Final residual = 9.51989326937e-11, No Iterations 64
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.11903794762e-08, Final residual = 9.74466637083e-12, No Iterations 31
+DILUPBiCGStab:  Solving for T, Initial residual = 2.1044127476e-05, Final residual = 1.47557156823e-09, No Iterations 23
+PEM: V=2.24199426752 V; Ia=1.21000000001; Ic=1.21 A; dP=65.6825295438, 65.7650281066 Pa; Tmax=335.970497207 K; change=6.48793031687e-05; charge=1.5304323982e-11; gas balance=7.09321631219e-07; bounded=0
+ExecutionTime = 11.54 s  ClockTime = 12 s
+
+
+Iteration = 70
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.16835534682e-08, Final residual = 4.89136603093e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.37724710669e-08, Final residual = 6.90527812872e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.08828320227e-05, Final residual = 2.11446875582e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.48404750508e-08, Final residual = 8.15479230441e-11, No Iterations 64
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.8647962972e-08, Final residual = 8.23234649746e-12, No Iterations 26
+DILUPBiCGStab:  Solving for T, Initial residual = 1.8401279945e-05, Final residual = 1.45059326569e-09, No Iterations 24
+PEM: V=2.2419944315 V; Ia=1.21000000001; Ic=1.21 A; dP=65.6824097561, 65.7649342059 Pa; Tmax=335.970468929 K; change=5.95296049206e-05; charge=1.29942771156e-11; gas balance=6.12325351082e-07; bounded=0
+ExecutionTime = 11.66 s  ClockTime = 12 s
+
+
+Iteration = 71
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.77267681616e-08, Final residual = 4.40170308493e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.9662300395e-08, Final residual = 6.44766050085e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 9.41187020564e-06, Final residual = 1.95957270854e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.22476715907e-08, Final residual = 9.86959066331e-11, No Iterations 62
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.64483568716e-08, Final residual = 9.90258437818e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 1.60815259085e-05, Final residual = 1.4452506438e-09, No Iterations 23
+PEM: V=2.24199457741 V; Ia=1.21; Ic=1.21 A; dP=65.6823209676, 65.7648749783 Pa; Tmax=335.97044438 K; change=5.46267430744e-05; charge=1.10562521218e-11; gas balance=5.09876480668e-07; bounded=0
+ExecutionTime = 11.78 s  ClockTime = 12 s
+
+
+Iteration = 72
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.42458828596e-08, Final residual = 3.97824161147e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.6028316708e-08, Final residual = 5.98513706061e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 8.13872579892e-06, Final residual = 1.83371181095e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.98188037001e-08, Final residual = 9.48625438834e-11, No Iterations 62
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.44853945009e-08, Final residual = 7.10435258789e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 1.40396595395e-05, Final residual = 1.29542974814e-09, No Iterations 24
+PEM: V=2.24199470582 V; Ia=1.21; Ic=1.21 A; dP=65.6822451652, 65.7648205182 Pa; Tmax=335.970423025 K; change=5.01394459394e-05; charge=9.2714908528e-12; gas balance=4.12710082265e-07; bounded=0
+ExecutionTime = 11.9 s  ClockTime = 12 s
+
+
+Iteration = 73
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.12481841658e-08, Final residual = 3.6018676549e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.28380826047e-08, Final residual = 5.50916951055e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 7.0384824733e-06, Final residual = 1.70604900748e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.7557364148e-08, Final residual = 9.94930787534e-11, No Iterations 18
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.27394660559e-08, Final residual = 7.26973813984e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 1.22452153024e-05, Final residual = 9.87950735007e-10, No Iterations 24
+PEM: V=2.24199481714 V; Ia=1.21; Ic=1.21 A; dP=65.6822414218, 65.7648153675 Pa; Tmax=335.970404601 K; change=4.60592765341e-05; charge=7.92577814781e-12; gas balance=4.6702443062e-07; bounded=0
+ExecutionTime = 12.01 s  ClockTime = 12 s
+
+
+Iteration = 74
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.86699848095e-08, Final residual = 3.25413729831e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.99736162561e-08, Final residual = 4.98684244412e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 6.09481131225e-06, Final residual = 1.58152701089e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.55436106557e-08, Final residual = 9.12866150544e-11, No Iterations 61
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.13048635212e-08, Final residual = 8.0271012964e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 1.07012250724e-05, Final residual = 9.06910940489e-10, No Iterations 24
+PEM: V=2.24199491892 V; Ia=1.21; Ic=1.21 A; dP=65.6821152344, 65.7647020129 Pa; Tmax=335.970388693 K; change=4.23415305969e-05; charge=7.41329006e-12; gas balance=1.73960115077e-07; bounded=0
+ExecutionTime = 12.13 s  ClockTime = 12 s
+
+
+Iteration = 75
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.64089647014e-08, Final residual = 2.94670279048e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.76314005268e-08, Final residual = 4.59780143691e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 5.31814429182e-06, Final residual = 1.47134175819e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.386294069e-08, Final residual = 7.517318202e-11, No Iterations 61
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.93831809182e-09, Final residual = 9.06604149202e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 9.33886363497e-06, Final residual = 9.31939670936e-10, No Iterations 23
+PEM: V=2.24199499822 V; Ia=1.21; Ic=1.21 A; dP=65.6820369316, 65.7646295704 Pa; Tmax=335.970375175 K; change=3.88962783024e-05; charge=6.43702684794e-12; gas balance=1.70344614439e-07; bounded=0
+ExecutionTime = 12.25 s  ClockTime = 13 s
+
+
+Iteration = 76
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.44192805356e-08, Final residual = 2.65064876265e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.5611957104e-08, Final residual = 4.23511439886e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 4.65617203221e-06, Final residual = 1.3781340787e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.23991563381e-08, Final residual = 9.21212947432e-11, No Iterations 17
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 8.74642472678e-09, Final residual = 5.88560919558e-12, No Iterations 25
+DILUPBiCGStab:  Solving for T, Initial residual = 8.17612821634e-06, Final residual = 5.89911879561e-10, No Iterations 24
+PEM: V=2.24199507045 V; Ia=1.21; Ic=1.21 A; dP=65.6820316574, 65.7646259834 Pa; Tmax=335.970363689 K; change=3.57479975257e-05; charge=6.10894017938e-12; gas balance=2.12904067203e-07; bounded=0
+ExecutionTime = 12.36 s  ClockTime = 13 s
+
+
+Iteration = 77
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.2723309149e-08, Final residual = 2.38194116168e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.38013433046e-08, Final residual = 3.85508868464e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 4.08677853663e-06, Final residual = 1.29508087187e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.10759207269e-08, Final residual = 8.38219884029e-11, No Iterations 18
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 7.76008445746e-09, Final residual = 4.7101052948e-12, No Iterations 26
+DILUPBiCGStab:  Solving for T, Initial residual = 7.17748336501e-06, Final residual = 5.2162841543e-10, No Iterations 23
+PEM: V=2.24199513498 V; Ia=1.21; Ic=1.21 A; dP=65.682027812, 65.764624312 Pa; Tmax=335.970353892 K; change=3.28644988245e-05; charge=5.75413450294e-12; gas balance=1.76314748453e-07; bounded=0
+ExecutionTime = 12.46 s  ClockTime = 13 s
+
+
+Iteration = 78
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.12838824245e-08, Final residual = 2.15732100574e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.22484539027e-08, Final residual = 3.512698421e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 3.59304660194e-06, Final residual = 1.21865378524e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 9.87699510528e-09, Final residual = 7.44689270952e-11, No Iterations 61
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.9377657692e-09, Final residual = 3.14525072921e-12, No Iterations 27
+DILUPBiCGStab:  Solving for T, Initial residual = 6.30455624741e-06, Final residual = 4.79000095969e-10, No Iterations 24
+PEM: V=2.24199519078 V; Ia=1.21; Ic=1.21 A; dP=65.6819223997, 65.7645094657 Pa; Tmax=335.970345435 K; change=3.02353489863e-05; charge=5.55796359611e-12; gas balance=1.07326714792e-07; bounded=0
+ExecutionTime = 12.58 s  ClockTime = 13 s
+
+
+Iteration = 79
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.0063687131e-08, Final residual = 1.98233419827e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.10051948633e-08, Final residual = 3.27137244278e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 3.19757279263e-06, Final residual = 1.14696170742e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 8.8345181335e-09, Final residual = 9.23424005148e-11, No Iterations 17
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 6.11298298328e-09, Final residual = 6.59270771399e-12, No Iterations 27
+DILUPBiCGStab:  Solving for T, Initial residual = 5.52032786058e-06, Final residual = 4.25878259886e-10, No Iterations 25
+PEM: V=2.24199523174 V; Ia=1.21; Ic=1.21 A; dP=65.681922569, 65.7645093753 Pa; Tmax=335.970338526 K; change=2.78072046765e-05; charge=5.2822005311e-12; gas balance=1.43362190921e-07; bounded=0
+ExecutionTime = 12.69 s  ClockTime = 13 s
+
+
+Iteration = 80
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.95703652135e-09, Final residual = 1.79160395361e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 9.78680877144e-09, Final residual = 2.96516685139e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.84925646511e-06, Final residual = 1.07537894891e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 7.91411241526e-09, Final residual = 9.31575133931e-11, No Iterations 18
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 5.47390820147e-09, Final residual = 8.92649343967e-12, No Iterations 21
+DILUPBiCGStab:  Solving for T, Initial residual = 4.85585018956e-06, Final residual = 3.97497281808e-10, No Iterations 25
+PEM: V=2.2419952747 V; Ia=1.21; Ic=1.21 A; dP=65.6819223425, 65.7645092747 Pa; Tmax=335.970332682 K; change=2.55693683003e-05; charge=5.12721430577e-12; gas balance=1.08207637775e-07; bounded=0
+ExecutionTime = 12.79 s  ClockTime = 13 s
+
+
+Iteration = 81
+DILUPBiCGStab:  Solving for Ux, Initial residual = 8.00849085604e-09, Final residual = 9.22205501233e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 8.73598428046e-09, Final residual = 2.6764792144e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.5443249213e-06, Final residual = 1.00261189334e-09, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 7.12115277577e-09, Final residual = 9.04849210455e-11, No Iterations 55
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.93752802766e-09, Final residual = 8.98099497464e-12, No Iterations 22
+DILUPBiCGStab:  Solving for T, Initial residual = 4.27642081626e-06, Final residual = 2.56166301557e-10, No Iterations 24
+PEM: V=2.24199531051 V; Ia=1.21; Ic=1.21 A; dP=65.6817937747, 65.7644023388 Pa; Tmax=335.970327828 K; change=2.35499346291e-05; charge=4.98759297795e-12; gas balance=1.56834217273e-07; bounded=0
+ExecutionTime = 12.9 s  ClockTime = 13 s
+
+
+Iteration = 82
+DILUPBiCGStab:  Solving for Ux, Initial residual = 7.20261359688e-09, Final residual = 8.31941272467e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 7.94211570461e-09, Final residual = 2.48663433223e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.30193774212e-06, Final residual = 9.31230643282e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 6.4102906886e-09, Final residual = 8.48805316213e-11, No Iterations 16
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 4.36141729807e-09, Final residual = 9.44578896164e-12, No Iterations 22
+DILUPBiCGStab:  Solving for T, Initial residual = 3.74858438803e-06, Final residual = 2.68623739242e-10, No Iterations 25
+PEM: V=2.24199532896 V; Ia=1.21; Ic=1.21 A; dP=65.6817946288, 65.7644045987 Pa; Tmax=335.970324 K; change=2.16952902427e-05; charge=5.01853631072e-12; gas balance=5.87371358092e-08; bounded=0
+ExecutionTime = 13.01 s  ClockTime = 13 s
+
+
+Iteration = 83
+DILUPBiCGStab:  Solving for Ux, Initial residual = 6.43297003925e-09, Final residual = 7.51574617467e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 7.08753718486e-09, Final residual = 2.22947077424e-12, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 2.08409023884e-06, Final residual = 8.57336437288e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.7468116805e-09, Final residual = 9.78033993191e-11, No Iterations 15
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.89784113545e-09, Final residual = 9.57494079781e-12, No Iterations 22
+DILUPBiCGStab:  Solving for T, Initial residual = 3.31044713316e-06, Final residual = 3.12380153023e-10, No Iterations 25
+PEM: V=2.24199535483 V; Ia=1.21; Ic=1.21 A; dP=65.6817952379, 65.7644058437 Pa; Tmax=335.97032078 K; change=1.9993556037e-05; charge=4.89919954183e-12; gas balance=4.21086276409e-08; bounded=0
+ExecutionTime = 13.13 s  ClockTime = 13 s
+
+
+Iteration = 84
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.80728296647e-09, Final residual = 6.82614940959e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 6.34249878584e-09, Final residual = 9.63075631172e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.89826019749e-06, Final residual = 7.85306889738e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 5.15711727558e-09, Final residual = 9.44485512148e-11, No Iterations 16
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.46226458818e-09, Final residual = 4.89964592492e-12, No Iterations 22
+DILUPBiCGStab:  Solving for T, Initial residual = 2.92600408651e-06, Final residual = 1.91025063244e-10, No Iterations 25
+PEM: V=2.24199537382 V; Ia=1.21; Ic=1.21 A; dP=65.6817947701, 65.7644058232 Pa; Tmax=335.970318232 K; change=1.8433861126e-05; charge=4.77086909008e-12; gas balance=4.20749421047e-08; bounded=0
+ExecutionTime = 13.23 s  ClockTime = 14 s
+
+
+Iteration = 85
+DILUPBiCGStab:  Solving for Ux, Initial residual = 5.25951031856e-09, Final residual = 6.21827143446e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.68441575737e-09, Final residual = 8.68081500369e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.73357408557e-06, Final residual = 7.16010546346e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.63048152609e-09, Final residual = 9.73952126464e-11, No Iterations 52
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 3.12979134198e-09, Final residual = 8.08513995517e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 2.5974481272e-06, Final residual = 1.15986359253e-10, No Iterations 27
+PEM: V=2.24199538998 V; Ia=1.21; Ic=1.21 A; dP=65.6817131662, 65.764323919 Pa; Tmax=335.970316185 K; change=1.69557304157e-05; charge=4.85789848399e-12; gas balance=1.14845760458e-07; bounded=0
+ExecutionTime = 13.34 s  ClockTime = 14 s
+
+
+Iteration = 86
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.7469580194e-09, Final residual = 5.59613190687e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 5.20808299234e-09, Final residual = 8.03785990547e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.59060534533e-06, Final residual = 6.51868116168e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 4.16474997998e-09, Final residual = 9.24867475364e-11, No Iterations 10
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.7755108883e-09, Final residual = 9.94185146221e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 2.29611933316e-06, Final residual = 2.2467652889e-10, No Iterations 23
+PEM: V=2.24199539537 V; Ia=1.21; Ic=1.21 A; dP=65.6817164066, 65.7643247271 Pa; Tmax=335.970314514 K; change=1.56448335365e-05; charge=4.78097832737e-12; gas balance=4.72116548676e-08; bounded=0
+ExecutionTime = 13.44 s  ClockTime = 14 s
+
+
+Iteration = 87
+DILUPBiCGStab:  Solving for Ux, Initial residual = 4.22981903933e-09, Final residual = 5.02339423265e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.64263388133e-09, Final residual = 7.19404713179e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.44645532804e-06, Final residual = 5.9150458041e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.72257249007e-09, Final residual = 9.38597919289e-11, No Iterations 13
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.48732914457e-09, Final residual = 8.12213655539e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 2.03906576395e-06, Final residual = 1.7659805135e-10, No Iterations 23
+PEM: V=2.24199540692 V; Ia=1.21; Ic=1.21 A; dP=65.6817203663, 65.7643255242 Pa; Tmax=335.970313253 K; change=1.44490186254e-05; charge=4.85459329645e-12; gas balance=4.10270157749e-08; bounded=0
+ExecutionTime = 13.53 s  ClockTime = 14 s
+
+
+Iteration = 88
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.8586604629e-09, Final residual = 4.61814665561e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 4.13998406767e-09, Final residual = 6.42288266682e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.32165112741e-06, Final residual = 5.35344676352e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 3.34307374613e-09, Final residual = 9.64314379383e-11, No Iterations 11
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 2.22553989292e-09, Final residual = 7.36010776262e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 1.80803681876e-06, Final residual = 1.4134396982e-10, No Iterations 23
+PEM: V=2.24199541483 V; Ia=1.21; Ic=1.21 A; dP=65.6817223507, 65.7643257557 Pa; Tmax=335.970312327 K; change=1.33216114536e-05; charge=4.83100083657e-12; gas balance=3.16405883967e-08; bounded=0
+ExecutionTime = 13.63 s  ClockTime = 14 s
+
+
+Iteration = 89
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.47316854289e-09, Final residual = 4.16541539191e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.69066138413e-09, Final residual = 5.7217947364e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.21300074294e-06, Final residual = 4.84077191095e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.9997888709e-09, Final residual = 9.89599788023e-11, No Iterations 11
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.94552568531e-09, Final residual = 8.67927389428e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 1.6056470227e-06, Final residual = 1.57742727969e-10, No Iterations 24
+PEM: V=2.24199542114 V; Ia=1.21; Ic=1.21 A; dP=65.6817230363, 65.7643257334 Pa; Tmax=335.970311648 K; change=1.2305740791e-05; charge=4.90277600035e-12; gas balance=1.63341623471e-08; bounded=0
+ExecutionTime = 13.73 s  ClockTime = 14 s
+
+
+Iteration = 90
+DILUPBiCGStab:  Solving for Ux, Initial residual = 3.13468217517e-09, Final residual = 3.77222164329e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 3.29633716562e-09, Final residual = 5.11732953957e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.11048652318e-06, Final residual = 4.38598476665e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.69859563282e-09, Final residual = 9.28357818703e-11, No Iterations 14
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.77766522386e-09, Final residual = 7.53067150803e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 1.42789722481e-06, Final residual = 1.33052605896e-10, No Iterations 22
+PEM: V=2.24199542671 V; Ia=1.21; Ic=1.21 A; dP=65.6817243538, 65.7643259938 Pa; Tmax=335.970311129 K; change=1.13395774405e-05; charge=4.78569732359e-12; gas balance=4.56019898091e-08; bounded=0
+ExecutionTime = 13.83 s  ClockTime = 14 s
+
+
+Iteration = 91
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.86091050879e-09, Final residual = 3.44799266349e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.9700548219e-09, Final residual = 4.6083010034e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 1.01687185745e-06, Final residual = 3.98885206891e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.43497856013e-09, Final residual = 8.25184543115e-11, No Iterations 5
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.56758368867e-09, Final residual = 7.30888367921e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 1.26566527156e-06, Final residual = 4.40655870355e-11, No Iterations 30
+PEM: V=2.24199543246 V; Ia=1.21; Ic=1.21 A; dP=65.6817243025, 65.7643260578 Pa; Tmax=335.970310721 K; change=1.04362265705e-05; charge=4.9064026826e-12; gas balance=5.42171253158e-08; bounded=0
+ExecutionTime = 13.92 s  ClockTime = 14 s
+
+
+Iteration = 92
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.51801362277e-09, Final residual = 3.02272230503e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.67043612294e-09, Final residual = 4.1375046862e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 9.28249119363e-07, Final residual = 3.59600173127e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 2.1843997757e-09, Final residual = 9.76960855313e-11, No Iterations 8
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.42046867241e-09, Final residual = 2.59456049213e-12, No Iterations 18
+DILUPBiCGStab:  Solving for T, Initial residual = 1.12569980823e-06, Final residual = 1.03412754502e-10, No Iterations 18
+PEM: V=2.24199543731 V; Ia=1.21; Ic=1.21 A; dP=65.6817241906, 65.7643259008 Pa; Tmax=335.970310434 K; change=9.70783081832e-06; charge=4.83887003758e-12; gas balance=4.06404424826e-08; bounded=0
+ExecutionTime = 14.01 s  ClockTime = 14 s
+
+
+Iteration = 93
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.25148311975e-09, Final residual = 2.72351067134e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.39729989347e-09, Final residual = 3.69375814409e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 8.37746488375e-07, Final residual = 3.23808886103e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.9634605182e-09, Final residual = 8.12204949499e-11, No Iterations 49
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.36819618318e-09, Final residual = 2.15865952648e-12, No Iterations 24
+DILUPBiCGStab:  Solving for T, Initial residual = 1.01939237517e-06, Final residual = 9.84917357521e-11, No Iterations 20
+PEM: V=2.24199544111 V; Ia=1.21; Ic=1.21 A; dP=65.6816082555, 65.7642027678 Pa; Tmax=335.970310489 K; change=8.93144200927e-06; charge=4.81815821467e-12; gas balance=2.14081018082e-07; bounded=0
+ExecutionTime = 14.12 s  ClockTime = 14 s
+
+
+Iteration = 94
+DILUPBiCGStab:  Solving for Ux, Initial residual = 2.14472762347e-09, Final residual = 2.51100515146e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.32521355171e-09, Final residual = 3.62670670619e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 7.69822954977e-07, Final residual = 2.90014111958e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.7794825711e-09, Final residual = 9.25473060769e-11, No Iterations 5
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.13669371542e-09, Final residual = 4.06319931516e-12, No Iterations 17
+DILUPBiCGStab:  Solving for T, Initial residual = 8.9639589023e-07, Final residual = 2.62589932587e-11, No Iterations 23
+PEM: V=2.24199543213 V; Ia=1.21; Ic=1.21 A; dP=65.6816097658, 65.764203189 Pa; Tmax=335.97031052 K; change=8.23924301548e-06; charge=4.90409172598e-12; gas balance=4.06753732296e-08; bounded=0
+ExecutionTime = 14.22 s  ClockTime = 15 s
+
+
+Iteration = 95
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.87135939341e-09, Final residual = 2.20193608496e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 2.04770347017e-09, Final residual = 3.19508061973e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 6.92671616589e-07, Final residual = 2.58738884776e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.59565117724e-09, Final residual = 8.0847876679e-11, No Iterations 7
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 1.0781863339e-09, Final residual = 7.13726559146e-12, No Iterations 22
+DILUPBiCGStab:  Solving for T, Initial residual = 8.0084932577e-07, Final residual = 4.90638772412e-11, No Iterations 23
+PEM: V=2.24199543348 V; Ia=1.21; Ic=1.21 A; dP=65.6816136979, 65.7642042976 Pa; Tmax=335.970310537 K; change=7.67734080592e-06; charge=4.74691167662e-12; gas balance=9.32312497658e-08; bounded=0
+ExecutionTime = 14.31 s  ClockTime = 15 s
+
+
+Iteration = 96
+DILUPBiCGStab:  Solving for Ux, Initial residual = 1.69207371096e-09, Final residual = 2.01923276042e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uy, Initial residual = 1.81726398077e-09, Final residual = 2.81514986387e-11, No Iterations 1
+DILUPBiCGStab:  Solving for Uz, Initial residual = 6.25517902812e-07, Final residual = 2.29975024487e-10, No Iterations 1
+DICPCG:  Solving for p, Initial residual = 1.43328723716e-09, Final residual = 9.88644436883e-11, No Iterations 8
+DILUPBiCGStab:  Solving for Cgas, Initial residual = 9.29442283612e-10, Final residual = 7.87555364346e-12, No Iterations 18
+DILUPBiCGStab:  Solving for T, Initial residual = 7.14056851278e-07, Final residual = 4.21451918967e-11, No Iterations 23
+PEM: V=2.24199542997 V; Ia=1.21; Ic=1.21 A; dP=65.6816171696, 65.764205208 Pa; Tmax=335.970310689 K; change=7.03966937917e-06; charge=4.85404740378e-12; gas balance=7.98315021138e-08; bounded=0
+CONVERGED: coupled fields and charge/mass/species balances passed.
+End

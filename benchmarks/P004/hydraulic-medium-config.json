@@ -1,0 +1,10 @@
+{
+  "mesh": "medium",
+  "flow_rate_m3_s": 1e-06,
+  "density_kg_m3": 1.0,
+  "viscosity_pa_s": 2.07e-05,
+  "max_iterations": 3000,
+  "residual_tolerance": 1e-08,
+  "balance_tolerance": 1e-06,
+  "steady_tolerance": 1e-05
+}

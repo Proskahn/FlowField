@@ -1,0 +1,145 @@
+{
+  "status": "passed",
+  "scope": "First executable P001 reconstruction; not paper validation",
+  "date": "2026-11-06",
+  "tests": {
+    "passed": 39,
+    "command": "python -m unittest discover -s tests -v",
+    "installed_repository_passed": true
+  },
+  "smoke": {
+    "status": "passed",
+    "problem": "P001",
+    "design": [
+      0.6666666666666666,
+      0.8,
+      0.6,
+      0.6666666666666666,
+      0.5,
+      0.5
+    ],
+    "ioh_enabled": true,
+    "paper_validated": false,
+    "replication_status": "provisional_geometry_reconstruction",
+    "ioh_files": [
+      "ioh/IOHprofiler_f1121_P001_ppfc-reconstruction-v1_b22c0e458e1d_failure_raise.json",
+      "ioh/data_f1121_P001_ppfc-reconstruction-v1_b22c0e458e1d_failure_raise/IOHprofiler_f1121_DIM6.dat"
+    ],
+    "ioh_evaluations": 1,
+    "objective": -0.6408177621262,
+    "metrics": {
+      "uniformity": 0.6408177621262,
+      "mean_speed_m_s": 0.0264787621715,
+      "pressure_drop_pa": 441.75481043044806,
+      "section_uniformity": {
+        "-135": 0.5050549281419,
+        "-45": 0.7518239894956,
+        "45": 0.890553616332,
+        "135": 0.8706394071272
+      },
+      "inlet_flux_m3_s": -3.75e-05,
+      "outlet_flux_m3_s": 3.750000000804e-05,
+      "mass_balance_relative_error": 2.144000761071981e-10,
+      "flow_rate_relative_error": 2.1440005326667233e-10,
+      "uniformity_final_window_range": 1.2864019993674702e-07,
+      "iterations": 1011,
+      "cell_count": 228000,
+      "gmsh_cells": 228000,
+      "mesh_ok": true,
+      "converged": true,
+      "paper_validated": false
+    },
+    "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p001/trial-05/cases/P001-dc65cb7c607848268287b78a023591e4",
+    "config_sha256": "b22c0e458e1d8396dc312251f57de3f21bc5b647b58f8912ef456f70a13f3bff"
+  },
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "mesh": {
+    "gmsh_version": "4.13.1",
+    "cells": 228000,
+    "element_types": [
+      5
+    ],
+    "mesh": "coarse",
+    "source_tetrahedra": 57000,
+    "subdivision": "barycentric-four-hexes-per-tetrahedron-planar-boundary",
+    "minimum_size_m": 0.003,
+    "maximum_size_m": 0.006,
+    "fluid_volumes": 1,
+    "patch_surface_counts": {
+      "inlet": 1,
+      "outlet": 1,
+      "walls": 277
+    }
+  },
+  "wall_time_s": 681.6768009169027,
+  "paper_validated": false,
+  "mesh_warnings": {
+    "faces_above_70_degrees_nonorthogonality": 225,
+    "maximum_nonorthogonality_degrees": 80.8959314654,
+    "maximum_skewness": 1.50374278783,
+    "all_geometry_topology_checks_passed": true
+  },
+  "validated_designs": 1,
+  "mesh_convergence_demonstrated": false,
+  "source_pdf_sha256": "d5dfb724d8c3f5cb834d27a8d4e38aefd8dbd8280e3afd9e636e756e70ceca30",
+  "installation": {
+    "repository": "/Users/zhuang/FlowField",
+    "unrelated_existing_files_preserved": 316,
+    "modified_existing_files_backed_up": 13,
+    "new_or_updated_files": 60,
+    "installed_metric_recheck": "passed"
+  },
+  "p000_regression_smoke": {
+    "status": "passed",
+    "objective_pa": 13.453637543662667,
+    "design": [
+      0.3333333333333333,
+      0.3333333333333333
+    ],
+    "case_directory": "/Users/zhuang/FlowField/runs/p000-after-p001-20261106/cases/P000-705e0cffa6f14fa7ba6e7213a86ebd33",
+    "metrics": {
+      "pressure_drop_pa": 13.453637543662667,
+      "reference_pressure_drop_pa": 14.201468144738083,
+      "reference_relative_error": 0.052658682430133164,
+      "reference_check_passed": true,
+      "inlet_kinematic_pressure_m2_s2": 0.01347789775963,
+      "outlet_kinematic_pressure_m2_s2": 0.0,
+      "inlet_flux_m3_s": -1e-08,
+      "outlet_flux_m3_s": 1.000000000002e-08,
+      "mass_balance_relative_error": 1.9999572850307103e-12,
+      "flow_rate_relative_error": 1.999955756559757e-12,
+      "reynolds_number": 10.000000000000002,
+      "iterations": 97,
+      "cell_count": 3200,
+      "mesh_ok": true,
+      "converged": true
+    },
+    "ioh_enabled": true,
+    "config_sha256": "52a0cde0487c05702f8320f9be7aaf989b112938f0fa58e07299d42ad113d307",
+    "interface": {
+      "class": "P000Problem",
+      "name": "P000",
+      "dimension": 2,
+      "raw_result_file": "/Users/zhuang/FlowField/runs/p000-after-p001-20261106/cases/P000-705e0cffa6f14fa7ba6e7213a86ebd33/evaluation.json"
+    },
+    "ioh_files": [
+      "ioh/IOHprofiler_f1121_P000_CFD_52a0cde0487c_failure_raise.json",
+      "ioh/data_f1121_P000_CFD_52a0cde0487c_failure_raise/IOHprofiler_f1121_DIM2.dat"
+    ]
+  },
+  "verified_run_archive": "/Users/zhuang/FlowField/runs/p001-initial-20261106",
+  "wheel_check": {
+    "built": true,
+    "all_seven_p001_modules_present": true,
+    "matches_installed_source": true,
+    "decode_command": "passed"
+  }
+}

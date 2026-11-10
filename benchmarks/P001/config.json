@@ -1,0 +1,16 @@
+{
+  "mesh": "coarse",
+  "inlet_velocity_m_s": 0.5,
+  "density_kg_m3": 1290.4769,
+  "dynamic_viscosity_pa_s": 0.0025491,
+  "turbulence_intensity": 0.05,
+  "port_width_m": 0.01,
+  "port_length_m": 0.015,
+  "sphere_cap_height_m": 0.003,
+  "turbulence_length_m": 0.001,
+  "max_iterations": 2000,
+  "residual_tolerance": 1e-06,
+  "mass_balance_tolerance": 0.0001,
+  "stability_tolerance": 0.0001,
+  "stability_window": 20
+}

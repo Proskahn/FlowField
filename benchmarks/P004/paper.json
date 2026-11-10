@@ -1,0 +1,22 @@
+{
+  "title": "Machine learning-assisted design of flow fields for proton exchange membrane fuel cells",
+  "authors": [
+    "Xi Zhou",
+    "Jinyuan Zhang",
+    "Kejie Feng",
+    "Zilin Qiao",
+    "Yindong Wang",
+    "Le Shi"
+  ],
+  "year": 2025,
+  "online_date": "2024-11-06",
+  "journal": "Journal of Power Sources",
+  "volume": 626,
+  "article": "235753",
+  "doi": "10.1016/j.jpowsour.2024.235753",
+  "source_path": "/Users/zhuang/Desktop/Electrolyzer/Flow_Field/Level3/1-s2.0-S0378775324017051-main.pdf",
+  "source_sha256": "6bad23ff8c856cb6e43139b8bacba312407017c2cb1ad27238677a7421e6a821",
+  "supplementary_table_S1_available": false,
+  "author_480_labels_available": false,
+  "full_current_CFD_reproduced": false
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Topology optimization as a powerful tool to design advanced PEMFCs flow fields",
+  "authors": [
+    "Reza Behrou",
+    "Alberto Pizzolato",
+    "Antoni Forner-Cuenca"
+  ],
+  "year": 2019,
+  "journal": "International Journal of Heat and Mass Transfer",
+  "volume": 135,
+  "pages": "72\u201392",
+  "doi": "10.1016/j.ijheatmasstransfer.2019.01.050",
+  "source_path": "/Users/zhuang/Desktop/Electrolyzer/Flow_Field/1-s2.0-S0017931018348269-main.pdf",
+  "sha256": "2ee0eb18416b91fd23f64723c207bc36bfe09a0a01e56f044565fc8d123ca3b7",
+  "paper_validated": false,
+  "level": 4,
+  "model_revision": "depth-averaged-cathode-v1"
+}

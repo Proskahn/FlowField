@@ -1,0 +1,16 @@
+/* FlowField P001 reconstruction; OpenCFD OpenFOAM v2312; SI units. */
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class volVectorField;
+    object U;
+}
+dimensions [0 1 -1 0 0 0 0];
+internalField uniform (0 0.01 0);
+boundaryField
+{
+    inlet { type fixedValue; value uniform (0 0.5 0); }
+    outlet { type pressureInletOutletVelocity; value uniform (0 0 0); }
+    walls { type noSlip; }
+}

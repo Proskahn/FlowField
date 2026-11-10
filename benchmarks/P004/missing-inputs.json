@@ -1,0 +1,19 @@
+{
+  "status": "missing_inputs",
+  "coupled_PEMFC_solver_implemented": false,
+  "required": [
+    "Supplementary Table S1: CL/GDL/membrane thicknesses, transport properties, kinetic parameters and numerical operating conditions",
+    "Author current-density labels or independently verified current CFD results at 0.475 V",
+    "Clarification of cathode Butler-Volmer signs in Eq.2 and ionic conductivity in Table1"
+  ],
+  "available": [
+    "7x7 Hamiltonian library: 28348 designs",
+    "Figure2 channel/rib dimensions",
+    "Four Figure4 path layouts",
+    "MLP architecture family and 80/20 split"
+  ],
+  "not_substitutes": [
+    "Channel-only pressure drop is not a fuel-cell current objective",
+    "Experimental 11x11 pure-oxygen results are not labels for 7x7 air-fed simulations"
+  ]
+}

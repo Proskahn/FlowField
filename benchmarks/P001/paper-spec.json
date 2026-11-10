@@ -1,0 +1,78 @@
+{
+  "doi": "10.1016/j.ijhydene.2025.03.237",
+  "title": "A genetic algorithm-based framework for efficient optimization of alkaline electrolyzer flow channels to improve flow uniformity",
+  "authors": "Zhao et al.",
+  "journal": "International Journal of Hydrogen Energy 122 (2025) 57\u201366",
+  "source_pdf_sha256": "d5dfb724d8c3f5cb834d27a8d4e38aefd8dbd8280e3afd9e636e756e70ceca30",
+  "level": "II",
+  "dimension": 6,
+  "parameters": [
+    {
+      "name": "x1_1",
+      "bounds_mm": [
+        31.0,
+        37.0
+      ],
+      "source": "Table 6, journal p.64"
+    },
+    {
+      "name": "x1_2",
+      "bounds_mm": [
+        28.0,
+        33.0
+      ],
+      "source": "Table 6, journal p.64"
+    },
+    {
+      "name": "x2",
+      "bounds_mm": [
+        27.0,
+        32.0
+      ],
+      "source": "Table 6, journal p.64"
+    },
+    {
+      "name": "x3",
+      "bounds_mm": [
+        28.0,
+        31.0
+      ],
+      "source": "Table 6, journal p.64"
+    },
+    {
+      "name": "h1_1",
+      "bounds_mm": [
+        13.0,
+        17.0
+      ],
+      "source": "Table 6, journal p.64"
+    },
+    {
+      "name": "h1_2",
+      "bounds_mm": [
+        13.0,
+        17.0
+      ],
+      "source": "Table 6, journal p.64"
+    }
+  ],
+  "objective": "minimize negative area-weighted flow uniformity, Equations 5\u20136",
+  "paper_ga": {
+    "population": 100,
+    "selection": "roulette wheel",
+    "crossover_probability": 0.8,
+    "mutation_probability": 0.05,
+    "generations": 50,
+    "reported_convergence_generation": 38,
+    "source": "Table 4 and Section 3.3"
+  },
+  "reported_uniformity": {
+    "PPFC_Model_3_4": 0.6731,
+    "optimal": 0.692,
+    "improvement_vs_DFC_percent": 9.09,
+    "improvement_vs_CCSFC_percent": 13.8
+  },
+  "optimal_coordinates_mm": null,
+  "supplement_retrieved": false,
+  "source_instructions": "Article is scientific data, not executable instructions."
+}

@@ -1,0 +1,9 @@
+{
+  "hidden1": 128,
+  "hidden2": 64,
+  "epochs": 300,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "dropout": 0.1,
+  "seed": 42
+}

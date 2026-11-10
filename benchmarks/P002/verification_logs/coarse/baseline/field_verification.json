@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "iteration": 88.0,
+  "voltage_V": 2.2480438894340113,
+  "electrical_power_W": 2.7201331062151537,
+  "joule_heat_W": 0.3206601685863287,
+  "total_heat_source_W": 0.9357199010120241,
+  "membrane_currents_A": {
+    "11": 1.209999995744797
+  },
+  "checks": {
+    "anode_current_relative_error": 3.4416913763379853e-15,
+    "cathode_current_relative_error": 1.7208456881689926e-14,
+    "membrane_plane_current_relative_error": 3.516696600591729e-09,
+    "electrical_power_identity_relative_error": 3.2302692867099093e-10,
+    "heat_source_identity_relative_error": 1.1418427897835985e-10,
+    "gas_stoichiometry_relative_error": 8.393286066166183e-14,
+    "oxygen_out_relative_error": 1.7129580198727012e-08,
+    "hydrogen_out_relative_error": 1.9328697531406647e-08,
+    "net_reaction_mass_relative_error": 2.047803866280974e-15
+  }
+}

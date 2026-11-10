@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "problem": "P000",
+  "openfoam_version": "v2312",
+  "config": {
+    "width_m": 0.001,
+    "height_m": 0.001,
+    "length_m": 0.05,
+    "flow_rate_m3_s": 1e-08,
+    "density_kg_m3": 998.2,
+    "kinematic_viscosity_m2_s": 1e-06,
+    "cells": [
+      50,
+      8,
+      8
+    ],
+    "max_iterations": 3000,
+    "residual_tolerance": 1e-07,
+    "mass_balance_tolerance": 1e-05,
+    "reference_tolerance": 0.08
+  },
+  "config_sha256": "52a0cde0487c05702f8320f9be7aaf989b112938f0fa58e07299d42ad113d307",
+  "input_sha256": {
+    "system/blockMeshDict": "94e70e4ce2462bc45b099c412493acb48fb590fde5db4ff21aa41db399217a6c",
+    "0/U": "bb50709ae03e6bd98a6d9b611915b25d372af2ba2f1ee4c7ba30ea315ad4597b",
+    "0/p": "2a9762ca7c5779248be39e3d2ca23272caaa5d3ae80d3bd3870e23c276d66ecb",
+    "constant/transportProperties": "cd331939d437f7ac683887e257ea45165df4e8e0e25a488b9fd79e84a7993280",
+    "constant/turbulenceProperties": "e59a7fa3159506f4bd55a28645e538885dfbab274029dcfe66d46ce48e572969",
+    "system/controlDict": "72c1368486b672b690c1a17cb95c5e2020e45eb0daff691a074e687c817c188d",
+    "system/fvSchemes": "35d3aaee31f093fe2c37400c5c049523caabcfae633c3d8aece10f524beb5b60",
+    "system/fvSolution": "710fec32bb6af154803db79fbd5c18a9d09558feaf84192fa70f876b81b142c0"
+  }
+}

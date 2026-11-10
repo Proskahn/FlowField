@@ -1,0 +1,126 @@
+"""Fresh-case auxiliary CFD and saved-field verification, separate from PEMFC current."""
+import hashlib,json,math,re,time,uuid
+from pathlib import Path
+from ....runtime import Runtime,SimulationError
+from ....evaluation import write_json
+from ....metrics import read_surface_history
+from .case import INPUTS,generate_case
+from .config import HydraulicConfig,HYDRAULIC_REVISION
+from .geometry import decode
+
+
+def _values(text,key,count):
+    match=re.search(r'\b'+key+r'\s+uniform\s+([^;]+);',text)
+    if match:values=[float(match.group(1))]*count
+    else:
+        match=re.search(r'\b'+key+r'\s+nonuniform\s+List<scalar>\s+(\d+)\s*\((.*?)\)\s*;',text,re.S)
+        if not match or int(match.group(1))!=count:raise SimulationError('Malformed saved scalar field')
+        values=[float(v) for v in match.group(2).split()]
+    if len(values)!=count or not all(math.isfinite(v) for v in values):raise SimulationError('Invalid saved scalar values')
+    return values
+
+
+def extract_metrics(case,config):
+    case=Path(case);manifest=json.loads((case/'case.json').read_text());mesh=manifest['mesh']
+    text=(case/'log.checkMesh').read_text()
+    if 'Mesh OK.' not in text or 'Failed ' in text:raise SimulationError('Mesh validation failed')
+    volume=re.search(r'Total volume\s*=\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)',text)
+    if not volume or abs(float(volume.group(1))/98e-9-1)>1e-8:raise SimulationError('Mesh volume differs from physical channel volume')
+    text=(case/'log.simpleFoam').read_text()
+    if not re.search(r'SIMPLE solution converged in \d+ iterations',text) or not re.search(r'^End\s*$',text,re.M):
+        raise SimulationError('Solver did not converge normally')
+    times=re.findall(r'^Time = ([\d.eE+\-]+)\s*$',text,re.M);iteration=float(times[-1])
+    histories={}
+    for name,col in [('p_inlet','areaAverage(p)'),('p_outlet','areaAverage(p)'),('q_inlet','sum(phi)'),('q_outlet','sum(phi)')]:
+        files=list((case/'postProcessing'/name).glob('*/surfaceFieldValue.dat'))
+        if len(files)!=1 or files[0].parent.name!='0':raise SimulationError('Expected a fresh surface history')
+        histories[name]=read_surface_history(files[0],col)
+        if max(histories[name])!=iteration or len(histories[name])<20:raise SimulationError('Stale or short convergence history')
+    keys=list(histories['p_inlet'])[-20:]
+    dp=[config.density_kg_m3*(histories['p_inlet'][k]-histories['p_outlet'][k]) for k in keys]
+    if min(dp)<=0:raise SimulationError('Pressure drop must be positive')
+    steady=max(abs(v/dp[-1]-1) for v in dp)
+    qi=histories['q_inlet'][iteration];qo=histories['q_outlet'][iteration]
+    balance=abs(qi+qo)/config.flow_rate_m3_s
+    flow_error=max(abs(-qi/config.flow_rate_m3_s-1),abs(qo/config.flow_rate_m3_s-1))
+    if max(balance,flow_error)>config.balance_tolerance or steady>config.steady_tolerance:
+        raise SimulationError('Flow balance or final pressure stability failed')
+    folders=[p for p in case.iterdir() if p.is_dir() and re.fullmatch(r'\d+(?:\.\d+)?',p.name)]
+    latest=max(folders,key=lambda p:float(p.name))
+    if float(latest.name)!=iteration:raise SimulationError('Saved fields do not match the final iteration')
+    pressure=(latest/'p').read_text();flux=(latest/'phi').read_text()
+    if not re.search(r'dimensions\s*\[0 2 -2 0 0 0 0\]',pressure) or not re.search(r'dimensions\s*\[0 3 -1 0 0 0 0\]',flux):
+        raise SimulationError('Wrong pressure/flux units')
+    internal_p=_values(pressure,'internalField',mesh['cells']);saved_p={};saved_q={}
+    owner_text=(case/'constant/polyMesh/owner').read_text()
+    owner_match=re.search(r'\}\s*(\d+)\s*\((.*?)\)',owner_text,re.S)
+    if not owner_match:raise SimulationError('Cannot read face owners')
+    owners=[int(v) for v in owner_match.group(2).split()]
+    if len(owners)!=mesh['faces'] or any(v<0 or v>=mesh['cells'] for v in owners):
+        raise SimulationError('Invalid face owners')
+    boundary=(case/'constant/polyMesh/boundary').read_text()
+    for name in ('inlet','outlet'):
+        count=mesh['patch_faces'][name]
+        block=re.search(r'\b'+name+r'\s*\{(.*?)\}',pressure,re.S).group(1)
+        if re.search(r'type\s+zeroGradient\s*;',block):
+            # OpenFOAM omits values for zeroGradient; the patch equals its face-owner cells.
+            patch=re.search(r'\b'+name+r'\s*\{(.*?)\}',boundary,re.S).group(1)
+            first=int(re.search(r'startFace\s+(\d+)',patch).group(1))
+            pv=[internal_p[v] for v in owners[first:first+count]]
+        else:pv=_values(block,'value',count)
+        saved_p[name]=sum(pv)/count
+        block=re.search(r'\b'+name+r'\s*\{(.*?)\}',flux,re.S).group(1)
+        saved_q[name]=sum(_values(block,'value',count))
+    saved_dp=config.density_kg_m3*(saved_p['inlet']-saved_p['outlet'])
+    wall_block=re.search(r'\bwalls\s*\{(.*?)\}',flux,re.S).group(1)
+    wall_leak=sum(abs(v) for v in _values(wall_block,'value',mesh['patch_faces']['walls']))/config.flow_rate_m3_s
+    if wall_leak>config.balance_tolerance:raise SimulationError('Nonzero sealed-wall flux')
+    error=max(abs(saved_dp/dp[-1]-1),abs(saved_q['inlet']/qi-1),abs(saved_q['outlet']/qo-1))
+    if error>1e-8:raise SimulationError('Saved fields differ from history')
+    return dict(pressure_drop_pa=saved_dp,pumping_power_w=saved_dp*config.flow_rate_m3_s,
+        inlet_flow_m3_s=-qi,outlet_flow_m3_s=qo,mass_balance_relative_error=balance,
+        imposed_flow_relative_error=flow_error,pressure_last20_relative_change=steady,
+        saved_fields_relative_error=error,sealed_wall_relative_flux=wall_leak,mesh_volume_m3=float(volume.group(1)),
+        reynolds_number=config.reynolds_number,cells=mesh['cells'],iterations=int(iteration),
+        current_density_A_m2=None,electrochemistry_solved=False)
+
+
+def run_case(case,runtime=None):
+    case=Path(case).resolve();manifest=json.loads((case/'case.json').read_text());config=HydraulicConfig(**manifest['config'])
+    if manifest.get('problem')!='P004-hydraulic' or manifest.get('model_revision')!=HYDRAULIC_REVISION or manifest.get('config_sha256')!=config.fingerprint:
+        raise ValueError('Invalid auxiliary hydraulic manifest')
+    if (manifest['geometry']!=decode(manifest['geometry']['path'])
+        or json.loads((case/'geometry.json').read_text())!=manifest['geometry']):
+        raise ValueError('Geometry manifest mismatch')
+    if set(manifest.get('input_sha256',{}))!=INPUTS:raise ValueError('Incomplete case input hashes')
+    if manifest['mesh']['cells']!=98*config.cells_per_width**3:raise ValueError('Mesh/config mismatch')
+    for name,sha in manifest['input_sha256'].items():
+        if Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('Invalid input path')
+        if hashlib.sha256((case/name).read_bytes()).hexdigest()!=sha:raise ValueError(f'Case input changed: {name}')
+    if any((case/name).exists() for name in ['postProcessing','result.json','log.checkMesh','log.simpleFoam']):
+        raise FileExistsError('Execution data already exists; generate a fresh case')
+    if any(p.is_dir() and p.name.replace('.','',1).isdigit() and float(p.name)>0 for p in case.iterdir()):
+        raise FileExistsError('Old saved fields found')
+    (case/'.execution-started').open('x').close();runtime=runtime or Runtime(timeout_s=1800)
+    result=dict(status='failed',problem='P004-hydraulic',case_directory=str(case),
+                config_sha256=config.fingerprint,config=config.to_dict(),library_id=manifest['geometry']['library_id'],
+                evaluation_kind='auxiliary_channel_only_CFD',paper_current_density_reproduced=False)
+    start=time.monotonic()
+    try:
+        info=runtime.resolve(commands=('checkMesh','simpleFoam'));result['runtime']=info
+        log=runtime.run(case,'checkMesh',('-allGeometry','-allTopology'),info=info).read_text()
+        if 'Mesh OK.' not in log or 'Failed ' in log:raise SimulationError('Full mesh check failed')
+        runtime.run(case,'simpleFoam',info=info)
+        metrics=extract_metrics(case,config)
+        result.update(status='ok',objective=metrics['pressure_drop_pa'],objectives={'pressure_drop_pa':metrics['pressure_drop_pa']},
+                      constraints={},objective_unit='Pa',metrics=metrics)
+    except (OSError,ValueError,RuntimeError) as exc:
+        result['error']=str(exc);raise SimulationError(f'P004 auxiliary hydraulics failed in {case}: {exc}',case_directory=case) from exc
+    finally:
+        result['wall_time_s']=time.monotonic()-start;write_json(case/'result.json',result)
+    return result
+
+
+def evaluate(path,output_root,config,runtime):
+    case=Path(output_root)/('P004-hydraulic-'+uuid.uuid4().hex)
+    generate_case(case,path,config);return run_case(case,runtime)

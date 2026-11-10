@@ -1,0 +1,7 @@
+{
+  "mesh": "coarse",
+  "scalarization": "total_power_w",
+  "iterations": 1000,
+  "write_interval": 100,
+  "model_overrides": {}
+}

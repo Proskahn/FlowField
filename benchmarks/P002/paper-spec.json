@@ -1,0 +1,119 @@
+{
+  "problem_id": "P002",
+  "title": "Multi-objective optimization of channel structure for a proton exchange membrane water electrolysis cell",
+  "authors": [
+    "Yubin Zhuang",
+    "Pan Cui",
+    "Rui Long",
+    "Wei Liu",
+    "Zhichun Liu"
+  ],
+  "journal": "International Journal of Hydrogen Energy 49 (2024), 337\u2013352",
+  "doi": "10.1016/j.ijhydene.2023.08.026",
+  "source_pdf": "/Users/zhuang/Desktop/Electrolyzer/Flow_Field/1-s2.0-S0360319923039551-main.pdf",
+  "source_sha256": "1a7c1e8bf8f71b81ede41528d550edb8198163d5190e9844e38abc5feb68c321",
+  "level": "II",
+  "dimension": 7,
+  "variable_order": [
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "Ha",
+    "Hc"
+  ],
+  "physical_bounds_mm": [
+    [
+      0.7,
+      1.9
+    ],
+    [
+      0.7,
+      1.9
+    ],
+    [
+      0.7,
+      1.9
+    ],
+    [
+      0.7,
+      1.9
+    ],
+    [
+      0.7,
+      1.9
+    ],
+    [
+      0.5,
+      1.4
+    ],
+    [
+      0.5,
+      1.4
+    ]
+  ],
+  "baseline_mm": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "published_table5_mm": [
+    0.8465,
+    0.7388,
+    0.8904,
+    0.8315,
+    0.7938,
+    1.2477,
+    1.3979
+  ],
+  "baseline_normalized": [
+    0.25000000000000006,
+    0.25000000000000006,
+    0.25000000000000006,
+    0.25000000000000006,
+    0.25000000000000006,
+    0.5555555555555556,
+    0.5555555555555556
+  ],
+  "published_table5_normalized": [
+    0.1220833333333334,
+    0.03233333333333338,
+    0.15866666666666668,
+    0.1095833333333334,
+    0.07816666666666666,
+    0.830777777777778,
+    0.9976666666666667
+  ],
+  "raw_objectives_minimize": [
+    "voltage_V",
+    "pressure_sum_Pa"
+  ],
+  "ioh_default_scalarization": "total_power_w = j*121e-6*V + Q_m3_s*(dp_anode_Pa+dp_cathode_Pa)",
+  "paper_optimizer": {
+    "algorithm": "multi-objective genetic algorithm",
+    "population": 40,
+    "generations": 40,
+    "reproduced": false
+  },
+  "paper_reported_pressure_metric_pa": {
+    "baseline": 1.82,
+    "optimized": 1.18,
+    "reduction_percent": 34.97,
+    "location": "Figure 14 and text; port/branch sampling definition not reconciled with reconstruction"
+  },
+  "reconstruction_assumptions": [
+    "branch centers at x=[1.5,3.5,5.5,7.5,9.5] mm",
+    "1 mm wide manifolds; same-direction feeds",
+    "1.5 mm total plate thickness retained while changing channel heights",
+    "active area 1e5 m^-1 and reference concentration 36.579 mol/m^3",
+    "estimated transport and material properties; dimensionless coverage pressure closure",
+    "source-unit and heat-sign interpretations documented in model report"
+  ],
+  "paper_validated": false,
+  "model_revision": "pem-reconstruction-v1"
+}

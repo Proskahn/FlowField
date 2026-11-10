@@ -1,0 +1,24 @@
+{
+  "revision": "hamilton-7x7-fixed-ports-v1",
+  "count": 28348,
+  "nodes_per_path": 49,
+  "grid": [
+    7,
+    7
+  ],
+  "node_id": "y*7+x; x,y zero-based",
+  "coordinates": "paper (x+1,y+1)",
+  "first_edge": [
+    0,
+    7
+  ],
+  "last_edge": [
+    41,
+    48
+  ],
+  "ordering": "lexicographic node-ID sequence",
+  "paths_sha256": "03b9a3250244613ab49beed176f6aa4026d96d4b1dcf81af317685c036920fca",
+  "compressed_sha256": "17d5ee13ca491eec29507da6ea4c4a6a0417386b48e904abec02df650a9fc20c",
+  "generator": "library.enumerate_paths",
+  "enumeration_s": 2.3208132500294596
+}

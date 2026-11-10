@@ -1,0 +1,248 @@
+{
+  "date": "2026-11-08",
+  "status": "exact_library_and_auxiliary_hydraulics_verified",
+  "paper_current_density_reproduced": false,
+  "library": {
+    "count": 28348,
+    "fresh_regeneration_matches": true,
+    "paths_sha256": "03b9a3250244613ab49beed176f6aa4026d96d4b1dcf81af317685c036920fca",
+    "compressed_sha256": "17d5ee13ca491eec29507da6ea4c4a6a0417386b48e904abec02df650a9fc20c",
+    "revision": "hamilton-7x7-fixed-ports-v1"
+  },
+  "figure4_ids": {
+    "serpentine": 23005,
+    "figure4_spiral": 27281,
+    "figure4_second": 27279,
+    "figure4_third": 27280
+  },
+  "feature_statistics": {
+    "corners": {
+      "min": 12,
+      "max": 40,
+      "mean": 26.226259348102158
+    },
+    "straight_std_lattice": {
+      "min": 0.3762743565985735,
+      "max": 2.4925925763107153,
+      "mean": 1.1429664800623245
+    },
+    "adjacent_length_products_lattice2": {
+      "min": 52,
+      "max": 168,
+      "mean": 77.51149992944829
+    },
+    "shortcut_distance_sum_lattice": {
+      "min": 324,
+      "max": 768,
+      "mean": 436.09058840129813
+    },
+    "mean_node_summed_neighbor_distance_lattice": {
+      "min": 13.224489795918368,
+      "max": 31.346938775510203,
+      "mean": 17.79961585311421
+    }
+  },
+  "tests": {
+    "passed": 75,
+    "failed": 0
+  },
+  "auxiliary_cfd_cases": [
+    {
+      "mesh": "coarse",
+      "label": "serpentine",
+      "library_id": 23005,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/coarse/cases/P004-hydraulic-917a0ccbcdf544858c29e62bf0304897",
+      "config_sha256": "97739e48f80f6c24f86ca6fd7e2653181f8f0b2389da9934286af2da0f09f24b",
+      "metrics": {
+        "pressure_drop_pa": 51.1286408279,
+        "pumping_power_w": 5.11286408279e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 1.000000000033e-06,
+        "mass_balance_relative_error": 3.2999980108553914e-11,
+        "imposed_flow_relative_error": 3.300004713935323e-11,
+        "pressure_last20_relative_change": 4.177695966944839e-10,
+        "saved_fields_relative_error": 1.9562129693895258e-13,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.8e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 6272,
+        "iterations": 170,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 8.68965929094702
+    },
+    {
+      "mesh": "coarse",
+      "label": "figure4_spiral",
+      "library_id": 27281,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/coarse/cases/P004-hydraulic-40d3a6cc64964cd1bf137fa9019ce873",
+      "config_sha256": "97739e48f80f6c24f86ca6fd7e2653181f8f0b2389da9934286af2da0f09f24b",
+      "metrics": {
+        "pressure_drop_pa": 52.5271972099,
+        "pumping_power_w": 5.25271972099e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 1.000000000032e-06,
+        "mass_balance_relative_error": 3.200005771432021e-11,
+        "imposed_flow_relative_error": 3.199995823877089e-11,
+        "pressure_last20_relative_change": 8.20528089917616e-11,
+        "saved_fields_relative_error": 9.99866855977416e-13,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.8e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 6272,
+        "iterations": 167,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 8.056096500018612
+    },
+    {
+      "mesh": "medium",
+      "label": "serpentine",
+      "library_id": 23005,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/medium/cases/P004-hydraulic-9b51c021110e442f81eb00785bc43258",
+      "config_sha256": "d9027f9566158bcb571796d2d14b09030138d003609593e5ed602bef43b245e6",
+      "metrics": {
+        "pressure_drop_pa": 59.3623087351875,
+        "pumping_power_w": 5.936230873518749e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 9.99999999991e-07,
+        "mass_balance_relative_error": 8.999936822813755e-12,
+        "imposed_flow_relative_error": 8.999911926821369e-12,
+        "pressure_last20_relative_change": 5.560767402101874e-10,
+        "saved_fields_relative_error": 1.099120794378905e-13,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.80000000001e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 50176,
+        "iterations": 170,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 37.83328512497246
+    },
+    {
+      "mesh": "medium",
+      "label": "figure4_spiral",
+      "library_id": 27281,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/medium/cases/P004-hydraulic-681c8ce7766e48ad8966af54203b5757",
+      "config_sha256": "d9027f9566158bcb571796d2d14b09030138d003609593e5ed602bef43b245e6",
+      "metrics": {
+        "pressure_drop_pa": 60.76706525285625,
+        "pumping_power_w": 6.076706525285625e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 9.999999999753e-07,
+        "mass_balance_relative_error": 2.4699904258409025e-11,
+        "imposed_flow_relative_error": 2.4699908784953095e-11,
+        "pressure_last20_relative_change": 6.732265855902142e-10,
+        "saved_fields_relative_error": 9.992007221626409e-14,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.80000000001e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 50176,
+        "iterations": 172,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 31.485649707959965
+    },
+    {
+      "mesh": "fine",
+      "label": "serpentine",
+      "library_id": 23005,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/fine/cases/P004-hydraulic-1a45603688cd4f15b0cc361aecc4f72d",
+      "config_sha256": "5bbdb60fb15b901397019649277c3e86cfa035d7d21c198d30dbeb93226987ed",
+      "metrics": {
+        "pressure_drop_pa": 61.16502673769306,
+        "pumping_power_w": 6.116502673769306e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 9.999999999702e-07,
+        "mass_balance_relative_error": 2.979988963382717e-11,
+        "imposed_flow_relative_error": 2.9799940293173677e-11,
+        "pressure_last20_relative_change": 7.886205910523358e-09,
+        "saved_fields_relative_error": 2.1360690993788012e-13,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.79999999999e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 169344,
+        "iterations": 239,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 144.54430562490597
+    },
+    {
+      "mesh": "fine",
+      "label": "figure4_spiral",
+      "library_id": 27281,
+      "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p004/verified/fine/cases/P004-hydraulic-ba7562288bf14b21a394fea2d573dc7e",
+      "config_sha256": "5bbdb60fb15b901397019649277c3e86cfa035d7d21c198d30dbeb93226987ed",
+      "metrics": {
+        "pressure_drop_pa": 62.628333852294446,
+        "pumping_power_w": 6.262833385229444e-05,
+        "inlet_flow_m3_s": 1e-06,
+        "outlet_flow_m3_s": 9.999999999819e-07,
+        "mass_balance_relative_error": 1.810003529164033e-11,
+        "imposed_flow_relative_error": 1.810007699276639e-11,
+        "pressure_last20_relative_change": 5.574792960594266e-09,
+        "saved_fields_relative_error": 2.5002222514558525e-13,
+        "sealed_wall_relative_flux": 0.0,
+        "mesh_volume_m3": 9.79999999999e-08,
+        "reynolds_number": 48.309178743961354,
+        "cells": 169344,
+        "iterations": 235,
+        "current_density_A_m2": null,
+        "electrochemistry_solved": false
+      },
+      "wall_time_s": 143.17383979191072
+    }
+  ],
+  "pressure_mesh_changes_percent": {
+    "serpentine": {
+      "coarse_to_medium": 16.103827080016032,
+      "medium_to_fine": 3.036805745793014
+    },
+    "figure4_spiral": {
+      "coarse_to_medium": 15.68686029454327,
+      "medium_to_fine": 3.06295621105499
+    }
+  },
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "ioh": {
+    "version": "0.3.22",
+    "problem_class": "INTEGER",
+    "dimension": 49,
+    "actual_auxiliary_cfd_evaluations": 2
+  },
+  "ml": {
+    "architecture_implemented": true,
+    "derivatives_checked": true,
+    "author_dataset_available": false,
+    "author_weights_available": false,
+    "trained_paper_model": false,
+    "training_verification": "synthetic temporary unit fixtures only"
+  },
+  "wheel": {
+    "version": "0.5.0",
+    "registry": [
+      "P000",
+      "P001",
+      "P002",
+      "P003",
+      "P004",
+      "P004-hydraulic"
+    ],
+    "p004_resource_files_matched": 12,
+    "isolated_case_generation": "passed",
+    "sha256": "7253435c158c67f7478e645e5af416a203d4168ed3ba7b28195122335d53261f"
+  }
+}

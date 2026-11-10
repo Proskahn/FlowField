@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "problem": "P001",
+  "model_revision": "ppfc-reconstruction-v1",
+  "replication_status": "provisional_geometry_reconstruction",
+  "paper_doi": "10.1016/j.ijhydene.2025.03.237",
+  "config": {
+    "mesh": "coarse",
+    "inlet_velocity_m_s": 0.5,
+    "density_kg_m3": 1290.4769,
+    "dynamic_viscosity_pa_s": 0.0025491,
+    "turbulence_intensity": 0.05,
+    "port_width_m": 0.01,
+    "port_length_m": 0.015,
+    "sphere_cap_height_m": 0.003,
+    "turbulence_length_m": 0.001,
+    "max_iterations": 2000,
+    "residual_tolerance": 1e-06,
+    "mass_balance_tolerance": 0.0001,
+    "stability_tolerance": 0.0001,
+    "stability_window": 20
+  },
+  "config_sha256": "b22c0e458e1d8396dc312251f57de3f21bc5b647b58f8912ef456f70a13f3bff",
+  "geometry": {
+    "normalized_design": [
+      0.6666666666666666,
+      0.8,
+      0.6,
+      0.6666666666666666,
+      0.5,
+      0.5
+    ],
+    "spacings_mm": {
+      "x1_1": 35.0,
+      "x1_2": 32.0,
+      "x2": 30.0,
+      "x3": 30.0,
+      "h1_1": 15.0,
+      "h1_2": 15.0
+    },
+    "spacings_m": {
+      "x1_1": 0.035,
+      "x1_2": 0.032,
+      "x2": 0.03,
+      "x3": 0.03,
+      "h1_1": 0.015,
+      "h1_2": 0.015
+    },
+    "diameter_m": 0.4,
+    "height_m": 0.0075,
+    "sphere_diameter_m": 0.015,
+    "prism_side_m": 0.013,
+    "region_boundaries_y_m": [
+      -0.135,
+      -0.045,
+      0.045,
+      0.135
+    ]
+  },
+  "objective": -0.6408177621262,
+  "input_sha256": {
+    "0/U": "4b5444005f2d76458eb3b5b98d9081d0de1e4c11de47af4b21b9e965cd3756a3",
+    "0/p": "32315196fd8f77bdf3301f4e7f1e869359f3275e84056f85979fa22d6fecc9eb",
+    "0/k": "eba70d56076d1b9e0bf29d5c35d7be7de3a9b274a6018ed107075ad94e04ec96",
+    "0/epsilon": "c79eea1b3984758db16aef0f4d6d1340cd7d14dedef4e2044e2a61902cf2544f",
+    "0/nut": "5048eebe2e7b0ed2bcdcd6a53f3747b9135ad0684065aafe0a22628f6b216c0d",
+    "constant/transportProperties": "836a939a816e655c05c187d35ee021a8b7d3014d7cecc89d20ad8917e79889da",
+    "constant/turbulenceProperties": "043edc5777143909ae85123b7f57405969a8064cea12c5a53a3c901be7f243c5",
+    "system/controlDict": "59d367a4fe970b0dae70fbbeb6cd5d215f5e76c6c13e77273c2deb2c2399ccdf",
+    "system/fvSchemes": "ef6e5fede10114e09a725f74e9a8fd8e726a1d0c50fef9d302b570f791dc4680",
+    "system/fvSolution": "e206ca5206e49c47589196a9be14f2d84de46f9ea940c9aa44d1de79608ca000",
+    "layout.svg": "891bd30c646fd7902513154054be449c7f82ace02508ca04728b38a132079525",
+    "units.json": "3d5a7de2e8683d6593bb115deb5f32a3b59273a598658ffbb24afc5108fb67af"
+  },
+  "status": "ok",
+  "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p001/trial-05/cases/P001-dc65cb7c607848268287b78a023591e4",
+  "created_utc": "2026-11-06T12:02:12.001564+00:00",
+  "objective_direction": "minimize",
+  "objective_unit": "dimensionless",
+  "paper_validated": false,
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "mesh_sha256": {
+    "boundary": "c1b2a4a872e1ef91c28050a4d04c410b00a4f382f395f1bfd8b211f6c85b4874",
+    "cellZones": "a6191b00c47c75038a8b56e6be3743203f65f36815906bce5a4b6c5d8dd12211",
+    "faceZones": "63975c571120f65b2e83d925cee6df3a62d476029699807472494933df781b26",
+    "faces": "94f3c6d1a0b73f6063e3aabbab6a712a0f9cdfdd878283d66fb57e864c735c97",
+    "neighbour": "3cb7f342e2c6ad66c7508fce945b015477c3e0b39e965689a1d0f387cf8a8c7d",
+    "owner": "89ebef6083432d5081d5b2706561a1e493cae62319635ab49ed1d91592733fef",
+    "pointZones": "fa846199ca15eef516f28b404984b977ccc30eaa9d8cf5d0bbcf7e2b681da950",
+    "points": "7754e40a0e7e6747a54ffb7992d1dbd6422bd340c1d2959e90cf12c241ce0e7d"
+  },
+  "metrics": {
+    "uniformity": 0.6408177621262,
+    "mean_speed_m_s": 0.0264787621715,
+    "pressure_drop_pa": 441.75481043044806,
+    "section_uniformity": {
+      "-135": 0.5050549281419,
+      "-45": 0.7518239894956,
+      "45": 0.890553616332,
+      "135": 0.8706394071272
+    },
+    "inlet_flux_m3_s": -3.75e-05,
+    "outlet_flux_m3_s": 3.750000000804e-05,
+    "mass_balance_relative_error": 2.144000761071981e-10,
+    "flow_rate_relative_error": 2.1440005326667233e-10,
+    "uniformity_final_window_range": 1.2864019993674702e-07,
+    "iterations": 1011,
+    "cell_count": 228000,
+    "gmsh_cells": 228000,
+    "mesh_ok": true,
+    "converged": true,
+    "paper_validated": false
+  },
+  "objectives": {
+    "negative_uniformity": -0.6408177621262
+  },
+  "constraints": {},
+  "wall_time_s": 681.6768009169027,
+  "metadata": {
+    "problem_id": "P001",
+    "problem_name": "P001_ppfc-reconstruction-v1_b22c0e458e1d_failure_raise",
+    "dimension": 6,
+    "design": [
+      0.6666666666666666,
+      0.8,
+      0.6,
+      0.6666666666666666,
+      0.5,
+      0.5
+    ],
+    "geometry": {
+      "normalized_design": [
+        0.6666666666666666,
+        0.8,
+        0.6,
+        0.6666666666666666,
+        0.5,
+        0.5
+      ],
+      "spacings_mm": {
+        "x1_1": 35.0,
+        "x1_2": 32.0,
+        "x2": 30.0,
+        "x3": 30.0,
+        "h1_1": 15.0,
+        "h1_2": 15.0
+      },
+      "spacings_m": {
+        "x1_1": 0.035,
+        "x1_2": 0.032,
+        "x2": 0.03,
+        "x3": 0.03,
+        "h1_1": 0.015,
+        "h1_2": 0.015
+      },
+      "diameter_m": 0.4,
+      "height_m": 0.0075,
+      "sphere_diameter_m": 0.015,
+      "prism_side_m": 0.013,
+      "region_boundaries_y_m": [
+        -0.135,
+        -0.045,
+        0.045,
+        0.135
+      ]
+    },
+    "config": {
+      "mesh": "coarse",
+      "inlet_velocity_m_s": 0.5,
+      "density_kg_m3": 1290.4769,
+      "dynamic_viscosity_pa_s": 0.0025491,
+      "turbulence_intensity": 0.05,
+      "port_width_m": 0.01,
+      "port_length_m": 0.015,
+      "sphere_cap_height_m": 0.003,
+      "turbulence_length_m": 0.001,
+      "max_iterations": 2000,
+      "residual_tolerance": 1e-06,
+      "mass_balance_tolerance": 0.0001,
+      "stability_tolerance": 0.0001,
+      "stability_window": 20
+    },
+    "config_sha256": "b22c0e458e1d8396dc312251f57de3f21bc5b647b58f8912ef456f70a13f3bff",
+    "paper_doi": "10.1016/j.ijhydene.2025.03.237",
+    "replication_status": "provisional_geometry_reconstruction",
+    "paper_validated": false,
+    "objective_direction": "minimize",
+    "objective_unit": "dimensionless",
+    "valid_cfd": true,
+    "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p001/trial-05/cases/P001-dc65cb7c607848268287b78a023591e4",
+    "runtime": {
+      "backend": "docker",
+      "image": "opencfd/openfoam-default:2312",
+      "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+      "repo_digests": [
+        "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+      ],
+      "architecture": "arm64"
+    },
+    "metrics": {
+      "uniformity": 0.6408177621262,
+      "mean_speed_m_s": 0.0264787621715,
+      "pressure_drop_pa": 441.75481043044806,
+      "section_uniformity": {
+        "-135": 0.5050549281419,
+        "-45": 0.7518239894956,
+        "45": 0.890553616332,
+        "135": 0.8706394071272
+      },
+      "inlet_flux_m3_s": -3.75e-05,
+      "outlet_flux_m3_s": 3.750000000804e-05,
+      "mass_balance_relative_error": 2.144000761071981e-10,
+      "flow_rate_relative_error": 2.1440005326667233e-10,
+      "uniformity_final_window_range": 1.2864019993674702e-07,
+      "iterations": 1011,
+      "cell_count": 228000,
+      "gmsh_cells": 228000,
+      "mesh_ok": true,
+      "converged": true,
+      "paper_validated": false
+    }
+  }
+}

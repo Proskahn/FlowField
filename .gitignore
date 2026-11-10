@@ -1,0 +1,17 @@
+# Generated files for the new benchmark scaffold only.
+/.venv/
+/runs/
+/ioh_data/
+/build/
+/dist/
+/src/*.egg-info/
+/src/**/__pycache__/
+/tests/__pycache__/
+/flowfield/__pycache__/
+/experiments/__pycache__/
+
+# AI-generated local guides and reports; keep them on disk, outside version control.
+/README.md
+/docs/**/*.md
+/benchmarks/P*/*.md
+/src/flowfield/problems/**/README.md

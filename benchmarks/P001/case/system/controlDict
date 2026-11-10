@@ -1,0 +1,153 @@
+/* FlowField P001 reconstruction; OpenCFD OpenFOAM v2312; SI units. */
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object controlDict;
+}
+application simpleFoam; startFrom startTime; startTime 0; stopAt endTime;
+endTime 2000; deltaT 1; writeControl timeStep; writeInterval 100;
+purgeWrite 2; writeFormat ascii; writePrecision 12; writeCompression off;
+timeFormat general; timePrecision 10; runTimeModifiable false;
+functions {
+    speedMagnitude
+    {
+        type mag; libs ("libfieldFunctionObjects.so"); field U; result speed;
+        executeControl timeStep; executeInterval 1; writeControl none;
+    }
+
+    p_inlet
+    {
+        type surfaceFieldValue;
+        libs ("libfieldFunctionObjects.so");
+        writeControl timeStep;
+        writeInterval 1;
+        log false;
+        writeFields false;
+        regionType patch;
+        name inlet;
+        operation areaAverage;
+        fields (p);
+    }
+
+    p_outlet
+    {
+        type surfaceFieldValue;
+        libs ("libfieldFunctionObjects.so");
+        writeControl timeStep;
+        writeInterval 1;
+        log false;
+        writeFields false;
+        regionType patch;
+        name outlet;
+        operation areaAverage;
+        fields (p);
+    }
+
+    q_inlet
+    {
+        type surfaceFieldValue;
+        libs ("libfieldFunctionObjects.so");
+        writeControl timeStep;
+        writeInterval 1;
+        log false;
+        writeFields false;
+        regionType patch;
+        name inlet;
+        operation sum;
+        fields (phi);
+    }
+
+    q_outlet
+    {
+        type surfaceFieldValue;
+        libs ("libfieldFunctionObjects.so");
+        writeControl timeStep;
+        writeInterval 1;
+        log false;
+        writeFields false;
+        regionType patch;
+        name outlet;
+        operation sum;
+        fields (phi);
+    }
+
+    uniformity_midplane
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name uniformity_midplane; operation uniformity; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 0 0.00375); normal (0 0 1); }
+            interpolate false;
+        }
+    }
+
+    speed_midplane
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name speed_midplane; operation areaAverage; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 0 0.00375); normal (0 0 1); }
+            interpolate false;
+        }
+    }
+
+    uniformity_section1
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name uniformity_section1; operation uniformity; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 -0.135 0); normal (0 1 0); }
+            interpolate false;
+        }
+    }
+
+    uniformity_section2
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name uniformity_section2; operation uniformity; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 -0.045 0); normal (0 1 0); }
+            interpolate false;
+        }
+    }
+
+    uniformity_section3
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name uniformity_section3; operation uniformity; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 0.045 0); normal (0 1 0); }
+            interpolate false;
+        }
+    }
+
+    uniformity_section4
+    {
+        type surfaceFieldValue; libs ("libfieldFunctionObjects.so");
+        writeControl timeStep; writeInterval 1; log false; writeFields false;
+        regionType sampledSurface; name uniformity_section4; operation uniformity; fields (speed);
+        sampledSurfaceDict
+        {
+            type cuttingPlane; planeType pointAndNormal;
+            pointAndNormalDict { point (0 0.135 0); normal (0 1 0); }
+            interpolate false;
+        }
+    }
+}
