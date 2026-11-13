@@ -6,11 +6,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from flowfield.ioh_adapter import analyzer_logger, make_ioh_problem
-from flowfield.base import FlowFieldProblem
+from flowfield.benchmarking.ioh import analyzer_logger, make_ioh_problem
+from flowfield.problem import AbstractFlowFieldProblem
 
 
-class CountingObjective(FlowFieldProblem):
+class CountingObjective(AbstractFlowFieldProblem):
     def __init__(self, name="AdapterUnitTest", dimension=2, lower=None, upper=None):
         super().__init__(name, dimension, lower or [0.] * dimension, upper or [1.] * dimension)
         self.calls = []

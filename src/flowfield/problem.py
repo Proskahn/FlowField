@@ -83,3 +83,40 @@ class FlowFieldProblem(ABC):
             raise ValueError(f"{self.name} returned a nonfinite scalar objective")
         self.last_result = result
         return objective
+
+    def initial_design(self):
+        """Default starting point; a problem can supply a physical baseline."""
+        return [(lo + hi) / 2 for lo, hi in zip(self.lower_bounds, self.upper_bounds)]
+
+
+class CFDProblem(FlowFieldProblem):
+    """Optional simulation interface for problems backed by OpenFOAM.
+
+    Data/surrogate problems only need FlowFieldProblem. Algorithms consume the
+    vector-to-result interface and never need these simulation methods.
+    """
+
+    @property
+    @abstractmethod
+    def case_definition(self):
+        """Return the problem's CaseDefinition (including its result extractor)."""
+        raise NotImplementedError
+
+    def case_arguments(self, x):
+        return self.decode(x), self.config
+
+    def write_case(self, x, destination):
+        """Decode variables and write a standalone case without running CFD."""
+        return self.case_definition.generate(destination, *self.case_arguments(x))
+
+    def run_case(self, case):
+        from .evaluation import CaseEvaluator
+        return CaseEvaluator(self.case_definition, self.runtime).run_case(case)
+
+    def extract_results(self, case):
+        from .evaluation import CaseEvaluator
+        return CaseEvaluator(self.case_definition).extract_results(case)
+
+
+# Compatibility with the earlier abstract-class name.
+AbstractFlowFieldProblem = FlowFieldProblem

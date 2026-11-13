@@ -1,6 +1,6 @@
 """P004 discrete paths; current data/surrogate and auxiliary hydraulics stay distinct."""
 from pathlib import Path
-from ....base import FlowFieldProblem
+from ....problem import AbstractFlowFieldProblem, CFDProblem
 from ....runtime import Runtime
 from .library import catalog,path_from_id,path_id,validate_path,serpentine,DOI,LIBRARY_REVISION
 from .geometry import decode as decode_geometry
@@ -8,7 +8,7 @@ from .config import HydraulicConfig,HYDRAULIC_REVISION
 from .dataset import CurrentDataset,MissingPaperDataError
 
 
-class P004Problem(FlowFieldProblem):
+class P004Problem(AbstractFlowFieldProblem):
     variable_type='integer'
     def __init__(self,output_root='runs',*,dataset=None,model=None):
         super().__init__('P004',49,[0]*49,[48]*49)
@@ -27,7 +27,11 @@ class P004Problem(FlowFieldProblem):
         return f'P004_{LIBRARY_REVISION}_{backend}'
     def validate_design(self,x):return validate_path(super().validate_design(x))
     def decode(self,x):return decode_geometry(self.validate_design(x))
-    def initial_design(self):return serpentine()
+    def initial_design(self):
+        if self.dataset:
+            identifier = 23005 if 23005 in self.dataset.labels else min(self.dataset.labels)
+            return self.design_from_id(identifier)
+        return serpentine()
     def design_from_id(self,identifier):return path_from_id(identifier)
     def sample_design(self,rng):
         ids=sorted(self.dataset.labels) if self.dataset else range(len(catalog()))
@@ -49,8 +53,18 @@ class P004Problem(FlowFieldProblem):
         self.last_result=result;return result
 
 
-class P004HydraulicProblem(P004Problem):
+class P004HydraulicProblem(P004Problem, CFDProblem):
     """Auxiliary pressure-drop benchmark; never substitutes for fuel-cell current."""
+    config_type = HydraulicConfig
+
+    @property
+    def case_definition(self):
+        from .hydraulics import CASE
+        return CASE
+
+    def case_arguments(self, x):
+        return self.decode(x)['path'], self.config
+
     def __init__(self,output_root='runs',*,config=None,runtime=None):
         super().__init__(output_root);self.name='P004-hydraulic'
         self.config=config if config is not None else HydraulicConfig()

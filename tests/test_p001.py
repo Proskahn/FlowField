@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from flowfield import FlowFieldProblem, get_problem, list_problems
+from flowfield import AbstractFlowFieldProblem, get_problem, list_problems
 from flowfield.problems.level2_medium_parametric.p001 import BASELINE_X, P001Problem, PPFCConfig
 from flowfield.problems.level2_medium_parametric.p001.case import generate_case
 from flowfield.problems.level2_medium_parametric.p001.config import uniformity
@@ -22,7 +22,7 @@ from flowfield.runtime import SimulationError
 class DefinitionTests(unittest.TestCase):
     def test_table6_bounds_units_and_baseline(self):
         p = get_problem('P001')
-        self.assertIsInstance(p, FlowFieldProblem)
+        self.assertIsInstance(p, AbstractFlowFieldProblem)
         self.assertEqual(p.dimension, 6)
         lo, hi = p.decode([0]*6), p.decode([1]*6)
         self.assertEqual(lo['spacings_mm'], dict(zip(('x1_1','x1_2','x2','x3','h1_1','h1_2'), (31,28,27,28,13,13))))

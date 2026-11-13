@@ -1,0 +1,36 @@
+{
+  "id": "P005",
+  "level": "I",
+  "name": "Dual-layer flow channel bubble detachment",
+  "dimension": 2,
+  "variable_type": "real",
+  "coordinates": [
+    "normalized_base_height",
+    "normalized_degassing_height"
+  ],
+  "lower_bounds": [
+    0,
+    0
+  ],
+  "upper_bounds": [
+    1,
+    1
+  ],
+  "decode_mm": [
+    "HB=0.5+1.5*x[0]",
+    "HD=0.5+3.5*x[1]"
+  ],
+  "objective": "minimize first confirmed bubble detachment time at fixed oxygen velocity",
+  "objective_unit": "s",
+  "scalarization": "T_det if confirmed by horizon H, otherwise 2*H",
+  "default_observation_horizon_s": 0.2,
+  "default_oxygen_velocity_m_s": 5,
+  "constraints": {
+    "detachment_observed": "-1 if event observed, +1 if right-censored"
+  },
+  "solver": "OpenCFD OpenFOAM v2312 interFoam",
+  "monitor": "bundled C++ flowfieldDetachment function object",
+  "model_revision": "dual-layer-vof-v1",
+  "paper_validated": false,
+  "replication_status": "provisional_physical_VOF_reconstruction"
+}

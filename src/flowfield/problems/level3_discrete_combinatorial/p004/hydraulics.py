@@ -1,9 +1,10 @@
 """Fresh-case auxiliary CFD and saved-field verification, separate from PEMFC current."""
-import hashlib,json,math,re,time,uuid
+import json,math,re
 from pathlib import Path
 from ....runtime import Runtime,SimulationError
-from ....evaluation import write_json
-from ....metrics import read_surface_history
+from ....evaluation import CaseDefinition, CaseEvaluator
+from ....mesh import PolyMesh
+from ....openfoam import read_surface_history
 from .case import INPUTS,generate_case
 from .config import HydraulicConfig,HYDRAULIC_REVISION
 from .geometry import decode
@@ -85,42 +86,37 @@ def extract_metrics(case,config):
         current_density_A_m2=None,electrochemistry_solved=False)
 
 
-def run_case(case,runtime=None):
-    case=Path(case).resolve();manifest=json.loads((case/'case.json').read_text());config=HydraulicConfig(**manifest['config'])
-    if manifest.get('problem')!='P004-hydraulic' or manifest.get('model_revision')!=HYDRAULIC_REVISION or manifest.get('config_sha256')!=config.fingerprint:
-        raise ValueError('Invalid auxiliary hydraulic manifest')
+def _validate(case, manifest, config):
     if (manifest['geometry']!=decode(manifest['geometry']['path'])
         or json.loads((case/'geometry.json').read_text())!=manifest['geometry']):
         raise ValueError('Geometry manifest mismatch')
-    if set(manifest.get('input_sha256',{}))!=INPUTS:raise ValueError('Incomplete case input hashes')
     if manifest['mesh']['cells']!=98*config.cells_per_width**3:raise ValueError('Mesh/config mismatch')
-    for name,sha in manifest['input_sha256'].items():
-        if Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('Invalid input path')
-        if hashlib.sha256((case/name).read_bytes()).hexdigest()!=sha:raise ValueError(f'Case input changed: {name}')
-    if any((case/name).exists() for name in ['postProcessing','result.json','log.checkMesh','log.simpleFoam']):
-        raise FileExistsError('Execution data already exists; generate a fresh case')
-    if any(p.is_dir() and p.name.replace('.','',1).isdigit() and float(p.name)>0 for p in case.iterdir()):
-        raise FileExistsError('Old saved fields found')
-    (case/'.execution-started').open('x').close();runtime=runtime or Runtime(timeout_s=1800)
-    result=dict(status='failed',problem='P004-hydraulic',case_directory=str(case),
-                config_sha256=config.fingerprint,config=config.to_dict(),library_id=manifest['geometry']['library_id'],
-                evaluation_kind='auxiliary_channel_only_CFD',paper_current_density_reproduced=False)
-    start=time.monotonic()
-    try:
-        info=runtime.resolve(commands=('checkMesh','simpleFoam'));result['runtime']=info
-        log=runtime.run(case,'checkMesh',('-allGeometry','-allTopology'),info=info).read_text()
-        if 'Mesh OK.' not in log or 'Failed ' in log:raise SimulationError('Full mesh check failed')
-        runtime.run(case,'simpleFoam',info=info)
-        metrics=extract_metrics(case,config)
-        result.update(status='ok',objective=metrics['pressure_drop_pa'],objectives={'pressure_drop_pa':metrics['pressure_drop_pa']},
-                      constraints={},objective_unit='Pa',metrics=metrics)
-    except (OSError,ValueError,RuntimeError) as exc:
-        result['error']=str(exc);raise SimulationError(f'P004 auxiliary hydraulics failed in {case}: {exc}',case_directory=case) from exc
-    finally:
-        result['wall_time_s']=time.monotonic()-start;write_json(case/'result.json',result)
-    return result
 
 
-def evaluate(path,output_root,config,runtime):
-    case=Path(output_root)/('P004-hydraulic-'+uuid.uuid4().hex)
-    generate_case(case,path,config);return run_case(case,runtime)
+def _execute(case, config, manifest, runtime, info, result):
+    PolyMesh.from_case(case)
+    result.update(library_id=manifest['geometry']['library_id'], evaluation_kind='auxiliary_channel_only_CFD', paper_current_density_reproduced=False)
+    log=runtime.run(case,'checkMesh',('-allGeometry','-allTopology'),info=info).read_text()
+    if 'Mesh OK.' not in log or 'Failed ' in log:raise SimulationError('Full mesh check failed')
+    runtime.run(case,'simpleFoam',info=info)
+
+
+def extract_results(case, config):
+    metrics = extract_metrics(case, config)
+    return dict(objective=metrics['pressure_drop_pa'], objectives={'pressure_drop_pa': metrics['pressure_drop_pa']},
+                constraints={}, objective_unit='Pa', metrics=metrics)
+
+
+CASE = CaseDefinition(
+    name='P004-hydraulic', config_type=HydraulicConfig, inputs=frozenset(INPUTS),
+    commands=('checkMesh', 'simpleFoam'), validate=_validate, execute=_execute,
+    generate=generate_case, extract=extract_results, revision=HYDRAULIC_REVISION,
+    execution_outputs=('log.checkMesh', 'log.simpleFoam'))
+
+
+def run_case(case, runtime=None):
+    return CaseEvaluator(CASE, runtime).run_case(case)
+
+
+def evaluate(path, output_root, config, runtime):
+    return CaseEvaluator(CASE, runtime).evaluate(path, config, output_root=output_root)

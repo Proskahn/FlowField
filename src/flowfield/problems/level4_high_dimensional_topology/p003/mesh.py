@@ -68,6 +68,9 @@ def mesh(case, m):
     write(poly/'boundary', btext+')\n', 'polyBoundaryMesh')
     write(poly/'cellZones', '0\n(\n)\n', 'regIOobject')
     write(poly/'faceZones', '0\n(\n)\n', 'regIOobject')
+    from ....mesh import PolyMesh
+    return PolyMesh.from_case(case)
+
 
 def field(case, name, dims, values, bcs, vector=False):
     if isinstance(values, list):

@@ -3,13 +3,23 @@
 import math
 from pathlib import Path
 
-from ....base import FlowFieldProblem
+from ....problem import CFDProblem
 from ....runtime import Runtime, SimulationError
 from .config import (BASELINE_X, PAPER_OPTIMUM_X, BOUNDS_MM, DOI, MODEL_REVISION,
                      PARAMETERS, PEMConfig)
 
 
-class P002Problem(FlowFieldProblem):
+class P002Problem(CFDProblem):
+    config_type = PEMConfig
+
+    @property
+    def case_definition(self):
+        from .evaluation import CASE
+        return CASE
+
+    def initial_design(self):
+        return list(BASELINE_X)
+
     def __init__(self, output_root='runs', *, config=None, runtime=None, failure_penalty=None):
         super().__init__('P002', 7, [0.]*7, [1.]*7)
         self.config = config if config is not None else PEMConfig()

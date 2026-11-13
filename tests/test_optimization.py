@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from flowfield.base import FlowFieldProblem
+from flowfield.problem import AbstractFlowFieldProblem
 from flowfield.optimization import optimize, main
 from flowfield.runtime import SimulationError
 
@@ -16,7 +16,7 @@ except ImportError:
     cma = None
 
 
-class CountingProblem(FlowFieldProblem):
+class CountingProblem(AbstractFlowFieldProblem):
     def __init__(self, *, dimension=2, failures=(), interrupt=None, constrained=False):
         super().__init__('OptimizationTest',dimension,[-2.]*dimension,[4.]*dimension)
         self.calls=[]
@@ -39,7 +39,7 @@ class CountingProblem(FlowFieldProblem):
                     metadata={'valid_cfd':True})
 
 
-class DiscreteProblem(FlowFieldProblem):
+class DiscreteProblem(AbstractFlowFieldProblem):
     variable_type='integer'
 
     def __init__(self):
@@ -170,18 +170,18 @@ class OptimizationTests(unittest.TestCase):
     def test_soft_wall_limit_does_not_start_extra_cfd(self):
         # A deterministic clock: initialization=0, first start=0, then cap reached.
         clock=iter([0,0,0,0,0,0,100,100,100,100,100,100,100,100,100])
-        with patch('flowfield.optimization.time.monotonic',side_effect=lambda:next(clock,100)):
+        with patch('flowfield.optimization.runner.time.monotonic',side_effect=lambda:next(clock,100)):
             p,s,_,_=self.run_problem(budget=20,max_seconds=1)
         self.assertLessEqual(len(p.calls),1)
         self.assertEqual(s['stop_reason'],'soft_wall_time_limit')
 
-    def test_dry_run_has_100_cfd_attempts_and_skips_unavailable_current(self):
+    def test_dry_run_has_120_cfd_attempts_and_skips_unavailable_current(self):
         capture=io.StringIO()
         with contextlib.redirect_stdout(capture):
-            result=main(['--budget','20','--output',str(self.root/'plan'),'--dry-run'])
+            result=main(['--problems','all','--budget','20','--output',str(self.root/'plan'),'--dry-run'])
         plan=json.loads(capture.getvalue())
         self.assertEqual(result,0)
-        self.assertEqual(plan['maximum_cfd_attempts'],100)
+        self.assertEqual(plan['maximum_cfd_attempts'],120)
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P003')['sigma_normalized'],.005)
         self.assertFalse((self.root/'plan').exists())
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P004')['status'],'skipped')

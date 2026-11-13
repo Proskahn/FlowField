@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from ....case import foam_file as _foam_file, _surface
+from ....openfoam import foam_file as _foam_file, surface_function as _surface
 from .config import DOI, MODEL_REVISION
 from .geometry import layout_svg, unit_layout
 

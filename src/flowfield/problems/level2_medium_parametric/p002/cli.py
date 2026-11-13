@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from ....evaluation import write_json
-from ....ioh_adapter import analyzer_logger, make_ioh_problem
+from ....benchmarking.ioh import analyzer_logger, make_ioh_problem
 from ....runtime import DEFAULT_IMAGE, Runtime, SimulationError
 from . import BASELINE_X, PAPER_OPTIMUM_X, P002Problem, PEMConfig
 from .case import generate_case

@@ -1,0 +1,138 @@
+{
+  "doi": "10.1016/j.egyai.2024.100411",
+  "title": "Optimization of dual-layer flow field in a water electrolyzer using a data-driven surrogate model",
+  "implemented_scope": "Section 2.1.1 physical model only",
+  "excluded": [
+    "DNN",
+    "training data fit",
+    "surrogate GA",
+    "electrochemical experiments"
+  ],
+  "reported": {
+    "channel_length_mm": 20,
+    "base_width_mm": 1,
+    "degassing_width_mm": 1.6,
+    "base_height_range_mm": [
+      0.5,
+      2
+    ],
+    "degassing_height_range_mm": [
+      0.5,
+      4
+    ],
+    "water_velocity_m_s": 0.00174,
+    "oxygen_velocity_instances_m_s": [
+      1,
+      3,
+      5,
+      10
+    ],
+    "temperature_k": 273.15,
+    "pressure_atm": 1,
+    "channel_contact_angle_deg": 70,
+    "electrode_contact_angle_deg": 30
+  },
+  "assumptions": {
+    "gas_inlet_side_m": 0.0001,
+    "gas_inlet_z_m": 0.001,
+    "gas_feed": "continuous",
+    "liquid_initial_velocity": "zero; simultaneous startup of both velocity inlets",
+    "gravity_direction": "negative height coordinate",
+    "water_inlet": "entire stepped cross section",
+    "pressure_outlet": "zero static gauge pressure, relative to 101325 Pa",
+    "contact_angles": "interpreted through liquid water; phase convention not stated explicitly",
+    "properties": "fixed engineering values at 273.15 K; not given in target paper",
+    "detection": "persistent resolved connected component; not literal zero electrode oxygen fraction"
+  },
+  "missing_author_inputs": [
+    "gas inlet dimensions and position",
+    "complete Fluent setup/initialization",
+    "exact detachment sampling region and numerical tolerance",
+    "66 CFD samples/supplemental details"
+  ],
+  "paper_validated": false,
+  "table3": {
+    "provenance": "Reported optimized combinations associated with surrogate optimization; not independent CFD ground truth",
+    "columns": [
+      "oxygen_velocity_m_s",
+      "base_height_mm",
+      "degassing_height_mm",
+      "reported_detachment_time_s"
+    ],
+    "rows": [
+      [
+        1,
+        1,
+        2.5,
+        0.085
+      ],
+      [
+        1,
+        1,
+        3,
+        0.086
+      ],
+      [
+        1,
+        1,
+        3.5,
+        0.088
+      ],
+      [
+        3,
+        1,
+        2.5,
+        0.046
+      ],
+      [
+        3,
+        1,
+        3,
+        0.043
+      ],
+      [
+        3,
+        1,
+        3.5,
+        0.042
+      ],
+      [
+        5,
+        1,
+        2.5,
+        0.049
+      ],
+      [
+        5,
+        1,
+        3,
+        0.044
+      ],
+      [
+        5,
+        1,
+        3.5,
+        0.039
+      ],
+      [
+        10,
+        1,
+        2.5,
+        0.039
+      ],
+      [
+        10,
+        1,
+        3,
+        0.042
+      ],
+      [
+        10,
+        1,
+        3.5,
+        0.045
+      ]
+    ]
+  },
+  "source_pdf_sha256": "1bbf74c42c314b3bfd3be82d5926d2a63eb549998cad79f401f1eed664902b26"
+}

@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 import re
 
-from ....metrics import read_surface_history
+from ....openfoam import read_surface_history
 from ....runtime import SimulationError
 
 

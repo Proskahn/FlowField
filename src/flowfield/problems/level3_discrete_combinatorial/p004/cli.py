@@ -5,8 +5,8 @@ import json,random
 from pathlib import Path
 from ....evaluation import write_json
 from ....runtime import Runtime,DEFAULT_IMAGE
-from ....ioh_adapter import make_ioh_problem,analyzer_logger
-from ....experiments import random_search
+from ....benchmarking.ioh import make_ioh_problem,analyzer_logger
+from ....optimization import optimize
 from . import P004Problem,P004HydraulicProblem,HydraulicConfig
 from .library import catalog,enumerate_paths,path_id,serpentine,COUNT
 from .case import generate_case
@@ -81,7 +81,7 @@ def main(argv=None):
             result=rank(args.model,args.output)
         elif args.command=='search':
             p=P004Problem(dataset=args.dataset,model=args.model)
-            result=random_search(p,budget=args.budget,seed=args.seed,output=args.output,with_ioh=args.ioh)
+            result=optimize(p,optimizer="random",budget=args.budget,seed=args.seed,output=args.output,with_ioh=args.ioh)
         elif args.command=='run':result=run_case(args.case,Runtime(args.backend,args.image,args.timeout))
         elif args.command=='hydraulic-smoke':
             config=HydraulicConfig(**json.loads(args.config.read_text())) if args.config else HydraulicConfig()

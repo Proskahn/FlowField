@@ -5,8 +5,8 @@ from pathlib import Path
 import tempfile,unittest
 from unittest.mock import patch
 from flowfield import get_problem,P004Problem,P004HydraulicProblem,HydraulicConfig
-from flowfield.experiments import random_search
-from flowfield.ioh_adapter import make_ioh_problem,analyzer_logger
+from flowfield.optimization import optimize
+from flowfield.benchmarking.ioh import make_ioh_problem,analyzer_logger
 from flowfield.problems.level3_discrete_combinatorial.p004.library import *
 from flowfield.problems.level3_discrete_combinatorial.p004.geometry import footprint_cells
 from flowfield.problems.level3_discrete_combinatorial.p004.case import generate_case
@@ -124,8 +124,9 @@ class P004Tests(unittest.TestCase):
                 with self.assertRaises(TypeError):f([.5]*49)
             self.assertEqual(f.state.evaluations,2)
             data=next((Path(tmp)/'ioh').rglob('*.dat')).read_text().splitlines();self.assertEqual(len(data),3);self.assertEqual(len(data[0].split()),51)
-            summary=random_search(p,budget=4,output=Path(tmp)/'search',with_ioh=False)
-            self.assertEqual(summary['evaluations'],4)
+            summary=optimize(p,optimizer="random",budget=4,output=Path(tmp)/'search',with_ioh=False)
+            self.assertEqual(summary['successful_evaluations'],3)
+            self.assertEqual(summary['stop_reason'],'no_new_design_found')
             records=[json.loads(v) for v in (Path(tmp)/'search/evaluations.jsonl').read_text().splitlines()]
             self.assertTrue(all(path_id(v['x']) in [0,4,23005] for v in records))
 

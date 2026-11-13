@@ -1,13 +1,20 @@
 """P003: density-field topology of a depth-averaged PEMFC cathode."""
 from pathlib import Path
 import math
-from ....base import FlowFieldProblem
+from ....problem import CFDProblem
 from ....runtime import Runtime,SimulationError
 from .config import TopologyConfig,DOI,MODEL_REVISION
 from .design import decode as decode_field,preset,volume_gradient
 
 
-class P003Problem(FlowFieldProblem):
+class P003Problem(CFDProblem):
+    config_type = TopologyConfig
+
+    @property
+    def case_definition(self):
+        from .evaluation import CASE
+        return CASE
+
     def __init__(self,output_root='runs',*,config=None,runtime=None,failure_penalty=None):
         self.config=config if config is not None else TopologyConfig()
         if not isinstance(self.config,TopologyConfig):raise TypeError('P003 requires TopologyConfig')

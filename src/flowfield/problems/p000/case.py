@@ -4,38 +4,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from .model import ChannelConfig
+from .config import ChannelConfig
 
 
-def foam_file(name, body, cls="dictionary"):
-    return f"""/* FlowField P000; OpenCFD OpenFOAM v2312; SI units. */
-FoamFile
-{{
-    version 2.0;
-    format ascii;
-    class {cls};
-    object {name};
-}}
-{body.strip()}
-"""
-
-
-def _surface(name, patch, operation, field):
-    return f"""
-    {name}
-    {{
-        type surfaceFieldValue;
-        libs ("libfieldFunctionObjects.so");
-        writeControl timeStep;
-        writeInterval 1;
-        log false;
-        writeFields false;
-        regionType patch;
-        name {patch};
-        operation {operation};
-        fields ({field});
-    }}
-"""
+from ...openfoam import foam_file, surface_function as _surface
 
 
 def generate_case(path, config: ChannelConfig):

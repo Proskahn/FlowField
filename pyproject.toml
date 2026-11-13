@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flowfield-benchmarks"
-version = "0.7.0"
+version = "0.8.0"
 description = "Reproducible OpenFOAM flow-field optimization benchmarks"
 requires-python = ">=3.10"
 dependencies = []
@@ -16,7 +16,9 @@ ioh = ["ioh==0.3.22"]
 p001 = ["gmsh==4.13.1"]
 
 [project.scripts]
+flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
 flowfield-optimize = "flowfield.optimization:main"
+flowfield-benchmark = "flowfield.benchmarking.runner:main"
 flowfield-p004 = "flowfield.problems.level3_discrete_combinatorial.p004.cli:main"
 flowfield-p003 = "flowfield.problems.level4_high_dimensional_topology.p003.cli:main"
 flowfield = "flowfield.cli:main"
@@ -32,3 +34,5 @@ where = ["src"]
 "flowfield.problems.level4_high_dimensional_topology.p003" = ["solver/*.C", "solver/Make/files", "solver/Make/options"]
 
 "flowfield.problems.level3_discrete_combinatorial.p004" = ["data/*.json", "data/*.gz"]
+
+"flowfield.problems.level1_small_continuous.p005" = ["monitor/*.C", "monitor/*.H", "monitor/Make/files", "monitor/Make/options", "data/*.json"]

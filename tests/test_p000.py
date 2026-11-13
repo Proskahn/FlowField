@@ -8,10 +8,11 @@ import unittest
 from dataclasses import replace
 from unittest.mock import patch
 
-from flowfield.case import generate_case
-from flowfield.evaluation import Evaluator, run_case
-from flowfield.metrics import extract_metrics, read_surface_history
-from flowfield.model import ChannelConfig, decode_design, reference_pressure_drop
+from flowfield.problems.p000.case import generate_case
+from flowfield.problems.p000 import P000Problem
+from flowfield.problems.p000.evaluation import run_case
+from flowfield.problems.p000.metrics import extract_metrics, read_surface_history
+from flowfield.problems.p000.config import ChannelConfig, decode_design, reference_pressure_drop
 from flowfield.runtime import Runtime, SimulationError
 
 
@@ -79,10 +80,10 @@ class CaseTests(unittest.TestCase):
                 run_case(case)
 
     def test_failure_penalty_is_explicit_and_bounds_still_raise(self):
-        with patch("flowfield.evaluation.evaluate", side_effect=SimulationError("failed")):
+        with patch("flowfield.problems.p000.evaluation.evaluate", side_effect=SimulationError("failed")):
             with self.assertRaises(SimulationError):
-                Evaluator()([0, 0])
-            evaluator = Evaluator(failure_penalty=1e12)
+                P000Problem()([0, 0])
+            evaluator = P000Problem(failure_penalty=1e12)
             self.assertEqual(evaluator([0, 0]), 1e12)
             self.assertEqual(evaluator.last_result["status"], "penalized")
             with self.assertRaises(ValueError):

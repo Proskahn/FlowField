@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 
-from .base import FlowFieldProblem
+from ..problem import AbstractFlowFieldProblem
 
 
 def _ioh():
@@ -14,14 +14,14 @@ def _ioh():
     return ioh
 
 
-def make_ioh_problem(evaluator: FlowFieldProblem):
-    """Adapt any FlowFieldProblem using its dimension, bounds and scalar call.
+def make_ioh_problem(evaluator: AbstractFlowFieldProblem):
+    """Adapt any AbstractFlowFieldProblem using its dimension, bounds and scalar call.
 
     Instance one, minimization, and no claimed known optimum. IOH's numeric ID
     is registry-assigned; the problem's ioh_name distinguishes configurations.
     """
-    if not isinstance(evaluator, FlowFieldProblem):
-        raise TypeError("make_ioh_problem requires a FlowFieldProblem")
+    if not isinstance(evaluator, AbstractFlowFieldProblem):
+        raise TypeError("make_ioh_problem requires a AbstractFlowFieldProblem")
     ioh = _ioh()
     kind = getattr(evaluator, 'variable_type', 'real')
     if kind not in ('real', 'integer'):

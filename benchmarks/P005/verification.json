@@ -1,0 +1,128 @@
+{
+  "date": "2026-11-11",
+  "status": "passed_execution_and_conservation_checks",
+  "paper_validated": false,
+  "model_revision": "dual-layer-vof-v1",
+  "solver": "stock OpenCFD v2312 interFoam",
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "tests": {
+    "passed": 112,
+    "failed": 0,
+    "new_p005_tests": 11,
+    "detector_test": "actual C++ header compiled and executed"
+  },
+  "mesh_checks": [
+    {
+      "name": "minimum",
+      "mesh": {
+        "cells": 9000,
+        "blocks": 24,
+        "minimum_cell_width_m": 4.999999999999997e-05,
+        "maximum_delta_t_s": 2.2955912334157275e-06,
+        "gas_inlet_faces": 4,
+        "expected_volume_m3": 2.6e-08,
+        "gas_inlet_area_m2": 1e-08
+      },
+      "passed": true
+    },
+    {
+      "name": "maximum",
+      "mesh": {
+        "cells": 57600,
+        "blocks": 24,
+        "minimum_cell_width_m": 4.999999999999997e-05,
+        "maximum_delta_t_s": 2.2955912334157275e-06,
+        "gas_inlet_faces": 4,
+        "expected_volume_m3": 1.6800000000000002e-07,
+        "gas_inlet_area_m2": 1e-08
+      },
+      "passed": true
+    },
+    {
+      "name": "medium",
+      "mesh": {
+        "cells": 292640,
+        "blocks": 24,
+        "minimum_cell_width_m": 2.4999999999999984e-05,
+        "maximum_delta_t_s": 8.116140639903258e-07,
+        "gas_inlet_faces": 16,
+        "expected_volume_m3": 1.16e-07,
+        "gas_inlet_area_m2": 1e-08
+      },
+      "passed": true
+    }
+  ],
+  "ioh_smoke": {
+    "problem": "P005",
+    "status": "passed",
+    "paper_validated": false,
+    "scope": "short_transient_execution_and_IOH_only",
+    "observation_horizon_s": 5e-05,
+    "objective": 0.0001,
+    "metrics": {
+      "detached": false,
+      "detachment_time_s": null,
+      "detachment_bracket_s": null,
+      "right_censored": true,
+      "detachment_time_lower_bound_s": 5e-05,
+      "final_time_s": 5e-05,
+      "diagnostic_samples": 6,
+      "gas_volume_m3": 2.500000015924955e-12,
+      "injected_volume_m3": 2.499999999999998e-12,
+      "max_gas_balance_relative": 6.540784806244881e-09,
+      "max_continuity_relative": 1.34783650865933e-09,
+      "min_alpha_water": -2.126004651606314e-18,
+      "max_alpha_water": 1.000000000003836
+    },
+    "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p005-20261110/vof-ioh-smoke/cases/P005-d8e33ac5d4224e7b89be66797f98fed0",
+    "ioh_evaluations": 1
+  },
+  "one_ms_transient": {
+    "status": "ok",
+    "objective": 0.002,
+    "metrics": {
+      "detached": false,
+      "detachment_time_s": null,
+      "detachment_bracket_s": null,
+      "right_censored": true,
+      "detachment_time_lower_bound_s": 0.001,
+      "final_time_s": 0.001,
+      "diagnostic_samples": 11,
+      "gas_volume_m3": 5.000000105227305e-11,
+      "injected_volume_m3": 4.999999999999964e-11,
+      "max_gas_balance_relative": 2.888946799086921e-08,
+      "max_continuity_relative": 1.349684432732713e-09,
+      "min_alpha_water": -4.295610577559291e-09,
+      "max_alpha_water": 1.00000000003844
+    },
+    "case_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p005-20261110/transient-1ms/P005-3149718d6d3d4ae282c77d2ebbb4bf2e",
+    "wall_time_s": 230.05519283399917
+  },
+  "optimization_resume": {
+    "budget": 2,
+    "total_cfd_attempts": 2,
+    "replayed_evaluations": 1,
+    "new_attempts_after_resume": 1,
+    "preserved_original_case_files": 47,
+    "original_files_unchanged": true,
+    "successful_evaluations": 2,
+    "ioh_trace": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p005-20261110/optimization-resume/P005/resume-sessions/000001/ioh",
+    "all_results_right_censored": true,
+    "optimization_improvement_claimed": false
+  },
+  "limitations": [
+    "No full 0.2 s detachment evaluation completed",
+    "No paper detachment time or optimum reproduced",
+    "No mesh/time-step independence established",
+    "Gas inlet geometry and exact event definition require author information"
+  ],
+  "evidence_directory": "/Users/zhuang/Documents/Codex/2026-11-06/referenced-chatgpt-conversation-this-is-an/work/p005-20261110"
+}

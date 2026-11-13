@@ -6,11 +6,11 @@ import json
 from pathlib import Path
 import sys
 
-from .case import generate_case
-from .evaluation import evaluate, run_case, write_json
-from .experiments import add_search_arguments, search_from_args
-from .ioh_adapter import analyzer_logger, make_ioh_problem
-from .model import ChannelConfig, MESHES, reference_pressure_drop
+from .problems.p000.case import generate_case
+from .evaluation import write_json
+from .problems.p000.evaluation import evaluate, run_case
+from .benchmarking.ioh import analyzer_logger, make_ioh_problem
+from .problems.p000.config import ChannelConfig, MESHES, reference_pressure_drop
 from .runtime import Runtime, SimulationError, DEFAULT_IMAGE
 from .registry import get_problem, list_problems
 
@@ -65,10 +65,14 @@ def smoke(output, config, runtime, with_ioh=False):
 
 
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "search":
+        from .optimization import main as optimize_main
+        return optimize_main(["--optimizer", "random", *argv[1:]])
     parser = argparse.ArgumentParser(description="FlowField P000: v2312 straight-channel verification")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("list", help="List registered benchmark IDs")
-    add_search_arguments(sub.add_parser("search", help="Run a seeded benchmark experiment"))
+    sub.add_parser("search", help="Run random search through flowfield-optimize")
     for name in ("generate", "evaluate", "reference", "smoke"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--config", type=Path, help="JSON ChannelConfig; unknown keys are rejected")
@@ -91,8 +95,6 @@ def main(argv=None):
     try:
         if args.command == "list":
             result = {"problems": list(list_problems())}
-        elif args.command == "search":
-            result = search_from_args(args)
         elif args.command == "run":
             result = run_case(args.case, _runtime(args))
         else:

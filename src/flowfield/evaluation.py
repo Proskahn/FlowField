@@ -1,16 +1,15 @@
-"""Fresh evaluation directories and explicit failure records for every CFD call."""
+"""Shared execution lifecycle; physics and result extraction stay in problems."""
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-import platform
+import subprocess
 import time
+from typing import Callable
 import uuid
 
-from .case import generate_case
-from .metrics import extract_metrics
-from .model import ChannelConfig
 from .runtime import Runtime, SimulationError
 
 
@@ -20,68 +19,96 @@ def write_json(path, payload):
         stream.write("\n")
 
 
-def run_case(case, runtime=None):
-    """Run a generated, never-executed case. Re-running requires a fresh case."""
-    case = Path(case).resolve()
-    runtime = runtime or Runtime()
-    metadata = json.loads((case / "case.json").read_text(encoding="utf-8"))
-    config = ChannelConfig(**metadata["config"])
-    if metadata.get("problem") != "P000" or metadata.get("config_sha256") != config.fingerprint:
-        raise ValueError("Not a valid P000 case manifest")
-    input_hashes = metadata.get("input_sha256", {})
-    expected_inputs = {"0/U", "0/p", "constant/transportProperties", "constant/turbulenceProperties",
-                       "system/blockMeshDict", "system/controlDict", "system/fvSchemes", "system/fvSolution"}
-    if set(input_hashes) != expected_inputs:
-        raise ValueError("Case manifest does not list all P000 inputs")
-    for name, checksum in input_hashes.items():
-        if hashlib.sha256((case / name).read_bytes()).hexdigest() != checksum:
-            raise ValueError(f"Case input changed: {name}; regenerate with an updated configuration")
-    if any((case / name).exists() for name in ("postProcessing", "constant/polyMesh", "result.json", "log.blockMesh")):
-        raise FileExistsError("Case already contains run data; generate a fresh destination")
-    # Exclusive marker prevents concurrent execution and resuming failed cases.
-    with (case / ".execution-started").open("x", encoding="utf-8") as stream:
-        stream.write(datetime.now(timezone.utc).isoformat() + "\n")
-    started = time.monotonic()
-    result = {"schema_version": 1, "problem": "P000", "suite_version": "0.2.0",
-              "status": "failed", "objective_unit": "Pa", "objective_direction": "minimize",
-              "config": config.to_dict(), "config_sha256": config.fingerprint,
-              "input_sha256": input_hashes,
-              "created_utc": datetime.now(timezone.utc).isoformat(),
-              "python_version": platform.python_version(), "case_directory": str(case)}
-    try:
-        info = runtime.resolve()
-        result["runtime"] = info
-        runtime.run(case, "blockMesh", info=info)
-        log = runtime.run(case, "checkMesh", ("-allGeometry", "-allTopology"), info=info)
-        if "Mesh OK." not in log.read_text(encoding="utf-8"):
-            raise SimulationError("checkMesh did not report Mesh OK; solver was not started")
-        runtime.run(case, "simpleFoam", info=info)
-        metrics = extract_metrics(case, config)
-        result["metrics"] = metrics
-        # Reference comparison is reported separately; numerical health determines evaluation validity.
-        result.update(status="ok", objective=metrics["pressure_drop_pa"])
-    except (SimulationError, OSError, ValueError) as exc:
-        result["error"] = str(exc)
-        raise SimulationError(f"P000 evaluation failed in {case}: {exc}", case_directory=case) from exc
-    except KeyboardInterrupt:
-        result["error"] = "Interrupted by user"
-        raise
-    finally:
-        result["wall_time_s"] = time.monotonic() - started
-        write_json(case / "result.json", result)
-    return result
+@dataclass(frozen=True)
+class CaseDefinition:
+    """Problem-owned hooks and data consumed by CaseEvaluator.
+
+    validate checks geometry and pinned sources without executing a solver.
+    execute meshes/solves/extracts results using the resolved runtime, updating
+    the supplied result so partial diagnostics survive a failure.
+    """
+    name: str
+    config_type: type
+    inputs: frozenset[str]
+    commands: tuple[str, ...]
+    validate: Callable
+    execute: Callable
+    generate: Callable
+    extract: Callable
+    revision: str | None = None
+    execution_outputs: tuple[str, ...] = ()
+    timeout_s: float = 1800
 
 
-def evaluate(config=None, *, output_root="runs", runtime=None):
-    config = config or ChannelConfig()
-    root = Path(output_root).resolve()
-    root.mkdir(parents=True, exist_ok=True)
-    case = root / ("P000-" + uuid.uuid4().hex)
-    generate_case(case, config)
-    return run_case(case, runtime)
+class CaseEvaluator:
+    """Create unique cases, validate inputs, run once, and retain failure records."""
 
+    def __init__(self, definition: CaseDefinition, runtime=None):
+        self.definition = definition
+        self.runtime = runtime or Runtime(timeout_s=definition.timeout_s)
 
-# Preserve imports/call signatures from the initial scaffold.
-from .problems import P000Problem
+    def evaluate(self, *case_args, output_root="runs"):
+        case = Path(output_root).resolve() / (self.definition.name + "-" + uuid.uuid4().hex)
+        self.definition.generate(case, *case_args)
+        return self.run_case(case)
 
-Evaluator = P000Problem
+    def _load_case(self, case):
+        """Verify the same immutable inputs for execution and offline extraction."""
+        spec = self.definition
+        manifest = json.loads((case / "case.json").read_text(encoding="utf-8"))
+        config = spec.config_type(**manifest["config"])
+        hashes = manifest.get("input_sha256", {})
+        if (manifest.get("problem") != spec.name
+                or manifest.get("config_sha256") != config.fingerprint
+                or set(hashes) != spec.inputs
+                or (spec.revision is not None and manifest.get("model_revision") != spec.revision)):
+            raise ValueError(f"Invalid {spec.name} manifest")
+        for name, digest in hashes.items():
+            relative = Path(name)
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError(f"Invalid case input path: {name}")
+            if hashlib.sha256((case / relative).read_bytes()).hexdigest() != digest:
+                raise ValueError(f"Case input changed: {name}; generate a fresh case")
+        spec.validate(case, manifest, config)
+        return manifest, config
+
+    def run_case(self, case):
+        case = Path(case).resolve()
+        spec = self.definition
+        manifest, config = self._load_case(case)
+        outputs = ("postProcessing", "result.json") + spec.execution_outputs
+        if any((case / name).exists() for name in outputs):
+            raise FileExistsError("Case already contains execution data; generate a fresh case")
+        for path in case.iterdir():
+            try:
+                old_fields = path.is_dir() and float(path.name) > 0
+            except ValueError:
+                old_fields = False
+            if old_fields:
+                raise FileExistsError("Case contains old fields; generate a fresh case")
+        with (case / ".execution-started").open("x", encoding="utf-8") as stream:
+            stream.write(datetime.now(timezone.utc).isoformat() + "\n")
+        result = dict(manifest, status="failed", case_directory=str(case),
+                      created_utc=datetime.now(timezone.utc).isoformat())
+        started = time.monotonic()
+        try:
+            info = self.runtime.resolve(commands=spec.commands)
+            result["runtime"] = info
+            spec.execute(case, config, manifest, self.runtime, info, result)
+            result.update({"status": "ok", **spec.extract(case, config)})
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            result.update(status="failed", error=str(exc))
+            raise SimulationError(f"{spec.name} failed in {case}: {exc}", case_directory=case) from exc
+        except KeyboardInterrupt:
+            result.update(status="failed", error="Interrupted by user")
+            raise
+        finally:
+            result["wall_time_s"] = time.monotonic() - started
+            write_json(case / "result.json", result)
+        return result
+
+    def extract_results(self, case):
+        """Read saved OpenFOAM output without launching CFD or writing files."""
+        case = Path(case).resolve()
+        _, config = self._load_case(case)
+        return self.definition.extract(case, config)

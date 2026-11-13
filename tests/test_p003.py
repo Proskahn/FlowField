@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from flowfield import get_problem, P003Problem, TopologyConfig
-from flowfield.ioh_adapter import make_ioh_problem, analyzer_logger
+from flowfield.benchmarking.ioh import make_ioh_problem, analyzer_logger
 from flowfield.runtime import SimulationError
 from flowfield.problems.level4_high_dimensional_topology.p003.config import current_density, CONTINUATION
 from flowfield.problems.level4_high_dimensional_topology.p003.design import grid, inverse_project, project, stencil

@@ -7,20 +7,22 @@ import json
 import math
 from pathlib import Path
 import platform
-import random
 import shutil
 import sys
 import time
 
-from .base import FlowFieldProblem
-from .ioh_adapter import analyzer_logger, make_ioh_problem
-from .model import ChannelConfig, MESHES
-from .registry import get_problem
-from .runtime import DEFAULT_IMAGE, Runtime, SimulationError
-from .optimization_state import (ResumeError, append_json, check_legacy_pid, load_history,
+from ..problem import AbstractFlowFieldProblem
+from ..benchmarking.ioh import analyzer_logger, make_ioh_problem
+from ..problems.p000.config import MESHES
+from ..registry import create_problem, list_problems, problem_config_type
+from ..config import load_config
+from ..problem import CFDProblem
+from .registry import create_sampler, list_optimizers, resolve_optimizer, optimizer_label, optimizer_definition
+from ..runtime import DEFAULT_IMAGE, Runtime, SimulationError
+from .state import (ResumeError, append_json, check_legacy_pid, load_history,
     next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment)
 
-PROBLEMS = ('P000', 'P001', 'P002', 'P003', 'P004', 'P004-hydraulic')
+PROBLEMS = list_problems()
 
 
 _save = save_json
@@ -53,34 +55,14 @@ def _validate_options(budget, seed, population, sigma, failure_penalty, max_seco
 
 
 def _method(problem, method):
-    if method not in ('auto', 'cmaes', 'random'):
-        raise ValueError('Unknown optimization method')
-    discrete = getattr(problem, 'variable_type', 'real') == 'integer'
-    if method == 'cmaes' and discrete:
-        raise ValueError('CMA-ES does not preserve P004 Hamiltonian paths; use auto or random')
-    if discrete and not hasattr(problem, 'sample_design'):
-        raise ValueError('Discrete search requires a feasible sample_design method')
-    return ('random' if discrete else 'cmaes') if method == 'auto' else method
+    return resolve_optimizer(problem, method)
 
 
 def _initial(problem):
-    if problem.name == 'P004' and getattr(problem, 'dataset', None) is not None:
-        identifier = 23005 if 23005 in problem.dataset.labels else min(problem.dataset.labels)
-        return list(problem.design_from_id(identifier))
-    if hasattr(problem, 'initial_design'):
-        return list(problem.initial_design())
-    if problem.name == 'P000':
-        return [1/3, 1/3]
-    if problem.name == 'P001':
-        from .problems.level2_medium_parametric.p001 import BASELINE_X
-        return list(BASELINE_X)
-    if problem.name == 'P002':
-        from .problems.level2_medium_parametric.p002 import BASELINE_X
-        return list(BASELINE_X)
-    return [(lo + hi)/2 for lo, hi in zip(problem.lower_bounds, problem.upper_bounds)]
+    return list(problem.initial_design())
 
 
-class _FailurePolicy(FlowFieldProblem):
+class _FailurePolicy(AbstractFlowFieldProblem):
     """Make explicitly penalized CFD failures visible to the same IOH call."""
 
     def __init__(self, problem, penalty):
@@ -113,47 +95,27 @@ class _FailurePolicy(FlowFieldProblem):
 
 
 def _proposals(problem, x0, method, population, sigma, seed, state):
-    """Yield designs and accept scalar feedback; deterministic across restarts."""
-    seen = {tuple(x0)}
-    yield list(x0), 'baseline', 0
-    if method == 'cmaes':
-        import cma
-        import numpy as np
-        lower = np.asarray(problem.lower_bounds)
-        span = np.asarray(problem.upper_bounds)-problem.lower_bounds
-        normalized = (np.asarray(x0)-lower)/span
-        es = cma.CMAEvolutionStrategy(normalized.tolist(), sigma, dict(
-            bounds=[0,1], popsize=population, CMA_diagonal=problem.dimension>100,
-            CMA_mirrors=0, randn=np.random.RandomState(seed).randn, seed=float('nan'),
-            verbose=-9, verb_log=0, verb_disp=0))
-        while True:
-            stopped = es.stop()
-            if stopped:
-                state['stop_reason'] = 'cma_termination'
-                state['cma_stop'] = {str(k):str(v) for k,v in stopped.items()}
-                return
-            proposals = es.ask()
-            values = []
-            for candidate in proposals:
-                x = (lower + span*np.asarray(candidate)).tolist()
-                values.append((yield x, 'candidate', int(es.countiter)+1))
-                state['partial_generation_evaluations'] = len(values)
-            es.tell(proposals, values)
+    """Bridge serial, budgeted evaluations to batch ask/tell algorithms."""
+    sampler = create_sampler(method, problem, seed=seed, initial=x0,
+                             population=population, sigma=sigma)
+    baseline = yield list(x0), 'baseline', 0
+    sampler.initialize(list(x0), baseline)
+    while True:
+        batch = sampler.ask()
+        if not batch:
+            state['stop_reason'] = sampler.stop_reason or 'optimizer_termination'
+            state.update(getattr(sampler, 'diagnostics', {}))
+            return
+        results = []
+        for x in batch:
+            problem.validate_design(x)
+            results.append((yield list(x), 'candidate', sampler.generation))
+            if sampler.generation is not None:
+                state['partial_generation_evaluations'] = len(results)
+        sampler.tell(batch, results)
+        if sampler.generation is not None:
             state['complete_generations'] += 1
             state['partial_generation_evaluations'] = 0
-    else:
-        rng = random.Random(seed)
-        while True:
-            for _ in range(1000):
-                x = list(problem.sample_design(rng)) if hasattr(problem,'sample_design') else [
-                    rng.uniform(lo,hi) for lo,hi in zip(problem.lower_bounds,problem.upper_bounds)]
-                if tuple(x) not in seen:
-                    break
-            else:
-                state['stop_reason'] = 'no_new_design_found'
-                return
-            seen.add(tuple(x))
-            yield x, 'candidate', None
 
 
 def _verify_history(problem, x0, method, population, sigma, seed, history):
@@ -167,7 +129,7 @@ def _verify_history(problem, x0, method, population, sigma, seed, history):
                 raise ResumeError(f'Cannot reproduce saved proposal {index+1}; '
                                   'check original code, dependencies and seed. No new CFD was started.')
             if index+1 < len(history):
-                request = proposals.send(row['objective'])
+                request = proposals.send(row['result'])
     except StopIteration as exc:
         raise ResumeError('Saved history extends past optimizer termination') from exc
     finally:
@@ -176,8 +138,12 @@ def _verify_history(problem, x0, method, population, sigma, seed, history):
 
 def optimize(problem, *, output, resume=False, **options):
     """Run or resume a fixed-budget experiment under an exclusive process lock."""
-    if not isinstance(problem, FlowFieldProblem):
-        raise TypeError('optimize requires a FlowFieldProblem')
+    if not isinstance(problem, AbstractFlowFieldProblem):
+        raise TypeError('optimize requires a AbstractFlowFieldProblem')
+    if 'optimizer' in options:
+        if 'method' in options:
+            raise ValueError('Specify optimizer or method, not both')
+        options['method'] = options.pop('optimizer')
     _validate_options(options.get('budget',20),options.get('seed',42),options.get('population',4),
                       options.get('sigma',.1),options.get('failure_penalty'),options.get('max_seconds'))
     _method(problem,options.get('method','auto'))
@@ -206,17 +172,17 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         except ImportError as exc:
             raise RuntimeError('Install CMA-ES with: python -m pip install -e ".[optim]"') from exc
     if with_ioh:
-        from .ioh_adapter import _ioh
+        from ..benchmarking.ioh import _ioh
         _ioh()
     wrapped = _FailurePolicy(problem,failure_penalty)
     diagonal = method == 'cmaes' and problem.dimension > 100
-    algorithm = ('Sep-CMA-ES' if diagonal else 'CMA-ES') if method == 'cmaes' else (
-        'FeasiblePathRandomSearch' if wrapped.variable_type == 'integer' else 'RandomSearch')
+    algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
-    experiment = dict(schema_version=2, algorithm=algorithm, problem=problem.name,
+    experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
+        optimizer_revision=optimizer_definition(method).revision, problem=problem.name,
         problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
-        initial_design=x0, population=population if method == 'cmaes' else None,
-        sigma_normalized=sigma if method == 'cmaes' else None, diagonal_covariance=diagonal,
+        initial_design=x0, population=population if method != 'random' else None,
+        sigma_normalized=sigma if method != 'random' else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
         objective_direction='minimize', failure_penalty=failure_penalty, ioh_enabled=with_ioh,
         max_seconds_soft=max_seconds, versions=_versions(),
@@ -329,7 +295,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
                 if progress:
                     progress(problem.name,index,budget,'replayed' if replaying else 'ok' if record['valid'] else 'failed/penalized')
                 try:
-                    request = proposals.send(record['objective'])
+                    request = proposals.send(record['result'])
                 except StopIteration:
                     break
                 snapshot()
@@ -354,36 +320,44 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
 
 
 def _make_problem(identifier, args):
-    common = dict(output_root=args.output/identifier/'cases', runtime=Runtime(args.backend,args.image,args.timeout))
-    if identifier == 'P000':
-        return get_problem(identifier, config=ChannelConfig(cells=MESHES[args.mesh]), **common)
-    if identifier == 'P001':
-        from .problems.level2_medium_parametric.p001 import PPFCConfig
-        return get_problem(identifier, config=PPFCConfig(mesh=args.mesh), **common)
-    if identifier == 'P002':
-        from .problems.level2_medium_parametric.p002 import PEMConfig
-        return get_problem(identifier, config=PEMConfig(mesh=args.mesh), **common)
-    if identifier == 'P003':
-        from .problems.level4_high_dimensional_topology.p003 import TopologyConfig
-        return get_problem(identifier, config=TopologyConfig(mesh=args.mesh), **common)
-    if identifier == 'P004-hydraulic':
-        from .problems.level3_discrete_combinatorial.p004 import HydraulicConfig
-        return get_problem(identifier, config=HydraulicConfig(mesh=args.mesh), **common)
-    return get_problem('P004', output_root=args.output/identifier/'cases',
-                       dataset=args.p004_dataset, model=args.p004_model)
+    common = dict(output_root=args.output / identifier / 'cases')
+    config_type = problem_config_type(identifier)
+    if config_type is not None:
+        source = args.config
+        if identifier == 'P005' and args.p005_config:
+            if source is not None:
+                raise ValueError('Use --config or --p005-config, not both')
+            source = args.p005_config
+        overrides = {}
+        if args.mesh is not None:
+            defaults = config_type()
+            overrides['mesh' if hasattr(defaults, 'mesh') else 'cells'] = (
+                args.mesh if hasattr(defaults, 'mesh') else MESHES[args.mesh])
+        if identifier == 'P005' and args.p005_oxygen_velocity is not None:
+            overrides['oxygen_velocity_m_s'] = args.p005_oxygen_velocity
+        common.update(config=load_config(config_type, source, **overrides),
+                      runtime=Runtime(args.backend, args.image, args.timeout))
+    elif args.config is not None:
+        raise ValueError(f'{identifier} has no registered configuration type')
+    if identifier == 'P004':
+        common.update(dataset=args.p004_dataset, model=args.p004_model)
+    return create_problem(identifier, **common)
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Bounded FlowField optimization: CMA-ES and feasible discrete search')
-    parser.add_argument('--problems', nargs='+', choices=PROBLEMS+('all',), default=['all'])
+    parser = argparse.ArgumentParser(description='Run selected FlowField problems with a registered optimizer')
+    parser.add_argument('--problem', '--problems', dest='problems', nargs='+', choices=list_problems()+('all',), default=['P000'])
     parser.add_argument('--budget', type=int, default=20, help='Maximum attempts PER problem, including baseline/failures')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--population', type=int, default=4)
     parser.add_argument('--sigma', type=float, default=.1, help='Initial step size in normalized coordinates')
+    parser.add_argument('--p005-config',type=Path,help='P005 physical/numerical configuration JSON; retain it for resume')
+    parser.add_argument('--p005-oxygen-velocity',type=float,help='P005 fixed oxygen inlet speed in m/s (default 5)')
     parser.add_argument('--p003-sigma', type=float, default=.005, help='P003 step size near its sharply projected feasible baseline')
-    parser.add_argument('--method', choices=('auto','cmaes','random'), default='auto')
+    parser.add_argument('--optimizer', '--method', dest='method', choices=('auto',)+list_optimizers(), default='auto')
+    parser.add_argument('--config', type=Path, help='Problem configuration JSON; --mesh overrides its mesh setting')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--mesh', choices=('coarse','medium','fine'), default='coarse')
+    parser.add_argument('--mesh', choices=('coarse','medium','fine'), default=None)
     parser.add_argument('--backend', choices=('auto','native','docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=1800, help='Seconds per mesh/build/solver command')
@@ -397,9 +371,12 @@ def main(argv=None):
     parser.add_argument('--resume',action='store_true',help='Continue an existing run from its JSON journals; keep the original total budget')
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(argv)
+    supplied = {word.split('=')[0] for word in argv if word.startswith('--')}
+    if '--problem' in supplied: supplied.add('--problems')
+    if '--optimizer' in supplied: supplied.add('--method')
     try:
         if args.resume:
-            args = restore_options(args,{word.split('=')[0] for word in argv if word.startswith('--')})
+            args = restore_options(args, supplied)
             if not args.dry_run:
                 check_legacy_pid(args.output.resolve())
         return _run_suite(args)
@@ -412,7 +389,7 @@ def _run_suite(args):
     _validate_options(args.budget,args.seed,args.population,args.p003_sigma,args.failure_penalty,args.max_seconds_per_problem)
     if 'all' in args.problems and len(args.problems) != 1:
         raise ValueError('Use all alone or list individual problem IDs')
-    identifiers = list(PROBLEMS) if args.problems == ['all'] else args.problems
+    identifiers = list(list_problems()) if args.problems == ['all'] else args.problems
     if len(set(identifiers)) != len(identifiers):
         raise ValueError('Duplicate problem IDs would obscure the per-problem budget')
     args.output = args.output.resolve()
@@ -427,14 +404,13 @@ def _run_suite(args):
         method = _method(problem,args.method)
         problems.append(problem)
         entries.append(dict(problem=identifier,status='ready',dimension=problem.dimension,
-            algorithm=('Sep-CMA-ES' if problem.dimension>100 else 'CMA-ES') if method=='cmaes' else (
-                'FeasiblePathRandomSearch' if getattr(problem,'variable_type','real')=='integer' else 'RandomSearch'),
+            algorithm=optimizer_label(method, problem),
             maximum_attempts=args.budget, evaluation_kind='current_lookup_or_surrogate' if identifier=='P004' else 'CFD',
             sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method=='cmaes' else None,
             initial_design_length=len(_initial(problem))))
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
                 maximum_cfd_attempts=sum(p.name!='P004' for p in problems)*args.budget,
-                mesh=args.mesh, seed=args.seed, problems=entries)
+                mesh=args.mesh or 'coarse', seed=args.seed, problems=entries)
     finished = {}
     if args.resume:
         remaining = 0
@@ -445,7 +421,7 @@ def _run_suite(args):
                 spent = len(history)
                 saved = json.loads((folder/'summary.json').read_text()) if (folder/'summary.json').exists() else {}
                 if (saved.get('attempts') == spent and not pending and
-                    saved.get('stop_reason') in ('evaluation_budget','cma_termination','no_new_design_found') and
+                    saved.get('stop_reason') in ('evaluation_budget','cma_termination','no_new_design_found','optimizer_termination') and
                     saved.get('status') in ('completed','completed_with_failures','failed')):
                     finished[problem.name] = saved
             elif folder.exists() and not pristine_initialization(folder):
@@ -462,7 +438,10 @@ def _run_suite(args):
     if not problems:
         raise ValueError('No runnable problems selected; P004 requires a current dataset/model')
     active = [p for p in problems if p.name not in finished]
-    # Detect missing Python dependencies before any CFD budget is spent.
+    # Construct adapters before any CFD budget is spent.
+    for problem in active:
+        create_sampler(args.method, problem, seed=args.seed, initial=_initial(problem),
+                       population=args.population, sigma=args.p003_sigma if problem.name=='P003' else args.sigma)
     if any(_method(p,args.method)=='cmaes' for p in active):
         import cma
     if any(p.name=='P001' for p in active):
@@ -470,21 +449,13 @@ def _run_suite(args):
         if gmsh.__version__ != '4.13.1':
             raise RuntimeError('P001 requires gmsh==4.13.1')
     if args.ioh:
-        from .ioh_adapter import _ioh
+        from ..benchmarking.ioh import _ioh
         _ioh()
-    if any(p.name != 'P004' for p in active):
-        runtime = Runtime(args.backend,args.image,args.timeout)
-        commands = {'checkMesh'}
-        if any(p.name in ('P000','P001','P004-hydraulic') for p in active):
-            commands.add('simpleFoam')
-        if any(p.name == 'P000' for p in active):
-            commands.add('blockMesh')
-        if any(p.name == 'P001' for p in active):
-            commands.add('gmshToFoam')
-        resolved = runtime.resolve(commands)
-        if resolved['backend']=='native' and any(p.name in ('P002','P003') for p in active) and not shutil.which('wmake'):
-            raise RuntimeError('Native P002/P003 require OpenFOAM wmake')
-        plan['runtime_preflight'] = resolved
+    cfd = [p for p in active if isinstance(p, CFDProblem)]
+    if cfd:
+        runtime = Runtime(args.backend, args.image, args.timeout)
+        commands = {command for p in cfd for command in p.case_definition.commands}
+        plan['runtime_preflight'] = runtime.resolve(commands)
     if not args.resume:
         args.output.mkdir(parents=True,exist_ok=False)
     with run_lock(args.output/'.suite.lock'):

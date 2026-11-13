@@ -190,6 +190,10 @@ def validate_experiment(saved, current):
     for key in keys:
         if saved.get(key) != current.get(key):
             raise ResumeError(f'Cannot resume with changed {key}')
+    if saved.get('schema_version', 0) >= 3:
+        for key in ('optimizer', 'optimizer_revision'):
+            if saved.get(key) != current.get(key):
+                raise ResumeError(f'Cannot resume with changed {key}')
     dependencies = ('cma', 'numpy') if current['population'] is not None else ()
     for key in dependencies:
         if saved['versions'].get(key) != current['versions'].get(key):
@@ -248,6 +252,9 @@ def restore_options(args, supplied):
             if args.p004_dataset is None and args.p004_model is None:
                 raise ResumeError('Legacy P004 resume requires the original --p004-dataset or --p004-model')
             options.update(p004_dataset=args.p004_dataset,p004_model=args.p004_model)
+    saved_ids = [entry['problem'] for entry in json.loads((output/'plan.json').read_text())['problems']]
+    if options.get('problems') == ['all']:
+        options['problems'] = saved_ids
     for key,value in options.items():
         if key in ('output','resume','dry_run'):
             continue
@@ -256,9 +263,10 @@ def restore_options(args, supplied):
         # Execution settings may change; objective and optimizer settings may not.
         if flag in supplied and key in ('backend','image','timeout','p004_dataset','p004_model'):
             continue
-        if flag in supplied and old != value:
+        comparable = str(old.resolve()) if isinstance(old, Path) else old
+        if flag in supplied and comparable != value:
             # --problems all represents the same suite when all IDs were saved.
-            if not (key=='problems' and old==['all'] and len(value)==6):
+            if not (key=='problems' and old==['all'] and value==saved_ids):
                 raise ResumeError(f'{flag} differs from the saved experiment; resume keeps the original budget/settings')
-        setattr(args,key,Path(value) if key in ('p004_dataset','p004_model') and value is not None else value)
+        setattr(args,key,Path(value) if key in ('p004_dataset','p004_model','p005_config','config') and value is not None else value)
     return args

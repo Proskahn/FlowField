@@ -4,18 +4,31 @@ from dataclasses import replace
 import math
 from pathlib import Path
 
-from ...base import EvaluationResult, FlowFieldProblem
-from ...model import ChannelConfig, decode_design
+from ...problem import EvaluationResult, CFDProblem
+from .config import ChannelConfig, decode_design
 from ...runtime import Runtime, SimulationError
 
 
-class P000Problem(FlowFieldProblem):
+class P000Problem(CFDProblem):
     """Fixed-flow rectangular channel; scalar objective is pressure drop in Pa.
 
     Coordinates are normalized width/height in [0,1]^2. Numerical health checks
     are execution requirements, not engineering optimization constraints. P000
     therefore returns an empty `constraints` mapping.
     """
+    config_type = ChannelConfig
+
+    @property
+    def case_definition(self):
+        from .evaluation import CASE
+        return CASE
+
+    def initial_design(self):
+        return [1/3, 1/3]
+
+    def case_arguments(self, x):
+        return (replace(self.config, **self.decode(x)),)
+
     def __init__(self, output_root="runs", *, config=None, runtime=None, failure_penalty=None):
         super().__init__("P000", 2, [0.0, 0.0], [1.0, 1.0])
         if failure_penalty is not None and (not math.isfinite(failure_penalty) or failure_penalty <= 0):
@@ -35,8 +48,8 @@ class P000Problem(FlowFieldProblem):
         return {"width_m": config.width_m, "height_m": config.height_m, "length_m": config.length_m}
 
     def evaluate_raw(self, x) -> EvaluationResult:
-        # Import here so the legacy evaluation module can re-export this class.
-        from ...evaluation import evaluate, write_json
+        from .evaluation import evaluate
+        from ...evaluation import write_json
 
         self.last_result = None
         design = self.validate_design(x)

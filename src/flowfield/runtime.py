@@ -11,7 +11,7 @@ import uuid
 
 DEFAULT_IMAGE = "opencfd/openfoam-default:2312"
 DEFAULT_COMMANDS = {"blockMesh", "checkMesh", "simpleFoam"}
-COMMANDS = DEFAULT_COMMANDS | {"gmshToFoam"}
+COMMANDS = DEFAULT_COMMANDS | {"gmshToFoam", "interFoam"}
 
 
 class SimulationError(RuntimeError):

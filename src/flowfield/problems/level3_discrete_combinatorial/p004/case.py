@@ -1,7 +1,7 @@
 """Auxiliary channel-only hydraulic case; this is not the paper's PEMFC model."""
 import hashlib,json
 from pathlib import Path
-from ....case import foam_file as _template,_surface
+from ....openfoam import foam_file as _template, surface_function as _surface
 from .geometry import decode,footprint_cells,svg
 from .config import HydraulicConfig,HYDRAULIC_REVISION
 

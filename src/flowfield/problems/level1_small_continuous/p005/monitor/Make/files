@@ -1,0 +1,2 @@
+detachmentMonitor.C
+LIB = $(FOAM_USER_LIBBIN)/libflowfieldP005

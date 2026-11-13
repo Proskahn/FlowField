@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from flowfield.optimization import main, optimize
-from flowfield.optimization_state import ResumeError, check_legacy_pid, run_lock, validate_experiment
+from flowfield.optimization.state import ResumeError, check_legacy_pid, run_lock, validate_experiment
 from test_optimization import CountingProblem, DiscreteProblem, cma
 
 
@@ -177,7 +177,7 @@ optimize(CountingProblem(),output=__import__('sys').argv[1],budget=10,with_ioh=F
 
     def test_exclusive_lock_blocks_other_process(self):
         path = self.root/'lock'
-        code = 'from flowfield.optimization_state import run_lock\nwith run_lock(__import__("sys").argv[1]): pass'
+        code = 'from flowfield.optimization.state import run_lock\nwith run_lock(__import__("sys").argv[1]): pass'
         with run_lock(path):
             child = subprocess.run([sys.executable,'-c',code,str(path)],capture_output=True,text=True)
             self.assertNotEqual(child.returncode,0)
@@ -198,7 +198,7 @@ optimize(CountingProblem(),output=__import__('sys').argv[1],budget=10,with_ioh=F
         second.initial_design = lambda:[1.,1.]
         def make(identifier,args):
             return first if identifier=='P000' else second
-        with patch('flowfield.optimization._make_problem',side_effect=make), patch('flowfield.optimization.Runtime.resolve',return_value={'backend':'docker'}):
+        with patch('flowfield.optimization.runner._make_problem',side_effect=make), patch('flowfield.optimization.runner.Runtime.resolve',return_value={'backend':'docker'}):
             with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
                 result = main(['--problems','P001','P000','--budget','6','--seed','0','--failure-penalty','1000',
                                '--output',str(folder)])
@@ -206,7 +206,7 @@ optimize(CountingProblem(),output=__import__('sys').argv[1],budget=10,with_ioh=F
         after = CountingProblem();after.name='P000'
         other = CountingProblem();other.name='P001'
         other.initial_design = lambda:[1.,1.]
-        with patch('flowfield.optimization._make_problem',side_effect=lambda identifier,args:after if identifier=='P000' else other), patch('flowfield.optimization.Runtime.resolve',return_value={'backend':'docker'}):
+        with patch('flowfield.optimization.runner._make_problem',side_effect=lambda identifier,args:after if identifier=='P000' else other), patch('flowfield.optimization.runner.Runtime.resolve',return_value={'backend':'docker'}):
             with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
                 result = main(['--resume','--output',str(folder)])
         self.assertEqual(result,1)  # Interruption is counted as a penalized failure.
@@ -218,13 +218,13 @@ optimize(CountingProblem(),output=__import__('sys').argv[1],budget=10,with_ioh=F
 
     def test_legacy_cli_infers_settings_and_dry_run_is_read_only(self):
         folder = self.root/'legacy';p=CountingProblem();p.name='P000'
-        with patch('flowfield.optimization._make_problem',return_value=p), patch('flowfield.optimization.Runtime.resolve',return_value={'backend':'docker'}):
+        with patch('flowfield.optimization.runner._make_problem',return_value=p), patch('flowfield.optimization.runner.Runtime.resolve',return_value={'backend':'docker'}):
             with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
                 main(['--problems','P000','--budget','6','--seed','0','--output',str(folder)])
         (folder/'run-options.json').unlink()
         before = {p.relative_to(folder):p.read_bytes() for p in folder.rglob('*') if p.is_file()}
         out = io.StringIO()
-        with patch('flowfield.optimization._make_problem',return_value=p),contextlib.redirect_stdout(out):
+        with patch('flowfield.optimization.runner._make_problem',return_value=p),contextlib.redirect_stdout(out):
             self.assertEqual(main(['--resume','--output',str(folder),'--dry-run']),0)
         plan = json.loads(out.getvalue())
         self.assertEqual((plan['budget_per_problem'],plan['seed'],plan['remaining_attempts']),(6,0,0))

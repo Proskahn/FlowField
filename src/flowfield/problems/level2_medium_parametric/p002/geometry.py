@@ -145,6 +145,8 @@ def mesh(case, m):
     write(poly/'cellZones', zonetext+')\n', 'regIOobject')
     write(poly/'faceZones', '0\n(\n)\n', 'regIOobject')
     m['inlet_areas'] = dict(inlet_areas)
+    from ....mesh import PolyMesh
+    return PolyMesh.from_case(case)
 
 
 def field(case, name, dims, values, bcs, vector=False):

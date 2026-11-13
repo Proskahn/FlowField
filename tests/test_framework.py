@@ -7,12 +7,12 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from flowfield import Evaluator, FlowFieldProblem, P000Problem, get_problem, list_problems, register_problem
-from flowfield.experiments import random_search
+from flowfield import AbstractFlowFieldProblem, P000Problem, get_problem, list_problems, register_problem
+from flowfield.optimization import optimize
 from flowfield.runtime import SimulationError
 
 
-class ToyProblem(FlowFieldProblem):
+class ToyProblem(AbstractFlowFieldProblem):
     """Cheap independent test problem; not a CFD benchmark or registered problem."""
     def __init__(self, name="FrameworkToy"):
         super().__init__(name, 3, [-2, 3, 10], [-1, 5, 20])
@@ -34,7 +34,7 @@ class ToyProblem(FlowFieldProblem):
 class FrameworkTests(unittest.TestCase):
     def test_contract_is_abstract_and_scalar_call_preserves_raw_result(self):
         with self.assertRaises(TypeError):
-            FlowFieldProblem("unfinished", 1, [0], [1])
+            AbstractFlowFieldProblem("unfinished", 1, [0], [1])
         problem = ToyProblem()
         self.assertEqual(problem([-1, 5, 10]), 114.)
         self.assertEqual(problem.calls, 1)
@@ -54,17 +54,16 @@ class FrameworkTests(unittest.TestCase):
     def test_invalid_bounds_and_nonfinite_objective(self):
         for bounds in (([], [1]), ([0], [0]), ([math.nan], [1]), ([0], [math.inf])):
             with self.subTest(bounds=bounds), self.assertRaises(ValueError):
-                FlowFieldProblem.__init__(ToyProblem(), "bad", 1, *bounds)
+                AbstractFlowFieldProblem.__init__(ToyProblem(), "bad", 1, *bounds)
         problem = ToyProblem()
         with patch.object(problem, "evaluate_raw", return_value={"objective": math.nan}):
             with self.assertRaisesRegex(ValueError, "nonfinite"):
                 problem([-1, 3, 10])
 
-    def test_registry_and_legacy_api(self):
+    def test_registry_and_public_api(self):
         self.assertIn("P000", list_problems())
         self.assertIsInstance(get_problem("P000"), P000Problem)
-        self.assertIsInstance(Evaluator(), FlowFieldProblem)
-        self.assertIs(Evaluator, P000Problem)
+        self.assertIsInstance(P000Problem(), AbstractFlowFieldProblem)
         with self.assertRaisesRegex(ValueError, "Unknown"):
             get_problem("not-a-problem")
         with self.assertRaisesRegex(ValueError, "already registered"):
@@ -78,13 +77,13 @@ class FrameworkTests(unittest.TestCase):
 
     def test_source_root_import_and_cli(self):
         root = Path(__file__).resolve().parents[1]
-        command = [sys.executable, "-c", "from flowfield import FlowFieldProblem,get_problem; "
-                   "assert isinstance(get_problem(),FlowFieldProblem); "
-                   "from flowfield.base import FlowFieldProblem as B; assert B is FlowFieldProblem"]
+        command = [sys.executable, "-c", "from flowfield import AbstractFlowFieldProblem,get_problem; "
+                   "assert isinstance(get_problem(),AbstractFlowFieldProblem); "
+                   "from flowfield.problem import AbstractFlowFieldProblem as B; assert B is AbstractFlowFieldProblem"]
         subprocess.run(command, cwd=root, check=True, capture_output=True)
         result = subprocess.run([sys.executable, "-m", "flowfield", "list"], cwd=root,
                                 check=True, capture_output=True, text=True)
-        self.assertEqual(json.loads(result.stdout)["problems"], ["P000", "P001", "P002", "P003", "P004", "P004-hydraulic"])
+        self.assertEqual(json.loads(result.stdout)["problems"], ["P000", "P001", "P002", "P003", "P004", "P004-hydraulic", "P005"])
 
 
 class P000InterfaceTests(unittest.TestCase):
@@ -106,7 +105,7 @@ class P000InterfaceTests(unittest.TestCase):
             cfd = {"status": "ok", "objective": 14.0, "case_directory": str(case),
                    "metrics": {"pressure_drop_pa": 14.0}, "runtime": {"backend": "test"}}
             problem = P000Problem(temp)
-            with patch("flowfield.evaluation.evaluate", return_value=cfd) as backend:
+            with patch("flowfield.problems.p000.evaluation.evaluate", return_value=cfd) as backend:
                 self.assertEqual(problem([1/3, 1/3]), 14.0)
             backend.assert_called_once()
             raw = problem.last_result
@@ -120,7 +119,7 @@ class P000InterfaceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             problem = P000Problem(temp, failure_penalty=1e12)
             error = SimulationError("solver failed", case_directory=temp)
-            with patch("flowfield.evaluation.evaluate", side_effect=error):
+            with patch("flowfield.problems.p000.evaluation.evaluate", side_effect=error):
                 raw = problem.evaluate_raw([.5, .5])
             self.assertEqual(raw["objective"], 1e12)
             self.assertEqual(raw["status"], "penalized")
@@ -138,10 +137,10 @@ class ExperimentTests(unittest.TestCase):
             for index in range(2):
                 problem = ToyProblem()
                 output = Path(temp) / str(index)
-                summary = random_search(problem, budget=4, seed=42, output=output, with_ioh=False)
+                summary = optimize(problem, optimizer="random", budget=4, seed=42, output=output, with_ioh=False)
                 records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
                 self.assertEqual(problem.calls, 4)
-                self.assertEqual(summary["evaluations"], 4)
+                self.assertEqual(summary["successful_evaluations"], 4)
                 self.assertEqual(summary["status"], "completed")
                 self.assertEqual(summary["best_objective"], min(r["objective"] for r in records))
                 for record in records:
@@ -150,7 +149,7 @@ class ExperimentTests(unittest.TestCase):
                 sequences.append([r["x"] for r in records])
             self.assertEqual(*sequences)
             with self.assertRaises(FileExistsError):
-                random_search(ToyProblem(), output=output, with_ioh=False)
+                optimize(ToyProblem(), optimizer="random", output=output, with_ioh=False)
 
     def test_failure_writes_partial_summary_and_retains_completed_evaluations(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -159,12 +158,15 @@ class ExperimentTests(unittest.TestCase):
             output = Path(temp) / "failed"
             with patch.object(problem, "evaluate_raw", side_effect=[raw, SimulationError("solver failed")]):
                 with self.assertRaises(SimulationError):
-                    random_search(problem, budget=3, output=output, with_ioh=False)
+                    optimize(problem, optimizer="random", budget=3, output=output, with_ioh=False)
             summary = json.loads((output / "summary.json").read_text())
             self.assertEqual(summary["status"], "failed")
-            self.assertEqual(summary["evaluations"], 1)
+            self.assertEqual(summary["successful_evaluations"], 1)
             self.assertIn("solver failed", summary["error"])
-            self.assertEqual(len((output / "evaluations.jsonl").read_text().splitlines()), 1)
+            records = [json.loads(line) for line in (output / "evaluations.jsonl").read_text().splitlines()]
+            self.assertEqual(len(records), 2)  # Failed attempts also belong to the shared budget journal.
+            self.assertIsNone(records[-1]['objective'])
+            self.assertFalse(records[-1]['valid'])
 
 
 if __name__ == "__main__":
