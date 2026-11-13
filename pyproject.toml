@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 optim = ["cma==4.5.0"]
+plot = ["matplotlib>=3.7"]
 p004-ml = ["numpy>=1.24"]
 ioh = ["ioh==0.3.22"]
 p001 = ["gmsh==4.13.1"]
@@ -19,6 +20,7 @@ p001 = ["gmsh==4.13.1"]
 flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
 flowfield-optimize = "flowfield.optimization:main"
 flowfield-benchmark = "flowfield.benchmarking.runner:main"
+flowfield-plot = "flowfield.benchmarking.plotting:main"
 flowfield-p004 = "flowfield.problems.level3_discrete_combinatorial.p004.cli:main"
 flowfield-p003 = "flowfield.problems.level4_high_dimensional_topology.p003.cli:main"
 flowfield = "flowfield.cli:main"

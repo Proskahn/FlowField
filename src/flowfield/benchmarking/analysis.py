@@ -25,16 +25,27 @@ def compare_runs(directories, *, targets=()):
         if identity is not None and current != identity:
             raise ValueError('Compare only the same objective/configuration, dimension, and budget')
         identity = current
-        if summary['status'] not in ('completed', 'completed_with_failures'):
+        exhausted_failures = summary['status'] == 'failed' and summary.get('stop_reason') == 'evaluation_budget'
+        if summary['status'] not in ('completed', 'completed_with_failures') and not exhausted_failures:
             raise ValueError(f'Incomplete run: {folder}')
         # Include recovered attempts without counting their original partial rows twice.
         from ..optimization.state import load_history
         rows, pending = load_history(folder, experiment['budget'], experiment.get('failure_penalty'))
         if pending:
             raise ValueError(f'Run has unreconciled attempts: {folder}')
+        if not rows or summary.get('attempts') != len(rows):
+            raise ValueError(f'Run summary does not match its observation journal: {folder}')
+        if exhausted_failures and len(rows) != experiment['budget']:
+            raise ValueError(f'Failed run has not exhausted its budget: {folder}')
         feasible = [r for r in rows if r['valid'] and r['feasible']]
+        best, trace = None, []
+        for row in rows:
+            if row['valid'] and row['feasible']:
+                best = row['objective'] if best is None else min(best, row['objective'])
+            trace.append(best)
         groups.setdefault(experiment['algorithm'], []).append(dict(
             seed=experiment['seed'], attempts=len(rows),
+            best_so_far=trace,
             best_feasible=min((r['objective'] for r in feasible), default=None),
             first_hits=[next((r['evaluation'] for r in feasible if r['objective'] <= t), None) for t in targets]))
     if not groups:
