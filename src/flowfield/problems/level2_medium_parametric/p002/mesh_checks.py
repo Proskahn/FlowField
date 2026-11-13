@@ -12,7 +12,9 @@ def assess_mesh(case, log, manifest):
     # OpenFOAM's optional determinant metric flags highly anisotropic, even
     # exactly orthogonal cells. Accept this one diagnostic only, in CL zones.
     if not re.search(r'^Failed 1 mesh checks\.$',log,re.M):
-        raise ValueError('Mesh failed checks other than the thin-layer determinant diagnostic')
+        failures = '; '.join(line.strip() for line in log.splitlines() if line.lstrip().startswith('***'))
+        raise ValueError('Mesh failed checks other than the thin-layer determinant diagnostic: '
+                         f'{failures or "see log.checkMesh"}')
     if len(re.findall(r'^\s*\*\*\*',log,re.M)) != 1 or '***Cells with small determinant' not in log:
         raise ValueError('Unexpected mesh quality failure')
     def number(pattern):

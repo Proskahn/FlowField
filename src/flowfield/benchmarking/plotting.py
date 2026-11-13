@@ -63,7 +63,7 @@ def _convergence(report, ax):
             values = [float('nan') if value is None else value for value in run['best_so_far']]
             ax.step(range(1, run['attempts'] + 1), values, where='post', color=f'C{index % 10}',
                     alpha=.8 if len(runs) == 1 else .55, marker='.' if run['attempts'] == 1 else None,
-                    label=f'{algorithm} ({len(runs)} runs)' if number == 0 else None)
+                    label=f'{algorithm} ({len(runs)} {"run" if len(runs) == 1 else "runs"})' if number == 0 else None)
     _style(ax, 'Convergence · individual runs', 'Evaluation attempts', 'Best feasible objective ↓')
     ax.set_xlim(.5, report['budget'] + .5)
     ax.legend(fontsize='small')
@@ -102,6 +102,11 @@ def _ert(report, ax):
                        color=f'C{index % 10}', transform=ax.get_xaxis_transform(),
                        label=f'{algorithm}: ERT = ∞ (no hits)')
     _style(ax, 'Expected running time', 'Objective target (≤ target succeeds)', 'Evaluation attempts ↓')
+    # NaN ERT values do not contribute to autoscaling; include their markers too.
+    targets = [row['target'] for group in report['algorithms'].values() for row in group['targets']]
+    lower, upper = min(targets), max(targets)
+    padding = .05 * (upper - lower) if upper > lower else max(1., abs(lower) * .05)
+    ax.set_xlim(lower - padding, upper + padding)
     ax.set_ylim(bottom=0)
     ax.legend(fontsize='small')
 

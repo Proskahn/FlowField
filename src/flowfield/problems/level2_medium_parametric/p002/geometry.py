@@ -26,12 +26,32 @@ def write(path, body, cls='dictionary'):
     path.write_text(header(path.name, cls) + body)
 
 
-def subdivide(knots, spacing):
+def subdivide(knots, spacing, *, max_ratio=None):
+    """Keep every geometry boundary, optionally limiting adjacent cell widths."""
     knots = sorted(set(round(v, 10) for v in knots))
     out = [knots[0]]
     for a, b in zip(knots, knots[1:]):
         n = max(1, math.ceil((b-a)/spacing-1e-9))
         out.extend(a+(b-a)*i/n for i in range(1, n+1))
+    if max_ratio is not None:
+        if not math.isfinite(max_ratio) or max_ratio < 2:
+            raise ValueError('max_ratio must be finite and at least 2')
+        # A channel edge can lie close to a manifold edge. Refine its larger
+        # neighbours instead of moving either physical boundary. Bisection
+        # retains the maximum spacing and propagates grading outward as needed.
+        while True:
+            widths = [b-a for a, b in zip(out, out[1:])]
+            split = {i for i, width in enumerate(widths)
+                     if (i > 0 and width > max_ratio * widths[i-1])
+                     or (i+1 < len(widths) and width > max_ratio * widths[i+1])}
+            if not split:
+                break
+            refined = [out[0]]
+            for i, (a, b) in enumerate(zip(out, out[1:])):
+                if i in split:
+                    refined.append((a+b)/2)
+                refined.append(b)
+            out = refined
     return out
 
 
@@ -50,8 +70,17 @@ def geometry(g, kind, level):
     if W != 11 or g['parallel_channel_length_mm'] != 8 or min(pt, cl, pm) <= 0:
         raise ValueError('P002 requires 11 mm plates, 8 mm branches and positive layer thicknesses')
     channels = [(1.5+2*i-w/2, 1.5+2*i+w/2) for i,w in enumerate(widths)]
-    x = subdivide([0, 1, 10, W]+[v for c in channels for v in c], .5/factor)
-    y = subdivide([0, .5, 1.5, 9.5, 10.5, L], .5/factor)
+    # A width ratio <= 8 gives orthogonal-face interpolation weights >= 1/9,
+    # comfortably above checkMesh's 0.05 threshold.
+    x = subdivide([0, 1, 10, W]+[v for c in channels for v in c], .5/factor, max_ratio=8)
+    # Thin x strips also need shorter cells at external y/z boundaries, where
+    # the determinant diagnostic has only one internal face in that direction.
+    # Refine locally, retaining the interior spacing and every physical layer.
+    boundary_spacing = 4 * min(b-a for a, b in zip(x, x[1:]))
+    y_knots = [0, .5, 1.5, 9.5, 10.5, L]
+    if boundary_spacing < .5/factor:
+        y_knots.extend([boundary_spacing, L-boundary_spacing])
+    y = subdivide(y_knots, .5/factor, max_ratio=8)
     def in_channel(cx, cy):
         return ((.5 < cy < 1.5 and cx < 10)
                 or (9.5 < cy < 10.5 and cx > 1)
@@ -64,7 +93,13 @@ def geometry(g, kind, level):
                 pm/(2*factor), cl/(factor+1), .1/factor, .25/factor, .25/factor]
     z, layers = [0], []
     for k, (lo, hi) in enumerate(zip(edges, edges[1:])):
-        vals = subdivide([lo, hi], spacings[k])
+        knots = [lo, hi]
+        if boundary_spacing < min(spacings[k], hi-lo):
+            if k == 0:
+                knots.append(lo+boundary_spacing)
+            elif k == len(spacings)-1:
+                knots.append(hi-boundary_spacing)
+        vals = subdivide(knots, spacings[k], max_ratio=8)
         z.extend(vals[1:])
         layers.extend([k]*(len(vals)-1))
     cells, ids = [], []

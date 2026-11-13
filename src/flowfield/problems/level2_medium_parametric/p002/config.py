@@ -9,7 +9,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 DOI = '10.1016/j.ijhydene.2023.08.026'
-MODEL_REVISION = 'pem-reconstruction-v1'
+MODEL_REVISION = 'pem-reconstruction-v2-graded-mesh'
 PARAMETERS = ('W1', 'W2', 'W3', 'W4', 'W5', 'Ha', 'Hc')
 BOUNDS_MM = ((.7, 1.9),)*5 + ((.5, 1.4),)*2
 BASELINE_MM = (1.,)*7

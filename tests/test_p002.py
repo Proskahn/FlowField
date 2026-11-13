@@ -14,7 +14,7 @@ from flowfield.problems.level2_medium_parametric.p002 import BASELINE_X, PAPER_O
 from flowfield.problems.level2_medium_parametric.p002.case import generate_case, INPUTS
 from flowfield.problems.level2_medium_parametric.p002.config import (
     PARAMETERS, PAPER_OPTIMUM_MM, normalize, parameters_for, scalar_objective)
-from flowfield.problems.level2_medium_parametric.p002.geometry import geometry, mesh, FLUID
+from flowfield.problems.level2_medium_parametric.p002.geometry import geometry, mesh, subdivide, FLUID
 from flowfield.problems.level2_medium_parametric.p002.evaluation import run_case
 from flowfield.problems.level2_medium_parametric.p002.metrics import read_history, HISTORY_COLUMNS
 from flowfield.problems.level2_medium_parametric.p002.metrics import field_pressure_drops
@@ -45,8 +45,9 @@ class P002Tests(unittest.TestCase):
                               *(m['z'][k+1]-m['z'][k]))
         dims = g['dimensions_mm']
         channel_area = 20+8*sum(dims[k] for k in PARAMETERS[:5])
-        self.assertAlmostEqual(volumes[1],channel_area*dims['Hc'],places=9)
-        self.assertAlmostEqual(volumes[7],channel_area*dims['Ha'],places=9)
+        # Geometry knots are rounded to 1e-10 mm before meshing.
+        self.assertAlmostEqual(volumes[1],channel_area*dims['Hc'],delta=1e-8)
+        self.assertAlmostEqual(volumes[7],channel_area*dims['Ha'],delta=1e-8)
         for zone in (3,5):
             self.assertAlmostEqual(volumes[zone],121*.02,places=10)
         for zone in (2,6):
@@ -85,6 +86,31 @@ class P002Tests(unittest.TestCase):
         self.assertLess(len(meshes[0]['cells']),len(meshes[1]['cells']))
         self.assertLess(len(meshes[1]['cells']),len(meshes[2]['cells']))
         self.assertEqual({m['z'][-1] for m in meshes},{3.818})
+
+    def test_grading_preserves_boundaries_and_bounds_adjacent_widths(self):
+        knots = [0, .999, 1, 1.001, 2]
+        grid = subdivide(knots, .5, max_ratio=8)
+        self.assertTrue(set(knots) <= set(grid))
+        widths = [b-a for a, b in zip(grid, grid[1:])]
+        self.assertGreater(min(widths), 0)
+        self.assertLessEqual(max(widths), .5)
+        self.assertTrue(all(max(a, b)/min(a, b) <= 8 for a, b in zip(widths, widths[1:])))
+        # Already well-spaced geometry, including the baseline, is unchanged.
+        self.assertEqual(subdivide([0, 1, 2], .5, max_ratio=8), subdivide([0, 1, 2], .5))
+
+    def test_seed42_candidate_has_safe_face_interpolation_weights(self):
+        # First proposal from CMA-ES, seed=42, sigma=.1, population=4.
+        x = [.29967141530112335, .23617347112231374, .31476977908601855,
+             .402306249311177, .22658399350846703, .5321410236422874, .7134836053062501]
+        self.check_geometry(x)
+        g = parameters_for(P002Problem().decode(x), PEMConfig())['geometry']
+        for level in ('coarse', 'medium', 'fine'):
+            m = geometry(g, 'parallel', level)
+            for axis in ('x', 'y', 'z'):
+                widths = [b-a for a, b in zip(m[axis], m[axis][1:])]
+                weights = [min(a, b)/(a+b) for a, b in zip(widths, widths[1:])]
+                with self.subTest(level=level, axis=axis):
+                    self.assertGreater(min(weights), .05)
 
     def test_scalarization_units_and_identity(self):
         self.assertAlmostEqual(scalar_objective(2.,200.,PEMConfig()),2.*1.21+200.*2.5e-7)
