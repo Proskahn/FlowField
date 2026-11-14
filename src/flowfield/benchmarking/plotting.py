@@ -3,7 +3,8 @@
 Matplotlib is optional and loaded only when creating a figure. Functions accept
 one run directory, a parent directory containing runs, or a list of either.
 Runs must share objective/configuration and dimension. Convergence permits
-different budgets; fixed-budget and target-based comparisons require equal budgets.
+different budgets and optimizer failure policies, labeled in the legend.
+Fixed-budget and target-based comparisons require matching budgets and policies.
 """
 
 import argparse
@@ -14,7 +15,8 @@ import textwrap
 from .analysis import compare_runs
 
 
-def _comparison(directories, targets=(), *, allow_unequal_budgets=False):
+def _comparison(directories, targets=(), *, allow_unequal_budgets=False,
+                allow_different_failure_policies=False):
     if isinstance(directories, (str, Path)):
         directories = [directories]
     runs = []
@@ -27,7 +29,8 @@ def _comparison(directories, targets=(), *, allow_unequal_budgets=False):
         if not manifests:
             raise ValueError(f'No experiment.json files found in {directory}')
         runs.extend(path.parent for path in manifests)
-    return compare_runs(runs, targets=targets, allow_unequal_budgets=allow_unequal_budgets)
+    return compare_runs(runs, targets=targets, allow_unequal_budgets=allow_unequal_budgets,
+                        allow_different_failure_policies=allow_different_failure_policies)
 
 
 def _figure(figsize):
@@ -133,8 +136,10 @@ def _ecdf(report, ax):
     ax.legend(fontsize='small')
 
 
-def _plot(directories, draw, *, targets=(), ax=None, output=None, allow_unequal_budgets=False):
-    report = _comparison(directories, targets, allow_unequal_budgets=allow_unequal_budgets)
+def _plot(directories, draw, *, targets=(), ax=None, output=None, allow_unequal_budgets=False,
+          allow_different_failure_policies=False):
+    report = _comparison(directories, targets, allow_unequal_budgets=allow_unequal_budgets,
+                         allow_different_failure_policies=allow_different_failure_policies)
     if ax is None:
         ax = _figure((7, 4.5)).subplots()
     draw(report, ax)
@@ -147,9 +152,11 @@ def plot_convergence(directories, *, ax=None, output=None):
 
     Failed/infeasible attempts consume x-axis budget but cannot improve the best.
     Lines stop at the last actual attempt; no observations are extrapolated.
-    Different declared budgets are allowed and shown in the legend.
+    Different declared budgets and optimizer failure policies are allowed and
+    shown in the legend. Physical objective/configuration must still match.
     """
-    return _plot(directories, _convergence, ax=ax, output=output, allow_unequal_budgets=True)
+    return _plot(directories, _convergence, ax=ax, output=output, allow_unequal_budgets=True,
+                 allow_different_failure_policies=True)
 
 
 def plot_fixed_budget(directories, *, ax=None, output=None):

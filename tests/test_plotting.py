@@ -160,6 +160,48 @@ class PlottingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'problem_name'):
             plot_convergence([self.a, longer])
 
+    def test_convergence_labels_failure_policies_and_keeps_model_identity(self):
+        base = 'P003_depth-averaged-cathode-v1_98a7221a4e37_failure_raise'
+        for folder, penalty, suffix in ((self.a, None, 'raise'), (self.b, 1000000, '1000000')):
+            path = folder / 'experiment.json'
+            data = json.loads(path.read_text())
+            data.update(problem_name=base+'_optimizer_failure_'+suffix, failure_penalty=penalty)
+            path.write_text(json.dumps(data))
+        before = {p: p.read_bytes() for d in (self.a, self.b) for p in d.iterdir()}
+        ax = plot_convergence([self.a, self.b])
+        self.assertIn('failure: stop', ax.lines[0].get_label())
+        self.assertIn('failure: penalty 1000000', ax.lines[1].get_label())
+        self.assertEqual(list(ax.lines[0].get_ydata()), [10, 10, 10, 4])
+        self.assertEqual(list(ax.lines[1].get_ydata()), [12, 9, 8, 7])
+        output = self.root/'policies.png'
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main([str(self.a), str(self.b), '--kind', 'convergence',
+                                   '--output', str(output)]), 0)
+        self.assertTrue(output.exists())
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
+        with self.assertRaisesRegex(ValueError, 'problem_name'):
+            plot_fixed_budget([self.a, self.b])
+        with self.assertRaisesRegex(ValueError, 'without targets'):
+            compare_runs([self.a, self.b], targets=[5], allow_different_failure_policies=True)
+        path = self.b/'experiment.json'
+        data = json.loads(path.read_text())
+        for changed in (base.replace('98a7221a4e37', 'differentconfig')+'_optimizer_failure_1000000',
+                        base.replace('failure_raise', 'failure_42')+'_optimizer_failure_1000000',
+                        base+'_optimizer_failure_42'):
+            with self.subTest(problem_name=changed):
+                path.write_text(json.dumps(data | {'problem_name': changed}))
+                with self.assertRaisesRegex(ValueError, 'problem_name'):
+                    plot_convergence([self.a, self.b])
+
+    def test_same_seed_different_policies_are_separate_traces(self):
+        path = self.b/'experiment.json'
+        data = json.loads(path.read_text())
+        data.update(seed=1, failure_penalty=1000000)
+        path.write_text(json.dumps(data))
+        ax = plot_convergence([self.a, self.b])
+        self.assertEqual(len(ax.lines), 2)
+        self.assertNotEqual(ax.lines[0].get_label(), ax.lines[1].get_label())
+
 
 class OptionalPlottingTests(unittest.TestCase):
     def test_public_import_does_not_load_matplotlib(self):

@@ -5,7 +5,8 @@ import math
 from pathlib import Path
 
 
-def compare_runs(directories, *, targets=(), allow_unequal_budgets=False):
+def compare_runs(directories, *, targets=(), allow_unequal_budgets=False,
+                 allow_different_failure_policies=False):
     """Compare runs of the SAME objective/configuration and dimension.
 
     Only successful feasible observations can reach a target. Failed attempts
@@ -14,10 +15,14 @@ def compare_runs(directories, *, targets=(), allow_unequal_budgets=False):
     Full evaluation traces remain available for IOHanalyzer ECDFs and plots.
     allow_unequal_budgets is for convergence traces only; it cannot be combined
     with fixed targets. Each run retains its own budget and final attempt.
+    allow_different_failure_policies compares the same physical scalar objective
+    with optimizer failure handling labeled separately. It is also trace-only.
     """
     targets = list(targets)
     if allow_unequal_budgets and targets:
         raise ValueError('Unequal-budget comparisons support convergence only, without targets')
+    if allow_different_failure_policies and targets:
+        raise ValueError('Different failure policies support convergence only, without targets')
     if any(isinstance(t, bool) or not isinstance(t, (int, float)) or not math.isfinite(t) for t in targets):
         raise ValueError('Targets must be finite numbers')
     groups, identity = {}, None
@@ -26,7 +31,16 @@ def compare_runs(directories, *, targets=(), allow_unequal_budgets=False):
         folder = Path(directory)
         experiment = json.loads((folder / 'experiment.json').read_text())
         summary = json.loads((folder / 'summary.json').read_text())
-        current = (experiment['problem_name'], experiment['dimension'], experiment['budget'])
+        problem_name = experiment['problem_name']
+        penalty = experiment.get('failure_penalty')
+        policy = 'stop' if penalty is None else f'penalty {penalty:.12g}'
+        if allow_different_failure_policies and 'failure_penalty' in experiment:
+            suffix = '_optimizer_failure_' + ('raise' if penalty is None else format(penalty, '.12g'))
+            # Strip only the runner's verified suffix, not the model/config hash
+            # or the problem's own failure policy. Never alter saved metadata.
+            if problem_name.endswith(suffix):
+                problem_name = problem_name[:-len(suffix)]
+        current = (problem_name, experiment['dimension'], experiment['budget'])
         compared = 2 if allow_unequal_budgets else 3
         if identity is not None and current[:compared] != identity[:compared]:
             differences = [f'{key}: {expected!r} != {actual!r}'
@@ -57,7 +71,10 @@ def compare_runs(directories, *, targets=(), allow_unequal_budgets=False):
             if row['valid'] and row['feasible']:
                 best = row['objective'] if best is None else min(best, row['objective'])
             trace.append(best)
-        groups.setdefault(experiment['algorithm'], []).append(dict(
+        algorithm = experiment['algorithm']
+        if allow_different_failure_policies:
+            algorithm += f' [failure: {policy}]'
+        groups.setdefault(algorithm, []).append(dict(
             seed=experiment['seed'], attempts=len(rows), budget=experiment['budget'],
             best_so_far=trace,
             best_feasible=min((r['objective'] for r in feasible), default=None),
