@@ -10,7 +10,8 @@ class EvaluationResult(TypedDict):
     """JSON-compatible evaluation: constraints use g(x) <= 0 for feasibility.
 
     `objective` is the scalar consumed by IOH. `objectives` contains named raw
-    physical objectives; `constraints` contains optimization constraints (not
+    physical minimization objectives (negate quantities to maximize them);
+    `constraints` contains optimization constraints (not
     solver residuals). Metadata contains provenance and numerical diagnostics.
     """
     objective: float
@@ -24,8 +25,9 @@ class FlowFieldProblem(ABC):
     """Implement decode and evaluate_raw to add a benchmark to the suite.
 
     All problems minimize the scalar returned by __call__. A constrained or
-    multi-objective problem defines its own explicit scalarization/penalty in
-    evaluate_raw, while preserving raw objectives and constraints in the result.
+    multi-objective problem defines its own explicit scalarization/penalty for
+    scalar optimizers and IOH, while preserving raw objectives and constraints
+    for Pareto optimizers such as NSGA-II.
     """
     name: str
     dimension: int

@@ -186,7 +186,7 @@ def validate_experiment(saved, current):
     keys = ('algorithm', 'problem', 'problem_name', 'dimension', 'budget', 'seed',
             'initial_design', 'population', 'sigma_normalized', 'diagonal_covariance',
             'lower_bounds', 'upper_bounds', 'failure_penalty', 'ioh_enabled', 'config',
-            'max_seconds_soft')
+            'max_seconds_soft', 'optimization_mode', 'objective_source')
     for key in keys:
         if saved.get(key) != current.get(key):
             raise ResumeError(f'Cannot resume with changed {key}')
@@ -194,7 +194,7 @@ def validate_experiment(saved, current):
         for key in ('optimizer', 'optimizer_revision'):
             if saved.get(key) != current.get(key):
                 raise ResumeError(f'Cannot resume with changed {key}')
-    dependencies = ('cma', 'numpy') if current['population'] is not None else ()
+    dependencies = ('cma', 'numpy') if current['population'] is not None and current.get('optimizer') != 'nsga2' else ()
     for key in dependencies:
         if saved['versions'].get(key) != current['versions'].get(key):
             raise ResumeError(f'Resume requires the original {key} version: {saved["versions"].get(key)}')

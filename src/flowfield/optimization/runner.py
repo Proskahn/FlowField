@@ -1,4 +1,4 @@
-"""Strict-budget serial CMA-ES experiments and feasible discrete baselines."""
+"""Strict-budget optimization, raw observations, Pareto archives and resume."""
 
 import argparse
 from contextlib import nullcontext
@@ -21,6 +21,7 @@ from .registry import create_sampler, list_optimizers, resolve_optimizer, optimi
 from ..runtime import DEFAULT_IMAGE, Runtime, SimulationError
 from .state import (ResumeError, append_json, check_legacy_pid, load_history,
     next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment)
+from .nsga2 import ParetoArchive
 
 PROBLEMS = list_problems()
 
@@ -175,6 +176,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         from ..benchmarking.ioh import _ioh
         _ioh()
     wrapped = _FailurePolicy(problem,failure_penalty)
+    archive = ParetoArchive() if optimizer_definition(method).multi_objective else None
     diagonal = method == 'cmaes' and problem.dimension > 100
     algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
@@ -182,13 +184,23 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         optimizer_revision=optimizer_definition(method).revision, problem=problem.name,
         problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
         initial_design=x0, population=population if method != 'random' else None,
-        sigma_normalized=sigma if method != 'random' else None, diagonal_covariance=diagonal,
+        sigma_normalized=sigma if method not in ('random', 'nsga2') else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
         objective_direction='minimize', failure_penalty=failure_penalty, ioh_enabled=with_ioh,
         max_seconds_soft=max_seconds, versions=_versions(),
         config=config.to_dict() if config is not None else None,
         budget_includes_baseline_and_failed_attempts=True, automatic_retries=False,
         recovery='deterministic_journal_replay', soft_time_limit_scope='per_invocation')
+    if archive is not None:
+        experiment.update(optimization_mode='multi_objective',
+                          objective_source='named raw objectives, all minimized; scalar fallback if empty',
+                          ioh_trace='scalar diagnostic only; Pareto results in pareto.json')
+    if method == 'nsga2':
+        experiment['optimizer_settings'] = dict(initial_population='baseline plus uniform samples',
+            crossover='bounded SBX', crossover_probability=.9, crossover_eta=15,
+            mutation='bounded polynomial', mutation_probability=1/problem.dimension, mutation_eta=20,
+            selection='rank and crowding binary tournament',
+            constraint_handling='feasibility first, then sum of positive violations; invalid CFD last')
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
     session = None
@@ -200,7 +212,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         if (output/'summary.json').exists():
             previous = json.loads((output/'summary.json').read_text())
         session = next_session(output)
-        for name in ('summary.json','best.json','best-feasible.json','checkpoint.json'):
+        for name in ('summary.json','best.json','best-feasible.json','checkpoint.json','pareto.json'):
             if (output/name).exists():
                 shutil.copyfile(output/name,session/name)
         _save(session/'session.json',dict(replayed_evaluations=len(history),
@@ -226,6 +238,11 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     pending_index = None
 
     def snapshot():
+        if archive is not None:
+            summary.update(pareto_size=len(archive.entries), pareto_file='pareto.json',
+                           objective_names=list(archive.space.names or ()),
+                           optimization_mode='multi_objective')
+            _save(output/'pareto.json', archive.to_dict())
         summary['session_wall_time_s'] = time.monotonic()-started
         summary['wall_time_s'] = previous.get('wall_time_s',0.)+summary['session_wall_time_s']
         _save(output/'summary.json',summary)
@@ -235,6 +252,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             evaluations='evaluations.jsonl',recoveries='recoveries.jsonl'))
 
     def remember(record):
+        if archive is not None:
+            archive.add(record)
         value, x = record['objective'], record['x']
         valid, feasible, raw = record['valid'],record['feasible'],record['result']
         summary['successful_evaluations' if valid else 'failed_evaluations'] += 1
@@ -349,8 +368,8 @@ def main(argv=None):
     parser.add_argument('--problem', '--problems', dest='problems', nargs='+', choices=list_problems()+('all',), default=['P000'])
     parser.add_argument('--budget', type=int, default=20, help='Maximum attempts PER problem, including baseline/failures')
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--population', type=int, default=4)
-    parser.add_argument('--sigma', type=float, default=.1, help='Initial step size in normalized coordinates')
+    parser.add_argument('--population', type=int, default=4, help='Population size; NSGA-II includes the baseline in its initial population')
+    parser.add_argument('--sigma', type=float, default=.1, help='CMA-ES initial step size in normalized coordinates')
     parser.add_argument('--p005-config',type=Path,help='P005 physical/numerical configuration JSON; retain it for resume')
     parser.add_argument('--p005-oxygen-velocity',type=float,help='P005 fixed oxygen inlet speed in m/s (default 5)')
     parser.add_argument('--p003-sigma', type=float, default=.005, help='P003 step size near its sharply projected feasible baseline')

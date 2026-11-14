@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 
 from .samplers import Sampler, RandomSampler, CMAESSampler
+from .nsga2 import NSGAIISampler
 
 
 @dataclass(frozen=True)
@@ -12,12 +13,13 @@ class OptimizerDefinition:
     label: str
     variable_types: tuple[str, ...]
     revision: str
+    multi_objective: bool = False
 
 
 _OPTIMIZERS = {}
 
 
-def register_optimizer(name, factory, *, label=None, variable_types=('real',), revision='1'):
+def register_optimizer(name, factory, *, label=None, variable_types=('real',), revision='1', multi_objective=False):
     """Factory receives (problem, seed, initial, population, sigma).
 
     Change revision when an implementation or its settings change, so resumed
@@ -32,7 +34,7 @@ def register_optimizer(name, factory, *, label=None, variable_types=('real',), r
         raise ValueError('Provide a callable factory and supported variable types')
     if not isinstance(revision, str) or not revision:
         raise ValueError('Optimizer revision must be a nonempty string')
-    _OPTIMIZERS[name] = OptimizerDefinition(factory, label or name, tuple(variable_types), revision)
+    _OPTIMIZERS[name] = OptimizerDefinition(factory, label or name, tuple(variable_types), revision, multi_objective)
 
 
 def list_optimizers():
@@ -76,3 +78,4 @@ def create_sampler(name, problem, **options):
 
 register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'))
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
+register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
