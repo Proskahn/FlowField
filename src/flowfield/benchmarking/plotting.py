@@ -2,7 +2,8 @@
 
 Matplotlib is optional and loaded only when creating a figure. Functions accept
 one run directory, a parent directory containing runs, or a list of either.
-Only runs of the same objective/configuration, dimension and budget are compared.
+Runs must share objective/configuration and dimension. Convergence permits
+different budgets; fixed-budget and target-based comparisons require equal budgets.
 """
 
 import argparse
@@ -13,7 +14,7 @@ import textwrap
 from .analysis import compare_runs
 
 
-def _comparison(directories, targets=()):
+def _comparison(directories, targets=(), *, allow_unequal_budgets=False):
     if isinstance(directories, (str, Path)):
         directories = [directories]
     runs = []
@@ -26,7 +27,7 @@ def _comparison(directories, targets=()):
         if not manifests:
             raise ValueError(f'No experiment.json files found in {directory}')
         runs.extend(path.parent for path in manifests)
-    return compare_runs(runs, targets=targets)
+    return compare_runs(runs, targets=targets, allow_unequal_budgets=allow_unequal_budgets)
 
 
 def _figure(figsize):
@@ -59,11 +60,14 @@ def _style(ax, title, xlabel, ylabel):
 def _convergence(report, ax):
     for index, (algorithm, group) in enumerate(report['algorithms'].items()):
         runs = group['runs']
+        label = f'{algorithm} ({len(runs)} {"run" if len(runs) == 1 else "runs"})'
+        if len(report['budgets']) > 1:
+            label += '; budget ' + ', '.join(str(b) for b in sorted({r['budget'] for r in runs}))
         for number, run in enumerate(runs):
             values = [float('nan') if value is None else value for value in run['best_so_far']]
             ax.step(range(1, run['attempts'] + 1), values, where='post', color=f'C{index % 10}',
                     alpha=.8 if len(runs) == 1 else .55, marker='.' if run['attempts'] == 1 else None,
-                    label=f'{algorithm} ({len(runs)} {"run" if len(runs) == 1 else "runs"})' if number == 0 else None)
+                    label=label if number == 0 else None)
     _style(ax, 'Convergence · individual runs', 'Evaluation attempts', 'Best feasible objective ↓')
     ax.set_xlim(.5, report['budget'] + .5)
     ax.legend(fontsize='small')
@@ -129,8 +133,8 @@ def _ecdf(report, ax):
     ax.legend(fontsize='small')
 
 
-def _plot(directories, draw, *, targets=(), ax=None, output=None):
-    report = _comparison(directories, targets)
+def _plot(directories, draw, *, targets=(), ax=None, output=None, allow_unequal_budgets=False):
+    report = _comparison(directories, targets, allow_unequal_budgets=allow_unequal_budgets)
     if ax is None:
         ax = _figure((7, 4.5)).subplots()
     draw(report, ax)
@@ -143,8 +147,9 @@ def plot_convergence(directories, *, ax=None, output=None):
 
     Failed/infeasible attempts consume x-axis budget but cannot improve the best.
     Lines stop at the last actual attempt; no observations are extrapolated.
+    Different declared budgets are allowed and shown in the legend.
     """
-    return _plot(directories, _convergence, ax=ax, output=output)
+    return _plot(directories, _convergence, ax=ax, output=output, allow_unequal_budgets=True)
 
 
 def plot_fixed_budget(directories, *, ax=None, output=None):

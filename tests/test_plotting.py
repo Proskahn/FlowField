@@ -124,8 +124,41 @@ class PlottingTests(unittest.TestCase):
         data = json.loads(path.read_text())
         data['problem_name'] = 'DifferentPhysicalObjective'
         path.write_text(json.dumps(data))
-        with self.assertRaisesRegex(ValueError, 'same objective'):
+        with self.assertRaisesRegex(ValueError, "problem_name: 'PlotFixture' != 'DifferentPhysicalObjective'"):
             plot_benchmark(self.runs)
+
+    def test_mismatch_error_identifies_budget_and_both_runs(self):
+        path = self.b / 'experiment.json'
+        data = json.loads(path.read_text())
+        data['budget'] = 20
+        path.write_text(json.dumps(data))
+        with self.assertRaises(ValueError) as caught:
+            plot_fixed_budget([self.a, self.b])
+        message = str(caught.exception)
+        self.assertIn('budget: 4 != 20', message)
+        self.assertIn(str(self.a), message)
+        self.assertIn(str(self.b), message)
+
+    def test_convergence_allows_unequal_budgets_without_extrapolating(self):
+        longer = self.make_run('LongRun', 1, [(12-i, True, True) for i in range(8)])
+        path = longer / 'experiment.json'
+        data = json.loads(path.read_text())
+        data['budget'] = 8
+        path.write_text(json.dumps(data))
+        ax = plot_convergence([self.a, longer])
+        self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2, 3, 4])
+        self.assertEqual(list(ax.lines[1].get_xdata()), list(range(1, 9)))
+        self.assertGreater(ax.get_xlim()[1], 8)
+        self.assertIn('budget 4', ax.lines[0].get_label())
+        self.assertIn('budget 8', ax.lines[1].get_label())
+        with self.assertRaisesRegex(ValueError, 'budget: 4 != 8'):
+            plot_benchmark([self.a, longer])
+        with self.assertRaisesRegex(ValueError, 'without targets'):
+            compare_runs([self.a, longer], targets=[5], allow_unequal_budgets=True)
+        data['problem_name'] = 'DifferentPhysicalObjective'
+        path.write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, 'problem_name'):
+            plot_convergence([self.a, longer])
 
 
 class OptionalPlottingTests(unittest.TestCase):

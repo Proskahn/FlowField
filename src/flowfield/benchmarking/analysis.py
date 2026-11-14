@@ -5,26 +5,40 @@ import math
 from pathlib import Path
 
 
-def compare_runs(directories, *, targets=()):
+def compare_runs(directories, *, targets=(), allow_unequal_budgets=False):
     """Compare runs of the SAME objective/configuration and dimension.
 
     Only successful feasible observations can reach a target. Failed attempts
     still consume budget. ERT = sum(first hit, or spent attempts for a miss) /
     successful runs. None represents infinite ERT when no run hits the target.
     Full evaluation traces remain available for IOHanalyzer ECDFs and plots.
+    allow_unequal_budgets is for convergence traces only; it cannot be combined
+    with fixed targets. Each run retains its own budget and final attempt.
     """
     targets = list(targets)
+    if allow_unequal_budgets and targets:
+        raise ValueError('Unequal-budget comparisons support convergence only, without targets')
     if any(isinstance(t, bool) or not isinstance(t, (int, float)) or not math.isfinite(t) for t in targets):
         raise ValueError('Targets must be finite numbers')
     groups, identity = {}, None
+    reference_folder = None
     for directory in directories:
         folder = Path(directory)
         experiment = json.loads((folder / 'experiment.json').read_text())
         summary = json.loads((folder / 'summary.json').read_text())
         current = (experiment['problem_name'], experiment['dimension'], experiment['budget'])
-        if identity is not None and current != identity:
-            raise ValueError('Compare only the same objective/configuration, dimension, and budget')
-        identity = current
+        compared = 2 if allow_unequal_budgets else 3
+        if identity is not None and current[:compared] != identity[:compared]:
+            differences = [f'{key}: {expected!r} != {actual!r}'
+                           for key, expected, actual in zip(('problem_name', 'dimension', 'budget')[:compared],
+                                                            identity[:compared], current[:compared])
+                           if expected != actual]
+            raise ValueError('Compare only the same objective/configuration, dimension, and budget. '
+                             f'Mismatch between {reference_folder} and {folder}: '
+                             + '; '.join(differences))
+        if identity is None:
+            reference_folder = folder
+            identity = current
         exhausted_failures = summary['status'] == 'failed' and summary.get('stop_reason') == 'evaluation_budget'
         if summary['status'] not in ('completed', 'completed_with_failures') and not exhausted_failures:
             raise ValueError(f'Incomplete run: {folder}')
@@ -44,7 +58,7 @@ def compare_runs(directories, *, targets=()):
                 best = row['objective'] if best is None else min(best, row['objective'])
             trace.append(best)
         groups.setdefault(experiment['algorithm'], []).append(dict(
-            seed=experiment['seed'], attempts=len(rows),
+            seed=experiment['seed'], attempts=len(rows), budget=experiment['budget'],
             best_so_far=trace,
             best_feasible=min((r['objective'] for r in feasible), default=None),
             first_hits=[next((r['evaluation'] for r in feasible if r['objective'] <= t), None) for t in targets]))
@@ -63,4 +77,6 @@ def compare_runs(directories, *, targets=()):
                 success_rate=successes / len(runs), ert=cost / successes if successes else None,
                 first_hits=hits))
         result[algorithm] = dict(runs=runs, targets=target_rows)
-    return dict(problem_name=identity[0], dimension=identity[1], budget=identity[2], algorithms=result)
+    budgets = sorted({run['budget'] for runs in groups.values() for run in runs})
+    return dict(problem_name=identity[0], dimension=identity[1], budget=max(budgets),
+                budgets=budgets, algorithms=result)
