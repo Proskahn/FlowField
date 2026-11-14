@@ -73,10 +73,12 @@ def compare_runs(directories, *, targets=(), allow_unequal_budgets=False,
             trace.append(best)
         algorithm = experiment['algorithm']
         if allow_different_failure_policies:
-            algorithm += f' [failure: {policy}]'
+            algorithm += f' [on error: {policy}]'
         groups.setdefault(algorithm, []).append(dict(
             seed=experiment['seed'], attempts=len(rows), budget=experiment['budget'],
             best_so_far=trace,
+            evaluations=[dict(objective=r['objective'] if r['valid'] else None,
+                              feasible=r['feasible']) for r in rows],
             best_feasible=min((r['objective'] for r in feasible), default=None),
             first_hits=[next((r['evaluation'] for r in feasible if r['objective'] <= t), None) for t in targets]))
     if not groups:

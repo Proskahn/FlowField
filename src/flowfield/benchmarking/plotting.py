@@ -69,10 +69,37 @@ def _convergence(report, ax):
         for number, run in enumerate(runs):
             values = [float('nan') if value is None else value for value in run['best_so_far']]
             ax.step(range(1, run['attempts'] + 1), values, where='post', color=f'C{index % 10}',
+                    linestyle=('-', '--', '-.', ':')[index % 4],
                     alpha=.8 if len(runs) == 1 else .55, marker='.' if run['attempts'] == 1 else None,
                     label=label if number == 0 else None)
     _style(ax, 'Convergence · individual runs', 'Evaluation attempts', 'Best feasible objective ↓')
     ax.set_xlim(.5, report['budget'] + .5)
+    ax.legend(fontsize='small')
+
+
+def _evaluations(report, ax):
+    for index, (algorithm, group) in enumerate(report['algorithms'].items()):
+        color = f'C{index % 10}'
+        for run in group['runs']:
+            rows = run['evaluations']
+            values = [float('nan') if r['objective'] is None else r['objective'] for r in rows]
+            failed = sum(r['objective'] is None for r in rows)
+            label = f'{algorithm}; seed {run["seed"]}'
+            if len(report['budgets']) > 1:
+                label += f'; budget {run["budget"]}'
+            if failed:
+                label += f'; {failed} failed CFD (omitted)'
+            ax.plot(range(1, run['attempts']+1), values, color=color, alpha=.7,
+                    linestyle=('-', '--', '-.', ':')[index % 4], label=label)
+            for feasible, marker in ((True, 'o'), (False, 'x')):
+                points = [(i, r['objective']) for i, r in enumerate(rows, 1)
+                          if r['objective'] is not None and r['feasible'] == feasible]
+                if points:
+                    xs, ys = zip(*points)
+                    ax.scatter(xs, ys, marker=marker, color=color, s=28, zorder=3)
+    _style(ax, 'Individual evaluations · circles: feasible; crosses: infeasible',
+           'Evaluation attempts', 'Scalar objective ↓')
+    ax.set_xlim(.5, report['budget']+.5)
     ax.legend(fontsize='small')
 
 
@@ -159,6 +186,17 @@ def plot_convergence(directories, *, ax=None, output=None):
                  allow_different_failure_policies=True)
 
 
+def plot_evaluations(directories, *, ax=None, output=None):
+    """Plot each valid candidate's scalar objective, including constraint penalties.
+
+    Circles indicate feasible candidates; crosses indicate constraint violations.
+    Failed CFD is omitted as a gap, with counts in the legend. Different budgets
+    and optimizer failure policies are labeled as in plot_convergence.
+    """
+    return _plot(directories, _evaluations, ax=ax, output=output, allow_unequal_budgets=True,
+                 allow_different_failure_policies=True)
+
+
 def plot_fixed_budget(directories, *, ax=None, output=None):
     """Final-incumbent distribution and feasibility counts; return an Axes.
 
@@ -209,7 +247,7 @@ def plot_benchmark(directories, *, targets=(), output=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Plot saved FlowField runs; no CFD is executed')
     parser.add_argument('runs', nargs='+', type=Path, help='Run directories or parents containing runs of one problem')
-    parser.add_argument('--kind', choices=('all', 'convergence', 'fixed-budget', 'ert', 'ecdf'), default='all')
+    parser.add_argument('--kind', choices=('all', 'convergence', 'evaluations', 'fixed-budget', 'ert', 'ecdf'), default='all')
     parser.add_argument('--targets', type=float, nargs='+', default=[])
     parser.add_argument('--output', type=Path, required=True, help='PNG, SVG or PDF file')
     args = parser.parse_args(argv)
@@ -220,7 +258,8 @@ def main(argv=None):
             function = plot_ert if args.kind == 'ert' else plot_ecdf
             function(args.runs, targets=args.targets, output=args.output)
         else:
-            function = plot_convergence if args.kind == 'convergence' else plot_fixed_budget
+            function = {'convergence': plot_convergence, 'evaluations': plot_evaluations,
+                        'fixed-budget': plot_fixed_budget}[args.kind]
             function(args.runs, output=args.output)
     except (OSError, ValueError, TypeError, RuntimeError) as exc:
         parser.exit(1, f'flowfield-plot: {exc}\n')

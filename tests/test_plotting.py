@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from flowfield.benchmarking import compare_runs, plot_benchmark, plot_convergence, plot_ert, plot_ecdf, plot_fixed_budget
+from flowfield.benchmarking import compare_runs, plot_benchmark, plot_convergence, plot_evaluations, plot_ert, plot_ecdf, plot_fixed_budget
 from flowfield.benchmarking.plotting import main
 
 
@@ -56,6 +56,20 @@ class PlottingTests(unittest.TestCase):
         self.assertEqual(list(ax.lines[1].get_ydata()), [12, 9, 8, 7])
         self.assertTrue(all(math.isnan(y) for y in ax.lines[2].get_ydata()))
         self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2, 3, 4])
+
+    def test_individual_evaluations_keep_variation_and_exclude_failed_cfd(self):
+        ax = plot_evaluations(self.a)
+        values = list(ax.lines[0].get_ydata())
+        self.assertEqual((values[0], values[2], values[3]), (10, -50, 4))
+        self.assertTrue(math.isnan(values[1]))
+        self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2, 3, 4])
+        self.assertEqual(list(ax.collections[0].get_offsets()[:, 0]), [1, 4])
+        self.assertEqual(list(ax.collections[1].get_offsets()[:, 0]), [3])
+        self.assertIn('1 failed CFD (omitted)', ax.lines[0].get_label())
+        output = self.root/'evaluations.png'
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main([str(self.runs), '--kind', 'evaluations', '--output', str(output)]), 0)
+        self.assertTrue(output.exists())
 
     def test_ert_and_ecdf_keep_unsuccessful_runs_in_the_statistics(self):
         ert = plot_ert(self.runs, targets=[5, 10])
@@ -169,8 +183,8 @@ class PlottingTests(unittest.TestCase):
             path.write_text(json.dumps(data))
         before = {p: p.read_bytes() for d in (self.a, self.b) for p in d.iterdir()}
         ax = plot_convergence([self.a, self.b])
-        self.assertIn('failure: stop', ax.lines[0].get_label())
-        self.assertIn('failure: penalty 1000000', ax.lines[1].get_label())
+        self.assertIn('on error: stop', ax.lines[0].get_label())
+        self.assertIn('on error: penalty 1000000', ax.lines[1].get_label())
         self.assertEqual(list(ax.lines[0].get_ydata()), [10, 10, 10, 4])
         self.assertEqual(list(ax.lines[1].get_ydata()), [12, 9, 8, 7])
         output = self.root/'policies.png'
