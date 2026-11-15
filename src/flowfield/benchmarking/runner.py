@@ -34,9 +34,10 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
     problem_options = problem_options or {}
     optimizer_options = optimizer_options or {}
     for options in optimizer_options.values():
-        if set(options) - {'population', 'sigma', 'failure_penalty', 'max_seconds', 'bo_initial_points', 'bo_candidates'}:
+        if set(options) - {'population', 'sigma', 'failure_penalty', 'max_seconds', 'bo_initial_points', 'bo_candidates',
+                           'turbo_initial_points', 'turbo_candidates'}:
             raise ValueError('Optimizer options may only set population, sigma, failure_penalty, max_seconds, '
-                             'bo_initial_points, bo_candidates')
+                             'bo_initial_points, bo_candidates, turbo_initial_points, turbo_candidates')
     # Validate problem construction and algorithm compatibility before creating output.
     for identifier in problems:
         problem = create_problem(identifier, **problem_options.get(identifier, {}))

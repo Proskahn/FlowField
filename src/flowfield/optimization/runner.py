@@ -23,6 +23,7 @@ from .state import (ResumeError, append_json, check_legacy_pid, load_history,
     next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment)
 from .nsga2 import ParetoArchive
 from .bo import bo_settings
+from .turbo import turbo_settings
 
 PROBLEMS = list_problems()
 
@@ -97,16 +98,21 @@ class _FailurePolicy(AbstractFlowFieldProblem):
 
 
 def _proposals(problem, x0, method, population, sigma, seed, state, *,
-               budget=None, bo_initial_points=5, bo_candidates=2048):
+               budget=None, bo_initial_points=5, bo_candidates=2048,
+               turbo_initial_points=5, turbo_candidates=512):
     """Bridge serial, budgeted evaluations to batch ask/tell algorithms."""
     extra = dict(bo_initial_points=bo_initial_points, bo_candidates=bo_candidates) if method == 'bo' else {}
+    if method == 'turbo':
+        extra = dict(turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
     sampler = create_sampler(method, problem, seed=seed, initial=x0,
                              population=population, sigma=sigma, **extra)
     baseline = yield list(x0), 'baseline', 0
     sampler.initialize(list(x0), baseline)
+    state.update(getattr(sampler, 'diagnostics', {}))
     spent = 1
     while budget is None or spent < budget:
         batch = sampler.ask()
+        state.update(getattr(sampler, 'diagnostics', {}))
         if not batch:
             state['stop_reason'] = sampler.stop_reason or 'optimizer_termination'
             state.update(getattr(sampler, 'diagnostics', {}))
@@ -121,6 +127,7 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
             if budget is not None and spent >= budget and len(results) < len(batch):
                 return
         sampler.tell(batch, results)
+        state.update(getattr(sampler, 'diagnostics', {}))
         if sampler.generation is not None:
             state['complete_generations'] += 1
             state['partial_generation_evaluations'] = 0
@@ -156,6 +163,7 @@ def optimize(problem, *, output, resume=False, **options):
                       options.get('sigma',.1),options.get('failure_penalty'),options.get('max_seconds'))
     _method(problem,options.get('method','auto'))
     bo_settings(options.get('bo_initial_points',5), options.get('bo_candidates',2048))
+    turbo_settings(problem.dimension, options.get('turbo_initial_points',5), options.get('turbo_candidates',512))
     output = Path(output).resolve()
     if resume:
         if not output.is_dir() or (not (output/'experiment.json').is_file() and not pristine_initialization(output)):
@@ -168,7 +176,8 @@ def optimize(problem, *, output, resume=False, **options):
 
 def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=4,
               sigma=.1, with_ioh=True, failure_penalty=None, max_seconds=None,
-              initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048):
+              initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
+              turbo_initial_points=5, turbo_candidates=512):
     method = _method(problem,method)
     x0 = _initial(problem) if initial is None else list(initial)
     problem.decode(x0)
@@ -180,7 +189,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             import numpy
         except ImportError as exc:
             raise RuntimeError('Install CMA-ES with: python -m pip install -e ".[optim]"') from exc
-    if method == 'bo':
+    if method in ('bo', 'turbo'):
         from .bo import dependencies
         dependencies()
     if with_ioh:
@@ -194,8 +203,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
         optimizer_revision=optimizer_definition(method).revision, problem=problem.name,
         problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
-        initial_design=x0, population=population if method not in ('random', 'bo') else None,
-        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo') else None, diagonal_covariance=diagonal,
+        initial_design=x0, population=population if method not in ('random', 'bo', 'turbo') else None,
+        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo') else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
         objective_direction='minimize', failure_penalty=failure_penalty, ioh_enabled=with_ioh,
         max_seconds_soft=max_seconds, versions=_versions(),
@@ -214,6 +223,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             constraint_handling='feasibility first, then sum of positive violations; invalid CFD last')
     if method == 'bo':
         experiment['optimizer_settings'] = bo_settings(bo_initial_points, bo_candidates)
+    if method == 'turbo':
+        experiment['optimizer_settings'] = turbo_settings(problem.dimension, turbo_initial_points, turbo_candidates)
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
     session = None
@@ -222,7 +233,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         validate_experiment(saved,experiment)
         history, pending = load_history(output,budget,failure_penalty)
         _verify_history(problem,x0,method,population,sigma,seed,history,
-                        budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates)
+                        budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+                        turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
         if (output/'summary.json').exists():
             previous = json.loads((output/'summary.json').read_text())
         session = next_session(output)
@@ -282,7 +294,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             _save(output/'best-feasible.json',record)
 
     proposals = _proposals(problem,x0,method,population,sigma,seed,summary,
-                           budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates)
+                           budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+                           turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
     context = analyzer_logger(objective,ioh_output,algorithm_name=algorithm,
         algorithm_info=f'seed={seed}; budget={budget}; resumed={resume}; replay is not new CFD') if with_ioh else nullcontext()
     try:
@@ -389,6 +402,10 @@ def main(argv=None):
                         help='BO initialization attempts including the baseline (default 5)')
     parser.add_argument('--bo-candidates', type=int, default=2048,
                         help='BO random acquisition candidates per step (default 2048)')
+    parser.add_argument('--turbo-initial-points', type=int, default=5,
+                        help='TuRBO initialization attempts per region, including the first baseline (default 5)')
+    parser.add_argument('--turbo-candidates', type=int, default=512,
+                        help='TuRBO candidates in each joint Thompson sample (default 512)')
     parser.add_argument('--p005-config',type=Path,help='P005 physical/numerical configuration JSON; retain it for resume')
     parser.add_argument('--p005-oxygen-velocity',type=float,help='P005 fixed oxygen inlet speed in m/s (default 5)')
     parser.add_argument('--p003-sigma', type=float, default=.005, help='P003 step size near its sharply projected feasible baseline')
@@ -426,6 +443,7 @@ def _run_suite(args):
     _validate_options(args.budget,args.seed,args.population,args.sigma,args.failure_penalty,args.max_seconds_per_problem)
     _validate_options(args.budget,args.seed,args.population,args.p003_sigma,args.failure_penalty,args.max_seconds_per_problem)
     bo_settings(args.bo_initial_points,args.bo_candidates)
+    turbo_settings(1,args.turbo_initial_points,args.turbo_candidates)
     if 'all' in args.problems and len(args.problems) != 1:
         raise ValueError('Use all alone or list individual problem IDs')
     identifiers = list(list_problems()) if args.problems == ['all'] else args.problems
@@ -481,6 +499,8 @@ def _run_suite(args):
     for problem in active:
         extra = (dict(bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates)
                  if _method(problem,args.method) == 'bo' else {})
+        if _method(problem,args.method) == 'turbo':
+            extra = dict(turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
         create_sampler(args.method, problem, seed=args.seed, initial=_initial(problem),
                        population=args.population, sigma=args.p003_sigma if problem.name=='P003' else args.sigma, **extra)
     if any(_method(p,args.method)=='cmaes' for p in active):
@@ -531,6 +551,7 @@ def _execute_suite(args,problems,entries,finished):
                 sigma=args.p003_sigma if problem.name=='P003' else args.sigma,with_ioh=args.ioh,
                 failure_penalty=args.failure_penalty,max_seconds=args.max_seconds_per_problem,progress=progress,
                 bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates,
+                turbo_initial_points=args.turbo_initial_points,turbo_candidates=args.turbo_candidates,
                 resume=args.resume and (args.output/problem.name).exists())
         except ResumeError:
             raise

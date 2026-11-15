@@ -194,7 +194,7 @@ def validate_experiment(saved, current):
         for key in ('optimizer', 'optimizer_revision'):
             if saved.get(key) != current.get(key):
                 raise ResumeError(f'Cannot resume with changed {key}')
-    if current.get('optimizer') == 'bo':
+    if current.get('optimizer') in ('bo', 'turbo'):
         if saved.get('optimizer_settings') != current.get('optimizer_settings'):
             raise ResumeError('Cannot resume with changed optimizer_settings')
         dependencies = ('numpy', 'scipy', 'scikit-learn')
