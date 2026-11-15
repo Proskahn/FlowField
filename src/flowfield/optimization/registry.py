@@ -81,5 +81,5 @@ def create_sampler(name, problem, **options):
 register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'))
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
-register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO')
-register_optimizer('turbo', TuRBOSampler, label='TuRBO-1')
+register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO', revision='2')
+register_optimizer('turbo', TuRBOSampler, label='TuRBO-1', revision='2')

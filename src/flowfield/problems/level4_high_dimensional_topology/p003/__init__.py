@@ -32,6 +32,14 @@ class P003Problem(CFDProblem):
     def initial_design(self):return preset('uniform',self.config)
     def preset(self,name):return preset(name,self.config)
     def volume_gradient(self,x):return volume_gradient(self.validate_design(x),self.config)
+    @property
+    def candidate_repair(self):
+        return dict(method='projected_channel_volume_radial', revision='1',
+                    constraint='channel_volume', limit=self.config.volume_limit,
+                    feasibility_tolerance=1e-12, interior_margin=1e-10)
+    def repair_candidates(self,candidates,*,anchor=None):
+        from .design import repair_candidates
+        return repair_candidates(candidates,self.config,anchor=anchor)
     def evaluate_raw(self,x):
         from .evaluation import evaluate
         from ....evaluation import write_json

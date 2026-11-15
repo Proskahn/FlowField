@@ -1,13 +1,14 @@
 """Sequential vanilla Bayesian optimization of the problem's scalar objective.
 
 The surrogate is an exact GP with a fitted isotropic Matérn-5/2 kernel.
-No CFD execution, constraint repair, or Pareto scalarization belongs here.
+Optional constraint repair is supplied by the problem before acquisition scoring.
 """
 import math
 from numbers import Real
 import warnings
 
 from .samplers import Sampler
+from .repair import CandidateRepair
 
 
 def bo_settings(initial_points=5, candidates=2048):
@@ -67,6 +68,8 @@ class BayesianOptimizationSampler(Sampler):
         self.span = np.asarray(problem.upper_bounds, dtype=float) - self.lower
         if not np.all(np.isfinite(self.span)) or np.any(self.span <= 0):
             raise ValueError('BO requires finite, nonzero real-variable bounds')
+        self.repair = CandidateRepair(problem)
+        self.repair.check_initial(self.initial)
         self.rng = np.random.RandomState(seed)
         count, dimension = bo_initial_points - 1, problem.dimension
         self.warmup = (np.column_stack([self.rng.permutation(count) for _ in range(dimension)])
@@ -74,6 +77,7 @@ class BayesianOptimizationSampler(Sampler):
         self.x, self.y = [], []
         self.pending = None
         self.model = None
+        self.proposal_metadata = None
 
     def _observe(self, x, result):
         value = result['objective']
@@ -126,34 +130,54 @@ class BayesianOptimizationSampler(Sampler):
             raise RuntimeError('tell must complete the previous BO evaluation before ask')
         np = self.np
         if len(self.x) < self.settings['initial_points']:
-            point = self.warmup[len(self.x) - 1]
-            while not self._novel(np.asarray([point]))[0]:
-                point = self.rng.random_sample(self.problem.dimension)
+            proposed = self.warmup[len(self.x) - 1]
+            for _ in range(1000):
+                point = self.repair.apply(np.asarray([proposed]))[0]
+                if self._novel(np.asarray([point]))[0]:
+                    break
+                proposed = self.rng.random_sample(self.problem.dimension)
+            else:
+                self.stop_reason = 'no_new_design_found'
+                return []
         else:
             self._fit()
-            pool = self.rng.random_sample((self.settings['candidates'], self.problem.dimension))
-            pool = pool[self._novel(pool)]
+            originals = self.rng.random_sample((self.settings['candidates'], self.problem.dimension))
+            pool = self.repair.apply(originals)
+            novel = self._novel(pool)
+            pool, originals = pool[novel], originals[novel]
+            unique = self.repair.distinct(pool)
+            pool, originals = pool[unique], originals[unique]
             if not len(pool):
                 self.stop_reason = 'no_new_design_found'
                 return []
             ei, std = self._acquisition(pool)
             order = np.argsort(-ei, kind='stable')
-            refined = []
+            refined, refined_originals = [], []
             if self.problem.dimension <= self.settings['local_search_max_dimension']:
                 for start in pool[order[:self.settings['acquisition_restarts']]]:
-                    fit = self.minimize(lambda x: -float(self._acquisition(np.asarray([x]))[0][0]),
+                    fit = self.minimize(lambda x: -float(self._acquisition(
+                        self.repair.apply(np.asarray([x])))[0][0]),
                                         start, method='L-BFGS-B', bounds=[(0., 1.)]*self.problem.dimension,
                                         options={'maxiter': 75})
-                    point = np.clip(fit.x, 0., 1.)
-                    if np.all(np.isfinite(point)) and self._novel(np.asarray([point]))[0]:
+                    proposed = np.clip(fit.x, 0., 1.)
+                    if not np.all(np.isfinite(proposed)):
+                        continue
+                    point = self.repair.apply(np.asarray([proposed]))[0]
+                    if self._novel(np.asarray([point]))[0]:
                         refined.append(point)
+                        refined_originals.append(proposed)
             if refined:
                 pool = np.vstack([pool, refined])
+                originals = np.vstack([originals, refined_originals])
+                unique = self.repair.distinct(pool)
+                pool, originals = pool[unique], originals[unique]
                 ei, std = self._acquisition(pool)
             # If EI underflows everywhere, explore posterior uncertainty.
-            point = pool[int(np.argmax(ei if np.max(ei) > 0 else std))]
+            index = int(np.argmax(ei if np.max(ei) > 0 else std))
+            point, proposed = pool[index], originals[index]
         design = np.clip(self.lower + self.span*point, self.lower, self.lower + self.span).tolist()
         self.pending = [design]
+        self.proposal_metadata = self.repair.metadata(proposed, point)
         return [list(design)]
 
     def tell(self, designs, results):

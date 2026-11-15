@@ -146,7 +146,7 @@ def load_history(output, budget, penalty):
             if type(index) is not int or not 1 <= index <= len(starts) or index in target:
                 raise ResumeError('Duplicate or unstarted evaluation in journal')
             start = starts[index-1]
-            if any(row.get(key) != start.get(key) for key in ('x', 'phase', 'generation')):
+            if any(row.get(key) != start.get(key) for key in ('x', 'phase', 'generation', 'proposal')):
                 raise ResumeError(f'Observation differs from started evaluation {index}')
             target[index] = row
     history, pending = [], []
@@ -170,6 +170,8 @@ def load_history(output, budget, penalty):
             row = dict(evaluation=index, x=start['x'], phase=start['phase'],
                        generation=start['generation'], objective=penalty, valid=False,
                        feasible=False, result=raw, wall_time_s=0., recovered=True)
+            if 'proposal' in start:
+                row['proposal'] = start['proposal']
             pending.append(row)
         value = row.get('objective')
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):

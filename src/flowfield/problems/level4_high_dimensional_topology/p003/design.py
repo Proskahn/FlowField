@@ -73,6 +73,72 @@ def volume_gradient(values,config):
     return gradient
 
 
+@lru_cache(maxsize=4)
+def _repair_filter(config):
+    # Optional optimizer dependencies; importing/running a standalone CFD case
+    # continues to work without NumPy or SciPy.
+    import numpy as np
+    from scipy.sparse import csr_matrix
+    rows, areas = stencil(config)
+    indices, weights, offsets = [], [], [0]
+    for row in rows:
+        indices.extend(n for n, _ in row)
+        weights.extend(w for _, w in row)
+        offsets.append(len(indices))
+    matrix = csr_matrix((weights, indices, offsets), shape=(len(rows), config.dimension))
+    areas = np.asarray(areas)
+    return matrix, areas/areas.sum()
+
+
+def repair_candidates(candidates, config, *, anchor=None):
+    """Enforce projected, area-weighted channel volume without running CFD.
+
+    Infeasible rows move along anchor + s*(row-anchor), taking the largest
+    feasible s in [0,1]. Nonnegative filter weights and a monotone projection
+    make volume monotone on that segment. A trust-region lower corner is a
+    valid anchor whenever its center is feasible, and keeps repair in the box.
+    Feasible rows are unchanged. Work in chunks to bound temporary memory.
+    """
+    import numpy as np
+    values = np.asarray(candidates)
+    if (values.ndim != 2 or values.shape[1] != config.dimension or values.dtype.kind not in 'fiu'
+            or not np.all(np.isfinite(values)) or np.any(values < 0) or np.any(values > 1)):
+        raise ValueError('P003 repair requires finite design rows within [0, 1]')
+    origin = np.zeros(config.dimension) if anchor is None else np.asarray(anchor)
+    if (origin.shape != (config.dimension,) or origin.dtype.kind not in 'fiu'
+            or not np.all(np.isfinite(origin)) or np.any(origin < 0) or np.any(origin > 1)
+            or np.any(values < origin)):
+        raise ValueError('P003 repair anchor must be a componentwise lower bound on the candidates')
+    matrix, areas = _repair_filter(config)
+    beta, limit = config.projection_beta, config.volume_limit
+    def volume(filtered):
+        return np.sum((-np.expm1(-beta*filtered) + filtered*math.exp(-beta))*areas, axis=-1)
+    base = matrix @ origin
+    base_volume = float(volume(base))
+    if base_volume > limit + 1e-12:
+        raise ValueError('P003 repair anchor violates the channel-volume constraint')
+    # Leave a numerical margin when possible; never exclude a feasible anchor.
+    target = max(base_volume, limit - min(1e-10, limit*1e-8))
+    result = values.astype(float, copy=True)
+    for start in range(0, len(result), 128):
+        block = result[start:start+128]
+        filtered = (matrix @ block.T).T
+        bad = np.flatnonzero(volume(filtered) > limit + 1e-12)
+        if not len(bad):
+            continue
+        delta = filtered[bad] - base
+        lo, hi = np.zeros(len(bad)), np.ones(len(bad))
+        for _ in range(48):
+            mid = (lo+hi)*.5
+            feasible = volume(base + mid[:, None]*delta) <= target
+            lo = np.where(feasible, mid, lo)
+            hi = np.where(feasible, hi, mid)
+        block[bad] = origin + lo[:, None]*(block[bad]-origin)
+        if np.any(volume((matrix @ block[bad].T).T) > limit + 1e-12):
+            raise RuntimeError('P003 volume repair failed its final feasibility check')
+    return result
+
+
 def preset(name,config):
     if name=='uniform':
         return [inverse_project(config.volume_limit,config.projection_beta)]*config.dimension

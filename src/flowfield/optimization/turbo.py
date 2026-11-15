@@ -11,6 +11,7 @@ import warnings
 
 from .bo import dependencies
 from .samplers import Sampler
+from .repair import CandidateRepair
 
 
 def turbo_settings(dimension, initial_points=5, candidates=512):
@@ -95,6 +96,8 @@ class TuRBOSampler(Sampler):
         self.span = np.asarray(problem.upper_bounds, dtype=float) - self.lower
         if not np.all(np.isfinite(self.span)) or np.any(self.span <= 0):
             raise ValueError('TuRBO requires finite, nonzero real-variable bounds')
+        self.repair = CandidateRepair(problem)
+        self.repair.check_initial(self.initial)
         self.rng = np.random.RandomState(seed)
         self.state = TrustRegionState(problem.dimension)
         self.restarts = 0
@@ -102,6 +105,7 @@ class TuRBOSampler(Sampler):
         self.initialized = False
         self.pending = None
         self.model = None
+        self.proposal_metadata = None
         self.warmup = self._latin(turbo_initial_points - 1)
         self.warmup_index = 0
         self._diagnostics()
@@ -175,8 +179,14 @@ class TuRBOSampler(Sampler):
         mask = self.rng.random_sample((count, dimension)) < self.settings['perturb_probability']
         empty = np.flatnonzero(~mask.any(axis=1))
         mask[empty, self.rng.randint(dimension, size=len(empty))] = True
-        pool = np.where(mask, perturbations, center)
-        return pool[self._novel(pool)]
+        originals = np.where(mask, perturbations, center)
+        pool = self.repair.apply(originals, anchor=lower)
+        novel = self._novel(pool)
+        pool, originals = pool[novel], originals[novel]
+        unique = self.repair.distinct(pool)
+        self.candidate_originals = originals[unique]
+        self.candidate_anchor = lower
+        return pool[unique]
 
     def ask(self):
         if not self.initialized:
@@ -186,12 +196,14 @@ class TuRBOSampler(Sampler):
         if self.state.restart_required:
             self._restart()
         self.pending_adapt = self.warmup_index >= len(self.warmup)
+        anchor = None
         if not self.pending_adapt:
-            point = self.warmup[self.warmup_index]
+            proposed = self.warmup[self.warmup_index]
             for _ in range(1000):
+                point = self.repair.apply(self.np.asarray([proposed]))[0]
                 if self._novel(self.np.asarray([point]))[0]:
                     break
-                point = self.rng.random_sample(self.problem.dimension)
+                proposed = self.rng.random_sample(self.problem.dimension)
             else:
                 self.stop_reason = 'no_new_design_found'
                 return []
@@ -201,9 +213,12 @@ class TuRBOSampler(Sampler):
             if not len(pool):
                 self.stop_reason = 'no_new_design_found'
                 return []
-            point = pool[int(self.np.argmin(posterior_sample(self.model, pool, self.rng)))]
+            index = int(self.np.argmin(posterior_sample(self.model, pool, self.rng)))
+            point, proposed = pool[index], self.candidate_originals[index]
+            anchor = self.candidate_anchor
         design = self.np.clip(self.lower + self.span*point, self.lower, self.lower+self.span).tolist()
         self.pending = [design]
+        self.proposal_metadata = self.repair.metadata(proposed, point, anchor=anchor)
         return [list(design)]
 
     def tell(self, designs, results):

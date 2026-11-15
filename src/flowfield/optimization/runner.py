@@ -106,7 +106,7 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
         extra = dict(turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
     sampler = create_sampler(method, problem, seed=seed, initial=x0,
                              population=population, sigma=sigma, **extra)
-    baseline = yield list(x0), 'baseline', 0
+    baseline = yield list(x0), 'baseline', 0, None
     sampler.initialize(list(x0), baseline)
     state.update(getattr(sampler, 'diagnostics', {}))
     spent = 1
@@ -120,7 +120,8 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
         results = []
         for x in batch:
             problem.validate_design(x)
-            results.append((yield list(x), 'candidate', sampler.generation))
+            results.append((yield list(x), 'candidate', sampler.generation,
+                            getattr(sampler, 'proposal_metadata', None)))
             spent += 1
             if sampler.generation is not None:
                 state['partial_generation_evaluations'] = len(results)
@@ -139,8 +140,9 @@ def _verify_history(problem, x0, method, population, sigma, seed, history, **opt
     try:
         request = next(proposals)
         for index, row in enumerate(history):
-            x, phase, generation = request
-            if row['x'] != x or row['phase'] != phase or row['generation'] != generation:
+            x, phase, generation, proposal = request
+            if (row['x'] != x or row['phase'] != phase or row['generation'] != generation
+                    or row.get('proposal') != proposal):
                 raise ResumeError(f'Cannot reproduce saved proposal {index+1}; '
                                   'check original code, dependencies and seed. No new CFD was started.')
             if index+1 < len(history):
@@ -225,6 +227,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         experiment['optimizer_settings'] = bo_settings(bo_initial_points, bo_candidates)
     if method == 'turbo':
         experiment['optimizer_settings'] = turbo_settings(problem.dimension, turbo_initial_points, turbo_candidates)
+    if method in ('bo', 'turbo'):
+        experiment['optimizer_settings']['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
     session = None
@@ -306,7 +310,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
                 if not replaying and max_seconds is not None and time.monotonic()-started >= max_seconds:
                     summary['stop_reason'] = 'soft_wall_time_limit'
                     break
-                x, phase, generation = request
+                x, phase, generation, proposal = request
+                proposal_fields = dict(proposal=proposal) if proposal is not None else {}
                 x = [int(v) if wrapped.variable_type == 'integer' else float(v) for v in x]
                 summary['attempts'] += 1
                 index = summary['attempts']
@@ -317,7 +322,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
                 else:
                     summary['new_attempts'] += 1
                     pending_index = index
-                    append_json(events,dict(event='started',evaluation=index,x=x,phase=phase,generation=generation))
+                    append_json(events,dict(event='started',evaluation=index,x=x,phase=phase,generation=generation,
+                                           **proposal_fields))
                     snapshot()
                     if progress:
                         progress(problem.name,index,budget,'started')
@@ -328,12 +334,14 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
                         valid = raw.get('status') not in ('failed','penalized') and raw.get('metadata',{}).get('valid_cfd',True)
                         feasible = valid and raw.get('feasible',True) and all(float(v)<=1e-12 for v in raw.get('constraints',{}).values())
                         record = dict(evaluation=index,x=x,objective=value,valid=bool(valid),feasible=bool(feasible),
-                            phase=phase,generation=generation,result=raw,wall_time_s=time.monotonic()-began)
+                            phase=phase,generation=generation,result=raw,wall_time_s=time.monotonic()-began,
+                            **proposal_fields)
                     except (Exception,KeyboardInterrupt) as exc:
                         summary['failed_evaluations'] += 1
                         append_json(records,dict(evaluation=index,x=x,objective=None,valid=False,
                             feasible=False,phase=phase,generation=generation,
-                            error=f'{type(exc).__name__}: {exc}',case_directory=getattr(exc,'case_directory',None)))
+                            error=f'{type(exc).__name__}: {exc}',case_directory=getattr(exc,'case_directory',None),
+                            **proposal_fields))
                         raise
                     append_json(records,record)
                     pending_index = None
@@ -465,6 +473,8 @@ def _run_suite(args):
             maximum_attempts=args.budget, evaluation_kind='current_lookup_or_surrogate' if identifier=='P004' else 'CFD',
             sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method=='cmaes' else None,
             initial_design_length=len(_initial(problem))))
+        if method in ('bo', 'turbo'):
+            entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
                 maximum_cfd_attempts=sum(p.name!='P004' for p in problems)*args.budget,
                 mesh=args.mesh or 'coarse', seed=args.seed, problems=entries)

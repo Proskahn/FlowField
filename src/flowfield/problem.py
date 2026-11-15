@@ -28,6 +28,12 @@ class FlowFieldProblem(ABC):
     multi-objective problem defines its own explicit scalarization/penalty for
     scalar optimizers and IOH, while preserving raw objectives and constraints
     for Pareto optimizers such as NSGA-II.
+
+    Problems may provide candidate_repair metadata and a repair_candidates(rows,
+    anchor=...) hook for cheap geometric constraints. BO and TuRBO apply this
+    before acquisition scoring. The hook consumes physical coordinates and
+    preserves feasible rows and anchor-to-input bounds; evaluate_raw stays pure
+    with respect to the supplied design (it must not silently repair it).
     """
     name: str
     dimension: int
