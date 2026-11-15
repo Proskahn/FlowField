@@ -5,6 +5,7 @@ import re
 
 from .samplers import Sampler, RandomSampler, CMAESSampler
 from .nsga2 import NSGAIISampler
+from .bo import BayesianOptimizationSampler
 
 
 @dataclass(frozen=True)
@@ -79,3 +80,4 @@ def create_sampler(name, problem, **options):
 register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'))
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
+register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO')

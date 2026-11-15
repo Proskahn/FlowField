@@ -194,7 +194,12 @@ def validate_experiment(saved, current):
         for key in ('optimizer', 'optimizer_revision'):
             if saved.get(key) != current.get(key):
                 raise ResumeError(f'Cannot resume with changed {key}')
-    dependencies = ('cma', 'numpy') if current['population'] is not None and current.get('optimizer') != 'nsga2' else ()
+    if current.get('optimizer') == 'bo':
+        if saved.get('optimizer_settings') != current.get('optimizer_settings'):
+            raise ResumeError('Cannot resume with changed optimizer_settings')
+        dependencies = ('numpy', 'scipy', 'scikit-learn')
+    else:
+        dependencies = ('cma', 'numpy') if current['population'] is not None and current.get('optimizer') != 'nsga2' else ()
     for key in dependencies:
         if saved['versions'].get(key) != current['versions'].get(key):
             raise ResumeError(f'Resume requires the original {key} version: {saved["versions"].get(key)}')

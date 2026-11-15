@@ -2,7 +2,8 @@
 from .runner import optimize, main
 from .samplers import Sampler, RandomSampler, CMAESSampler
 from .nsga2 import NSGAIISampler
+from .bo import BayesianOptimizationSampler
 from .registry import register_optimizer, list_optimizers, create_sampler
 
 __all__ = ["optimize", "main", "Sampler", "RandomSampler", "CMAESSampler", "NSGAIISampler",
-           "register_optimizer", "list_optimizers", "create_sampler"]
+           "BayesianOptimizationSampler", "register_optimizer", "list_optimizers", "create_sampler"]
