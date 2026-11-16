@@ -36,6 +36,29 @@ static tmp<volTensorField> phaseGradient(const volVectorField& q,
     return fvc::surfaceIntegrate(mesh.Sf()*qf);
 }
 
+// OpenFOAM stores grad(q)_ij = d(q_j)/d(x_i). The divergence contracts
+// the face normal on the LEFT. Reversing this contraction duplicates the
+// shear Laplacian instead of adding the transpose/deviatoric stress.
+static tmp<surfaceVectorField> phaseTransposeStressFlux(
+    const surfaceScalarField& viscosity, const volVectorField& q,
+    const boolList& fluid, const boolList& neighbourFluid)
+{
+    return viscosity*(q.mesh().Sf()
+        & fvc::interpolate(dev2(Foam::T(phaseGradient(q,fluid,neighbourFluid)))));
+}
+
+// Extremely large dry-phase/solid diagonals can dominate OpenFOAM's global
+// residual normalization and make unresolved channel equations appear solved.
+// Equilibrate a COPY, including its RHS and processor coefficients. The
+// original matrix still supplies the physical SIMPLE diagonal and predictor.
+static void solveRowScaled(fvVectorMatrix& equation, const volVectorField& force)
+{
+    volScalarField inverse("momentumInverse",1.0/equation.A());
+    fvVectorMatrix scaled(equation==force);
+    scaled*=inverse;
+    scaled.solve();
+}
+
 // Distance-weighted harmonic coefficient. Exactly zero across an inactive
 // material interface; there is no small artificial conductivity or leakage.
 static void harmonic(surfaceScalarField& face, const volScalarField& cell,

@@ -150,5 +150,45 @@
   ],
   "current_source_note": "The checks and hashes above describe the pre-increment solver. Current repair checks and remaining convergence limits are in current_repair_report.",
   "current_repair_report": "runs/p006-repair/repair-report.json",
-  "current_source_matches_recorded_solver_hashes": false
+  "current_source_matches_recorded_solver_hashes": false,
+  "momentum_operator_corrections": {
+    "recorded_at": "2026-11-16T21:10:34.431257+00:00",
+    "report": "runs/p006-repair/momentum-operator-verification.json",
+    "source_sha256": {
+      "flowfieldP006Foam.C": "faac1095f213e1bfb28210e07d7bb9bf2dc6095b0f03f85ae8bbb991bf795cf9",
+      "ChargeNetwork.H": "34f76ae0a3c7f01ae92b2c8737a4c8678eb86e1a8f96ded13687ffc3895cb26e",
+      "Tools.H": "e23050d89955e747e4377e4408bb272f46baac255a41087ff2c5200c21b306fd",
+      "FlowNetwork.H": "1e873df05436b9c4b106280dde06461db64af935271ee53e23825cad7eb5828f",
+      "Anderson.H": "907aba7f6b2e6df2ddc8a72f767240119e8150f6cf42a1cffd47eb8c785f1b29",
+      "Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+      "Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df"
+    },
+    "manufactured_checks_passed": true,
+    "processes": [
+      1,
+      2
+    ],
+    "maximum_stress_error": 1.16573e-15,
+    "high_contrast_unscaled_velocity_error": 1.0,
+    "high_contrast_scaled_velocity_error": 4.44089e-16,
+    "p006_software_tests_passed": 21,
+    "qualified_cfd": false,
+    "coupled_baseline_trial": {
+      "report": "runs/p006-repair/stress-scaled500/trial-result.json",
+      "qualified": false,
+      "stopped_by_agent": true,
+      "finished_iteration_budget": false,
+      "last_completed_iteration": 110,
+      "local_phase_balances": [
+        26.5456708149,
+        10.9566568451
+      ],
+      "physical_momentum_residuals": [
+        1.09534251997,
+        1.16906848784
+      ],
+      "field_change": 0.2348173548,
+      "thermal_activated": false
+    }
+  }
 }

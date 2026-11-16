@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
         surfaceScalarField massG("massG",phiG*fvc::interpolate(rhoG));
         // The transpose/deviatoric contribution completes the Newtonian tensor
         // accompanying the implicit vector Laplacian in the printed equation.
-        surfaceVectorField tauL("tauL",muLF*(fvc::interpolate(dev2(Foam::T(phaseGradient(qL,fluid,nbrFluid))))&mesh.Sf()));
-        surfaceVectorField tauG("tauG",muGF*(fvc::interpolate(dev2(Foam::T(phaseGradient(qG,fluid,nbrFluid))))&mesh.Sf()));
+        surfaceVectorField tauL("tauL",phaseTransposeStressFlux(muLF,qL,fluid,nbrFluid));
+        surfaceVectorField tauG("tauG",phaseTransposeStressFlux(muGF,qG,fluid,nbrFluid));
         auto wallStress=[&](label c,const vector& sf,scalar distance,scalar orientation)
         {
             vector normal=orientation*sf/mag(sf);
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
         // matrices with the previous pressure force before updating H. The
         // following projection supplies the current pressure force and final
         // diagonal correction; no full solve is made after that projection.
-        solve(LEqn==forceL);solve(GEqn==forceG);
+        solveRowScaled(LEqn,forceL);solveRowScaled(GEqn,forceG);
         // Pressure-free H predictors; capillary force is applied on faces below.
         volScalarField rqL("rqL",1.0/LEqn.A()),rqG("rqG",1.0/GEqn.A());
         volVectorField HqL("HqL",rqL*LEqn.H()),HqG("HqG",rqG*GEqn.H());
