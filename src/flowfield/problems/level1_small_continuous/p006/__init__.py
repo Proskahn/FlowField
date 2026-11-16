@@ -31,6 +31,10 @@ class P006Problem(CFDProblem):
 
     def initial_design(self):return list(BASELINE_X)
 
+    def preflight(self):
+        from .runtime import eigen_headers
+        eigen_headers()
+
     def decode(self,x):return decode_geometry(self.validate_design(x),self.config)
 
     def geometric_constraints(self,x):return self.decode(x)['constraints']

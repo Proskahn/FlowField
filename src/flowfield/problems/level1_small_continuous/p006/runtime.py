@@ -14,7 +14,8 @@ def eigen_headers():
     try:
         package=distribution('cmeel-eigen')
     except PackageNotFoundError as exc:
-        raise SimulationError("P006 requires Eigen headers: python -m pip install -e '.[p006]'") from exc
+        raise SimulationError('P006 requires Eigen headers in the active Python environment: '
+                              'python -m pip install cmeel-eigen==3.4.1') from exc
     path=Path(package.locate_file('cmeel.prefix/include/eigen3')).resolve()
     if not (path/'Eigen/SparseLU').is_file():raise SimulationError('Installed Eigen headers are incomplete')
     digest=hashlib.sha256()

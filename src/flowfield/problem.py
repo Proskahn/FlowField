@@ -96,6 +96,14 @@ class FlowFieldProblem(ABC):
         """Default starting point; a problem can supply a physical baseline."""
         return [(lo + hi) / 2 for lo, hi in zip(self.lower_bounds, self.upper_bounds)]
 
+    def preflight(self):
+        """Check fixed dependencies before optimization spends any evaluations.
+
+        Raise on setup errors even when failed CFD evaluations will be penalized.
+        This check must not generate cases or run CFD; geometry-only use remains
+        available without optional simulation dependencies.
+        """
+
 
 class CFDProblem(FlowFieldProblem):
     """Optional simulation interface for problems backed by OpenFOAM.

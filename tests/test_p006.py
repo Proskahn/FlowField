@@ -6,6 +6,10 @@ import tempfile
 import shutil
 import re
 import unittest
+from importlib.metadata import PackageNotFoundError
+from unittest.mock import patch
+import contextlib
+import io
 
 from flowfield import create_problem, CaseEvaluator
 from flowfield.problems.level1_small_continuous.p006 import P006Problem, ManifoldConfig
@@ -15,9 +19,56 @@ from flowfield.problems.level1_small_continuous.p006.metrics import values, vect
 from flowfield.problems.level1_small_continuous.p006.case import generate_case
 from flowfield.problems.level1_small_continuous.p006.warm_start import FIELDS
 from flowfield.problems.level1_small_continuous.p006.pressure import pressure_forces,verify_pressure_forces
+from flowfield.optimization import optimize, main as optimize_main
+from flowfield.runtime import SimulationError
 
 
 class P006Tests(unittest.TestCase):
+    def test_missing_eigen_stops_optimization_before_cases_or_penalties(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            # The runner's penalty and the problem's own penalty cannot turn a
+            # missing build dependency into repeated, invalid observations.
+            p=P006Problem(output_root=root/'cases',failure_penalty=1e6)
+            with patch('flowfield.problems.level1_small_continuous.p006.runtime.distribution',
+                       side_effect=PackageNotFoundError('cmeel-eigen')), \
+                 patch.object(p,'evaluate_raw') as evaluate:
+                with self.assertRaisesRegex(SimulationError,'requires Eigen headers'):
+                    optimize(p,method='random',budget=100,output=root/'optimization',
+                             with_ioh=False,failure_penalty=1e6)
+                evaluate.assert_not_called()
+            self.assertEqual(list(root.iterdir()),[])
+
+    def test_cli_missing_eigen_reports_install_command_before_runtime(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output=Path(tmp)/'optimization'
+            errors=io.StringIO()
+            with patch('flowfield.problems.level1_small_continuous.p006.runtime.distribution',
+                       side_effect=PackageNotFoundError('cmeel-eigen')), \
+                 patch('flowfield.optimization.runner.Runtime.resolve') as resolve, \
+                 contextlib.redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as exc:
+                    optimize_main(['--problem','P006','--optimizer','random','--budget','100',
+                                   '--failure-penalty','1000000','--output',str(output)])
+                self.assertEqual(exc.exception.code,1)
+                resolve.assert_not_called()
+            self.assertIn('python -m pip install cmeel-eigen==3.4.1',errors.getvalue())
+            self.assertFalse(output.exists())
+
+    def test_dry_run_keeps_p006_available_without_eigen(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output=Path(tmp)/'plan'
+            capture=io.StringIO()
+            with patch('flowfield.problems.level1_small_continuous.p006.runtime.distribution',
+                       side_effect=PackageNotFoundError('cmeel-eigen')) as dependency, \
+                 contextlib.redirect_stdout(capture):
+                result=optimize_main(['--problem','P006','--optimizer','random',
+                                     '--output',str(output),'--dry-run'])
+                dependency.assert_not_called()
+            self.assertEqual(result,0)
+            self.assertEqual(json.loads(capture.getvalue())['problems'][0]['problem'],'P006')
+            self.assertFalse(output.exists())
+
     def test_pressure_trace_matches_layered_darcy_solution(self):
         p=P006Problem();m=build_geometry(p.decode(p.initial_design()),p.config)
         nx,ny=len(m['x'])-1,len(m['y'])-1;stride=nx*ny

@@ -170,7 +170,10 @@ def optimize(problem, *, output, resume=False, **options):
     if resume:
         if not output.is_dir() or (not (output/'experiment.json').is_file() and not pristine_initialization(output)):
             raise ResumeError(f'Missing experiment.json in {output}; a console log alone cannot resume a run')
-    else:
+    elif output.exists():
+        raise FileExistsError(f'Output must be new: {output}')
+    problem.preflight()
+    if not resume:
         output.mkdir(parents=True,exist_ok=False)
     with run_lock(output/'.optimizer.lock'):
         return _optimize(problem,output=output,resume=resume and (output/'experiment.json').exists(),**options)
@@ -516,6 +519,7 @@ def _run_suite(args):
     active = [p for p in problems if p.name not in finished]
     # Construct adapters before any CFD budget is spent.
     for problem in active:
+        problem.preflight()
         extra = (dict(bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates)
                  if _method(problem,args.method) == 'bo' else {})
         if _method(problem,args.method) == 'turbo':
