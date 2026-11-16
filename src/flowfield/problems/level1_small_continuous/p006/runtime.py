@@ -26,19 +26,24 @@ def eigen_headers():
 
 
 def _show_progress(log,stop):
-    """Keep the complete log on disk; show a compact update every ten iterations."""
-    show=False
+    """Show every tenth iteration and the full fatal-error diagnostic block."""
+    show=False;fatal=False
     with log.open() as source:
         while True:
             line=source.readline()
             if not line:
                 if stop.is_set():break
                 stop.wait(.2);continue
-            if line.startswith('Iteration = '):
+            # OpenFOAM puts the reason and source location on the lines after
+            # this marker. MPI may also prefix it with a rank such as "[0]".
+            if '--> FOAM FATAL' in line:fatal=True
+            if fatal:
+                print(f'[{log.parent.name}] {line.rstrip()}',flush=True)
+            elif line.startswith('Iteration = '):
                 try:iteration=int(line.split('=',1)[1]);show=iteration==1 or iteration%10==0
                 except ValueError:show=False
                 if show:print(f'[{log.parent.name}] {line.strip()}',flush=True)
-            elif (show and line.startswith('P006:')) or line.startswith(('CONVERGED:','--> FOAM FATAL')):
+            elif (show and line.startswith('P006:')) or line.startswith('CONVERGED:'):
                 print(f'[{log.parent.name}] {line.strip()}',flush=True)
 
 

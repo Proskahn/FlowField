@@ -167,8 +167,12 @@ public:
     {
         using namespace Foam;
         const scalar pressureScale=1000.,satFloor=1e-6;
-        scalarField x(2*count_,0),oldS(sg.primitiveField());
-        forAll(index_,c)if(index_[c]>=0){x[index_[c]]=p[c]/pressureScale;x[index_[c]+1]=sg[c];}
+        scalarField x(2*count_,0),oldS(sg.primitiveField()),initialS(count_,0);
+        // Solve for the saturation increment, not the absolute saturation.
+        // Retry capacities can be large enough that s_new-s_old loses the
+        // entire increment to roundoff. capacity*deltaS preserves that term.
+        forAll(index_,c)if(index_[c]>=0)
+        {x[index_[c]]=p[c]/pressureScale;initialS[index_[c]/2]=sg[c];}
         surfaceScalarField hL("hL",fvc::flux(HL)),hG("hG",fvc::flux(HG));
         scalarField nbrE;syncTools::swapBoundaryCellList(mesh_,eps.primitiveField(),nbrE);
         // Local pseudo-time limits the explicit momentum/saturation coupling
@@ -267,9 +271,9 @@ public:
             scalarField pv(mesh_.nCells(),0),sv(mesh_.nCells(),0),nbrP,nbrS;
             forAll(index_,c)if(index_[c]>=0)
             {
-                label a=index_[c];pv[c]=trial[a];sv[c]=trial[a+1];scalar V=mesh_.V()[c];
+                label a=index_[c];pv[c]=trial[a];sv[c]=oldS[c]+trial[a+1];scalar V=mesh_.V()[c];
                 res[a]=-(Sl[c]+Sg[c])*V;
-                res[a+1]=capacity[c]*(sv[c]-oldS[c])-Sg[c]*V;
+                res[a+1]=capacity[c]*trial[a+1]-Sg[c]*V;
                 add(a+1,a+1,capacity[c]);
             }
             syncTools::swapBoundaryCellList(mesh_,pv,nbrP);syncTools::swapBoundaryCellList(mesh_,sv,nbrS);
@@ -366,7 +370,8 @@ public:
                 {
                     direction=0;
                     forAll(direction,i)if(i%2==field)
-                    {scalar scale=field?max(satFloor,min(x[i],1-x[i])):max(1.,mag(x[i]));
+                    {scalar s=initialS[i/2]+x[i];
+                     scalar scale=field?max(satFloor,min(s,1-s)):max(1.,mag(x[i]));
                      direction[i]=scale*std::sin(1.2345*(i+1+Pstream::myProcNo()));}
                     trial=x+h*direction;assemble(trial,trialRes,false,false);
                     A.Amul(product,direction,interfaceCoeffs,interfaceFields_,0);
@@ -390,13 +395,13 @@ public:
             // unmodified conservation residual, including these cells.
             for(label i=0;i<count_;++i)
             {
-                scalar s=x[2*i+1];
+                scalar s=initialS[i]+x[2*i+1];
                 if((s<=satFloor*(1+1e-5)&&delta[2*i+1]<0)
                    ||(s>=1-satFloor*(1+1e-5)&&delta[2*i+1]>0))delta[2*i+1]=0;
             }
             scalar step=1;
             for(label i=0;i<count_;++i)
-            {scalar ds=delta[2*i+1],s=x[2*i+1];if(ds>0)step=min(step,.99*(1-satFloor-s)/ds);if(ds<0)step=min(step,.99*(satFloor-s)/ds);}
+            {scalar ds=delta[2*i+1],s=initialS[i]+x[2*i+1];if(ds>0)step=min(step,.99*(1-satFloor-s)/ds);if(ds<0)step=min(step,.99*(satFloor-s)/ds);}
             reduce(step,minOp<scalar>());scalar norm=gSum(sqr(res));bool accepted=false;
             for(label ls=0;ls<20;++ls)
             {trial=x+step*delta;assemble(trial,trialRes,false,false);if(gSum(sqr(trialRes))<norm){accepted=true;break;}step*=.5;}
@@ -408,16 +413,19 @@ public:
         scalar depletion=0;
         forAll(index_,c)if(index_[c]>=0)
         {
-            scalar change=x[index_[c]+1]-oldS[c];
+            scalar change=x[index_[c]+1];
             scalar loss=change<0?-change/max(oldS[c],satFloor):change/max(1-oldS[c],satFloor);
             depletion=max(depletion,loss);
         }
         reduce(depletion,maxOp<scalar>());
         if(std::isfinite(error)&&error<1e-5&&depletion<=.2)
         {projectionAccepted=true;break;}
+        // Preserve the final attempted state and its capacity for the failure
+        // diagnostic; resetting here would report the unevaluated start state.
+        if(retry==11)break;
         forAll(index_,c)if(index_[c]>=0)
         {
-            scalar change=x[index_[c]+1]-oldS[c];
+            scalar change=x[index_[c]+1];
             scalar loss=change<0?-change/max(oldS[c],satFloor):change/max(1-oldS[c],satFloor);
             scalar factor=max(1.,loss/.15);
             if(!std::isfinite(error)||error>=1e-5)factor=max(factor,10.);
@@ -439,7 +447,7 @@ public:
         assemble(x,trialRes,false,true);
         phiL=projectedPhiL;phiG=projectedPhiG;
         forAll(index_,c)if(index_[c]>=0)
-        {p[c]=pressureScale*x[index_[c]];sg[c]=x[index_[c]+1];pc[c]=cap(mat_[c],sg[c])[0];}
+        {p[c]=pressureScale*x[index_[c]];sg[c]=oldS[c]+x[index_[c]+1];pc[c]=cap(mat_[c],sg[c])[0];}
         p.correctBoundaryConditions();sg.correctBoundaryConditions();pc.correctBoundaryConditions();
     }
 };

@@ -147,5 +147,8 @@
     "Verify converged serial/MPI agreement and mesh independence",
     "Assess unreported-input sensitivity and compare the published targets",
     "Run and validate CFD-backed COBYLA optimization"
-  ]
+  ],
+  "current_source_note": "The checks and hashes above describe the pre-increment solver. Current repair checks and remaining convergence limits are in current_repair_report.",
+  "current_repair_report": "runs/p006-repair/repair-report.json",
+  "current_source_matches_recorded_solver_hashes": false
 }
