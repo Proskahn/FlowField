@@ -175,13 +175,13 @@ class OptimizationTests(unittest.TestCase):
         self.assertLessEqual(len(p.calls),1)
         self.assertEqual(s['stop_reason'],'soft_wall_time_limit')
 
-    def test_dry_run_has_120_cfd_attempts_and_skips_unavailable_current(self):
+    def test_dry_run_has_140_cfd_attempts_and_skips_unavailable_current(self):
         capture=io.StringIO()
         with contextlib.redirect_stdout(capture):
             result=main(['--problems','all','--budget','20','--output',str(self.root/'plan'),'--dry-run'])
         plan=json.loads(capture.getvalue())
         self.assertEqual(result,0)
-        self.assertEqual(plan['maximum_cfd_attempts'],120)
+        self.assertEqual(plan['maximum_cfd_attempts'],140)
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P003')['sigma_normalized'],.005)
         self.assertFalse((self.root/'plan').exists())
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P004')['status'],'skipped')

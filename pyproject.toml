@@ -16,9 +16,11 @@ plot = ["matplotlib>=3.7"]
 p004-ml = ["numpy>=1.24"]
 ioh = ["ioh==0.3.22"]
 p001 = ["gmsh==4.13.1"]
+p006 = ["scipy>=1.16,<1.19", "cmeel-eigen==3.4.1"]
 
 [project.scripts]
 flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
+flowfield-p006 = "flowfield.problems.level1_small_continuous.p006.cli:main"
 flowfield-optimize = "flowfield.optimization:main"
 flowfield-benchmark = "flowfield.benchmarking.runner:main"
 flowfield-plot = "flowfield.benchmarking.plotting:main"
@@ -39,3 +41,4 @@ where = ["src"]
 "flowfield.problems.level3_discrete_combinatorial.p004" = ["data/*.json", "data/*.gz"]
 
 "flowfield.problems.level1_small_continuous.p005" = ["monitor/*.C", "monitor/*.H", "monitor/Make/files", "monitor/Make/options", "data/*.json"]
+"flowfield.problems.level1_small_continuous.p006" = ["solver/*.C", "solver/*.H", "solver/Make/files", "solver/Make/options"]

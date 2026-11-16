@@ -1,0 +1,92 @@
+{
+  "title": "Coordinated design of manifolds and branch channels for improving flow distribution and temperature uniformity in PEM water electrolyzers",
+  "authors": "Yuchen Zhou et al.",
+  "year": 2026,
+  "doi": "10.1016/j.ijhydene.2026.157728",
+  "pdf_sha256": "df065b2a819af237f95a2cab244d04aa81a368ec797fc48841f2cc63938e576d",
+  "scope": "CFD and constrained geometric optimization; no experimental or machine-learning replacement",
+  "level": "I",
+  "dimension": 3,
+  "variables_mm": {
+    "win": [
+      0.7,
+      1.5
+    ],
+    "wmid": [
+      0.7,
+      1.5
+    ],
+    "wout": [
+      0.7,
+      1.5
+    ]
+  },
+  "manifold_sweep_mm": [
+    1,
+    1.5,
+    2,
+    2.5,
+    3
+  ],
+  "objective": "Area-weighted standard deviation of temperature on the ACL/PEM interface, K (Eq.27)",
+  "constraint": "abs(Acontact/Aref - 1) <= delta (Eq.29), all nine widths within 0.7..1.5 mm, positive ribs",
+  "algorithm": "COBYLA; uniform 1 mm initial widths; relative objective change < 1e-5",
+  "reported": {
+    "footprint_mm": [
+      18,
+      25
+    ],
+    "channels": 9,
+    "baseline_branch_width_mm": 1,
+    "baseline_rib_mm": 1,
+    "baseline_branch_length_mm": 23,
+    "manifold_span_mm": 17.5,
+    "channel_height_mm": 1,
+    "backing_thickness_mm": 0.5,
+    "PTL_thickness_mm": 0.3,
+    "CL_thickness_mm": 0.05,
+    "PEM_thickness_mm": 0.0178,
+    "inlet_liquid_flow_ml_min_each": 15,
+    "inlet_temperature_K": 353,
+    "inlet_liquid_saturation": 0.9,
+    "ambient_temperature_K": 298.15,
+    "h_W_m2K": 20,
+    "reference_pressure_Pa": 101325,
+    "mesh_test_voltage_V": 2.2
+  },
+  "missing_or_ambiguous": [
+    "Spline end conditions and exact channel-center positions",
+    "Contact-area tolerance delta and reference area under changing manifold width",
+    "Author CAD/mesh; 17.5 mm manifold span versus 18 mm plate and port extensions",
+    "Fixed 25 mm footprint versus fixed 23 mm branch length when manifolds widen",
+    "Whether 15 mL/min refers to liquid volume or total inlet mixture at sl=0.9",
+    "Specific reaction surface areas and kinetic reference temperature",
+    "Membrane conductivity closure, ionomer fraction and dissolved-water boundary/source laws",
+    "eta_lambda and dimensions of Eq.17; rho_i/EW is also present in Eq.16",
+    "Contact angle, surface tension, viscosities, heat capacities and CL thermal conductivity",
+    "Separate anode/cathode reversible-heat allocation",
+    "Exact finite-volume stabilization, phase momentum implementation and optimization settings",
+    "Equivalent permeability of channels, treated by the paper as porous media with porosity 1"
+  ],
+  "paper_targets": {
+    "baseline_1mm": {
+      "flow_cv": 0.83,
+      "Tmax_K": 367.36,
+      "temperature_range_K": 12.22
+    },
+    "baseline_3mm": {
+      "flow_cv": 0.25,
+      "Tmax_K": 363.53,
+      "temperature_range_K": 8.65
+    },
+    "optimized_1mm": {
+      "Tmax_K": 365.14,
+      "temperature_range_K": 10.04,
+      "temperature_std_reduction_percent": 21.1
+    },
+    "optimized_2_5mm": {
+      "temperature_std_K": 1.51
+    }
+  },
+  "paper_validated": false
+}

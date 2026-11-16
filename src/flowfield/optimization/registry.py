@@ -7,6 +7,7 @@ from .samplers import Sampler, RandomSampler, CMAESSampler
 from .nsga2 import NSGAIISampler
 from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler
+from .cobyla import COBYLASampler
 
 
 @dataclass(frozen=True)
@@ -83,3 +84,4 @@ register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
 register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO', revision='2')
 register_optimizer('turbo', TuRBOSampler, label='TuRBO-1', revision='2')
+register_optimizer('cobyla', COBYLASampler, label='COBYLA', revision='1-scipy-replay-paper-stop')

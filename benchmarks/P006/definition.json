@@ -1,0 +1,197 @@
+{
+  "problem_id": "P006",
+  "model_revision": "manifold-two-fluid-thermal-v1",
+  "paper_validated": false,
+  "dimension": 3,
+  "variable_type": "real",
+  "normalized_bounds": [
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "width_map_mm": "0.7 + 0.8*x",
+  "controls": [
+    "win",
+    "wmid",
+    "wout"
+  ],
+  "initial_widths_mm": [
+    1,
+    1,
+    1
+  ],
+  "spline": {
+    "type": "natural cubic",
+    "knots": [
+      0,
+      4,
+      8
+    ],
+    "sample_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "end_condition": "zero second derivative; unreported by authors"
+  },
+  "objective": {
+    "name": "area-weighted temperature standard deviation",
+    "location": "ACL/PEM interface",
+    "unit": "K",
+    "direction": "minimize"
+  },
+  "constraints": [
+    "all 9 widths between 0.7 and 1.5 mm",
+    "positive internal and edge ribs",
+    "abs(contact_area/reference_area-1) <= contact_tolerance"
+  ],
+  "geometry_assumptions": [
+    "Fixed 18 x 25 mm footprint; clear branch length = 25 - 2*manifold_width mm",
+    "Channel centers at x=1,3,...,17 mm",
+    "18 mm total manifold span includes two 0.25 mm port extensions",
+    "Contact reference is uniform 1 mm branches at the same manifold width",
+    "Cathode counterflow"
+  ],
+  "estimated_inputs": {
+    "contact_tolerance": 0.05,
+    "liquid_viscosity": 0.000355,
+    "oxygen_viscosity": 2.3e-05,
+    "hydrogen_viscosity": 1e-05,
+    "liquid_cp": 4195.0,
+    "oxygen_cp": 930.0,
+    "hydrogen_cp": 14400.0,
+    "liquid_conductivity": 0.67,
+    "oxygen_conductivity": 0.03,
+    "hydrogen_conductivity": 0.21,
+    "catalyst_conductivity": 2.0,
+    "surface_tension": 0.0627,
+    "contact_angle_deg": 70.0,
+    "active_area_anode": 100000.0,
+    "active_area_cathode": 100000.0,
+    "kinetic_reference_temperature": 353.0,
+    "ionomer_fraction_cl": 0.3,
+    "ionomer_density": 2000.0,
+    "ionomer_equivalent_weight": 1.1,
+    "membrane_water_boundary": 22.0,
+    "water_diffusivity_factor": 1.0,
+    "permeability_channel": 1e-06
+  },
+  "other_closures": [
+    "Inlet 15 mL/min interpreted as liquid volume flow, total mixture flow Q/0.9",
+    "Springer membrane ionic conductivity with Bruggeman CL fraction",
+    "Unity gas and water activities at the 1 atm reference pressure",
+    "Anode reversible heat iVol*T*(-0.0009 V/K), zero cathode reversible heat",
+    "Eq.18 water diffusivity with configurable multiplier; Eq.17 prefactor is ambiguous",
+    "No evaporation or gas crossover",
+    "No additional interphase drag correlation; paper does not specify one",
+    "PTL Leverett relation extended to CL using CL porosity/permeability; CL capillary closure is unreported"
+  ],
+  "fidelity_limits": [
+    "Author CAD, constitutive inputs, spline end conditions and area tolerance unavailable",
+    "Low-order donor-cell phase transport; coarse mesh results require refinement",
+    "Separate phase enthalpy advection in the LTE energy equation",
+    "Published optimized layouts and reported performance values are not reproduced by definition",
+    "Channel permeability is an unreported input; 1e-6 m^2 is a dimensional estimate based on the 1 mm channel height, requiring sensitivity checks",
+    "Superficial phase momentum follows Eq.13; collocated finite-volume pressure/phase coupling and donor-cell transport differ from the author discretization"
+  ],
+  "solver": {
+    "application": "flowfieldP006Foam",
+    "openfoam": "OpenCFD v2312",
+    "phase_projection": "bounded Newton pressure/saturation",
+    "linear": "Eigen SparseLU serial; local SparseLU-preconditioned GMRES MPI",
+    "outer": "Local pseudo-time with phase-depletion retries, optional voltage continuation, and safeguarded Anderson acceleration after momentum settles; phase acceptance unchanged",
+    "output_time": "outer iteration count, not physical seconds",
+    "momentum": "Separate superficial phase velocities; conservative steady-equivalent form of Eq.13 using Eqs.11-12, full viscous stress and Darcy drag",
+    "phase_mobility": "Cubic upwind relative permeability; harmonic interpolation of the remaining momentum coefficient",
+    "phase_fraction_floor": 1e-06,
+    "velocity_correction": "Full relaxed momentum predictor followed by pressure projection and diagonal cell correction using a physical Gauss pressure force",
+    "wall_stress": "Zero face velocity at internal no-slip walls; full Newtonian normal stress; symmetric active masks across processor interfaces",
+    "initial_voltage": "Requested voltage by default; min(initial_voltage, cell_voltage) if a lower warm-up is configured",
+    "anderson": {
+      "memory": 30,
+      "damping": 0.5,
+      "activation_after_iteration": 50,
+      "momentum_residual_below": 0.01,
+      "field_change_below": 0.05,
+      "saturation_coordinate_step_limit": 0.04,
+      "candidates_are_initial_guesses_only": true
+    },
+    "jacobian_check": "Separate scaled pressure/saturation finite-difference directions with fixed donors only during this diagnostic; relative-error limit 1e-4; actual nonlinear fluxes retain unfrozen donors",
+    "initial_state": "Finished, hash-verified same-geometry case; internal volume fields and saved face fluxes copied into a new case, fresh prescribed volume-field boundary conditions and inlet fluxes; no inherited qualification",
+    "pressure_gradient": "Geometric face-pressure interpolation within one material; physical half-cell Darcy resistance weights at material interfaces; independent of numerical pseudo-time and equation relaxation",
+    "pressure_relaxation": 0.3,
+    "pressure_relaxation_fluxes": "Conservative full-projection face fluxes are retained; cell pressure and its physical force are relaxed for steady SIMPLE iteration",
+    "initial_porous_gas_fraction": 1e-06,
+    "initial_channel_gas_fraction": "1 - inlet_liquid_saturation",
+    "pseudo_courant": {
+      "initial": 0.5,
+      "maximum": 2.0,
+      "growth_factor": 1.02,
+      "growth_requires": "iteration>50, phase momentum residuals<.005, field change<.01",
+      "reduction": "halve toward .5 if momentum>.02 or field change>.1"
+    }
+  },
+  "acceptance": {
+    "consecutive_iterations": 5,
+    "minimum_iterations": 60,
+    "field_change_max": 1e-05,
+    "charge_residual_max": 1e-06,
+    "local_and_global_phase_error_max": 0.001,
+    "energy_error_max": 0.001,
+    "gas_fraction_bounds": [
+      0,
+      1
+    ],
+    "saved_fields_independently_verified": true,
+    "analytical_fallback": false,
+    "requested_voltage_required": true,
+    "saved_superficial_intrinsic_velocity_consistency_max": 1e-08,
+    "per_phase_per_material_momentum_residual_max": 0.001,
+    "momentum_residual_excludes_pseudo_time_and_relaxation": true,
+    "independent_pressure_force_relative_error_max": 1e-06
+  },
+  "optimization": {
+    "algorithm": "SciPy PRIMA COBYLA",
+    "initial_trust_radius_normalized": 0.1,
+    "final_radius_tolerance": 1e-05,
+    "constraint_tolerance": 1e-08,
+    "relative_objective_stop": 1e-05,
+    "stop_interpretation": "successive distinct feasible evaluations after initial simplex",
+    "maximum_attempts": "user-supplied budget includes baseline and failures",
+    "manifold_sweep_mm": [
+      1,
+      1.5,
+      2,
+      2.5,
+      3
+    ],
+    "resume": "deterministic journal replay without repeated CFD"
+  },
+  "mesh": {
+    "baseline_cells": {
+      "coarse": 13104,
+      "medium": 100800,
+      "fine": 344736
+    },
+    "paper_elements": 815135,
+    "check": "checkMesh -allTopology -meshQuality",
+    "thin_membrane_min_determinant": 1e-08,
+    "passes_default_allGeometry": false,
+    "topology": "Fixed subdivisions for channel and rib segments at each mesh level; smooth width changes preserve cell connectivity"
+  }
+}

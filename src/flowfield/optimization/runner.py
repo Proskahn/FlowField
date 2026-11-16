@@ -194,6 +194,9 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     if method in ('bo', 'turbo'):
         from .bo import dependencies
         dependencies()
+    if method == 'cobyla':
+        from .cobyla import dependencies
+        dependencies()
     if with_ioh:
         from ..benchmarking.ioh import _ioh
         _ioh()
@@ -205,8 +208,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
         optimizer_revision=optimizer_definition(method).revision, problem=problem.name,
         problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
-        initial_design=x0, population=population if method not in ('random', 'bo', 'turbo') else None,
-        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo') else None, diagonal_covariance=diagonal,
+        initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla') else None,
+        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo', 'cobyla') else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
         objective_direction='minimize', failure_penalty=failure_penalty, ioh_enabled=with_ioh,
         max_seconds_soft=max_seconds, versions=_versions(),
@@ -227,6 +230,12 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         experiment['optimizer_settings'] = bo_settings(bo_initial_points, bo_candidates)
     if method == 'turbo':
         experiment['optimizer_settings'] = turbo_settings(problem.dimension, turbo_initial_points, turbo_candidates)
+    if method == 'cobyla':
+        experiment['optimizer_settings'] = dict(rhobeg_normalized=.1, trust_region_tolerance=1e-5,
+            constraint_tolerance=1e-8, relative_objective_tolerance=1e-5,
+            constraint_handling='native geometric inequalities and bounds',
+            objective_source='unpenalized_objective when provided, otherwise objective',
+            proposal_recovery='SciPy replay; previously evaluated CFD values are reused')
     if method in ('bo', 'turbo'):
         experiment['optimizer_settings']['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     history, pending, previous = [], [], {}
