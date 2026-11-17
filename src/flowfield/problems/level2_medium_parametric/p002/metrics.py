@@ -69,7 +69,7 @@ def field_pressure_drops(case, iteration, manifest):
     return {side:pressure[side+'Inlet']-pressure[side+'Outlet'] for side in ('anode','cathode')}
 
 
-def extract_metrics(case, config):
+def extract_metrics(case, config, *, write_report=True):
     case = Path(case)
     manifest = json.loads((case/'case.json').read_text())
     status = json.loads((case/'postProcessing/pem/status.json').read_text())
@@ -91,7 +91,7 @@ def extract_metrics(case, config):
             raise ValueError('Last five iterations do not meet convergence and balance limits')
     if last['Tmax_K'] <= 0 or not 0 <= last['gas_volume_max'] < .995:
         raise ValueError('Unphysical final state or active gas-fraction cap')
-    verification = verify(case)
+    verification = verify(case, write_report=write_report)
     if not verification['passed'] or verification['iteration'] != last['iteration']:
         raise ValueError('Independent saved-field conservation checks failed or fields are stale')
     dp = field_pressure_drops(case, last['iteration'], manifest)

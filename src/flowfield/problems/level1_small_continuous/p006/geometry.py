@@ -192,7 +192,10 @@ def case_files(case, m, config):
     # Face fluxes are solver state as well as the cell velocities. Explicit
     # initial files allow a continuation to retain the conservative fluxes.
     for phase,ratio in (('L',1.),('G',(1-c.inlet_liquid_saturation)/c.inlet_liquid_saturation)):
-        body='dimensions [0 3 -1 0 0 0 0];\ninternalField uniform 0;\nboundaryField\n{\n'
+        # Signed face fluxes must flip with face orientation when decomposed.
+        # Without this metadata, a nonzero saved guess gives equal signs on
+        # opposite processor faces, corrupting the first momentum solve.
+        body='dimensions [0 3 -1 0 0 0 0];\noriented oriented;\ninternalField uniform 0;\nboundaryField\n{\n'
         for patch in PATCHES:
             value='uniform 0'
             if patch.endswith('Inlet'):

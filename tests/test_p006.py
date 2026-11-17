@@ -19,6 +19,7 @@ from flowfield.problems.level1_small_continuous.p006.metrics import values, vect
 from flowfield.problems.level1_small_continuous.p006.case import generate_case
 from flowfield.problems.level1_small_continuous.p006.warm_start import FIELDS
 from flowfield.problems.level1_small_continuous.p006.pressure import pressure_forces,verify_pressure_forces
+from flowfield.problems.level1_small_continuous.p006.runtime import iteration_limit_reason
 from flowfield.optimization import optimize, main as optimize_main
 from flowfield.runtime import SimulationError
 
@@ -165,6 +166,63 @@ class P006Tests(unittest.TestCase):
                 generate_case(root/'continued',p.decode(p.initial_design()),p.config,initial_state=source)
             self.assertFalse((root/'continued').exists())
 
+    def coupled_state(self, root):
+        p,source=self.finished_state(root)
+        path=source/'postProcessing/p006/status.json'
+        status=json.loads(path.read_text());status.update(momentum_fraction=1.,thermal_active=True)
+        path.write_text(json.dumps(status))
+        (source/'postProcessing/p006/history.csv').write_text(
+            'iteration,momentum_fraction,thermal_active,applied_voltage_V\n10,1,1,2.2\n')
+        return p,source
+
+    def test_unconverged_full_coupled_guess_retains_stage_and_fresh_acceptance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            original={x:x.read_bytes() for x in source.rglob('*') if x.is_file()}
+            case=generate_case(root/'continued',p.decode(p.initial_design()),p.config,initial_state=source)
+            props=(case/'constant/modelProperties').read_text()
+            self.assertIn('initial_momentum_fraction 1;',props)
+            self.assertIn('initial_thermal_active true;',props)
+            m=json.loads((case/'case.json').read_text())
+            self.assertTrue(m['initial_state']['coupling']['restored'])
+            self.assertFalse(m['initial_state']['source_converged'])
+            self.assertFalse(m['initial_state']['qualification_inherited'])
+            self.assertEqual(original,{x:x.read_bytes() for x in source.rglob('*') if x.is_file()})
+            self.assertFalse((case/'result.json').exists())
+            CaseEvaluator(p.case_definition)._load_case(case)
+
+    def test_initial_guess_cannot_invent_full_coupling_from_inconsistent_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            history=source/'postProcessing/p006/history.csv'
+            for row in ('10,1,0,2.2','9,1,1,2.2','10,.5,1,2.2','10,1,1,1.4','10,1,1,nan'):
+                history.write_text('iteration,momentum_fraction,thermal_active,applied_voltage_V\n'+row+'\n')
+                with self.assertRaisesRegex(ValueError,'coupling evidence'):
+                    generate_case(root/'invalid',p.decode(p.initial_design()),p.config,initial_state=source)
+                self.assertFalse((root/'invalid').exists())
+
+    def test_explicit_lower_initial_voltage_keeps_normal_initialization(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            config=ManifoldConfig(processes=1,initial_voltage=1.4)
+            case=generate_case(root/'continued',p.decode(p.initial_design()),config,initial_state=source)
+            self.assertNotIn('initial_thermal_active true;', (case/'constant/modelProperties').read_text())
+            m=json.loads((case/'case.json').read_text())
+            self.assertFalse(m['initial_state']['coupling']['restored'])
+
+    def test_iteration_budget_exit_is_distinct_from_fatal_or_missing_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.finished_state(root)
+            status_path=source/'postProcessing/p006/status.json'
+            status=json.loads(status_path.read_text());status['iteration']=p.config.iterations
+            status_path.write_text(json.dumps(status))
+            self.assertIn('3000-iteration limit',iteration_limit_reason(source))
+            (source/'log.flowfieldP006Foam').write_text('FOAM FATAL ERROR\nEnd\n')
+            self.assertIsNone(iteration_limit_reason(source))
+            (source/'log.flowfieldP006Foam').write_text('End\n')
+            status['converged']=True;status_path.write_text(json.dumps(status))
+            self.assertIsNone(iteration_limit_reason(source))
+
     def test_initial_guess_refuses_changed_geometry_or_invalid_saved_field(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);p,source=self.finished_state(root)
@@ -187,6 +245,8 @@ class P006Tests(unittest.TestCase):
             saved.write_text(text)
             case=generate_case(root/'continued',p.decode(p.initial_design()),p.config,initial_state=source)
             copied=(case/'0/phiL').read_text()
+            self.assertIn('oriented oriented;',copied)
+            self.assertIn('oriented oriented;', (case/'0/phiG').read_text())
             self.assertIn('internalField uniform 1e-12;',copied)
             outlet=re.search(r'\banodeOutlet\s*\{(.*?)\}',copied,re.S).group(1)
             self.assertIn('value uniform 2e-8;',outlet)

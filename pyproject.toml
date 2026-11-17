@@ -19,6 +19,7 @@ p001 = ["gmsh==4.13.1"]
 p006 = ["scipy>=1.16,<1.19", "cmeel-eigen==3.4.1"]
 
 [project.scripts]
+flowfield-check = "flowfield.stability.cli:main"
 flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
 flowfield-p006 = "flowfield.problems.level1_small_continuous.p006.cli:main"
 flowfield-optimize = "flowfield.optimization:main"

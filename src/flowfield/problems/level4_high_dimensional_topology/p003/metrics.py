@@ -49,7 +49,7 @@ def history(case):
     return rows
 
 
-def extract_metrics(case,config):
+def extract_metrics(case,config,*,write_report=True):
     case=Path(case);manifest=json.loads((case/'case.json').read_text())
     status=json.loads((case/'postProcessing/p003/status.json').read_text());rows=history(case);last=rows[-1]
     log=(case/'log.flowfieldP003Foam').read_text()
@@ -123,5 +123,6 @@ def extract_metrics(case,config):
         reaction_net_mass_kg_s=prodW-consO,
         reaction_net_mass_relative_to_inlet=(prodW-consO)/(config.gas_density_kg_m3*qin),
         nitrogen_transport_equation_solved=False,checks=checks,iteration=last['iteration'],cells=n)
-    (case/'field_verification.json').write_text(json.dumps(dict(passed=True,**result['metrics']),indent=2,allow_nan=False)+'\n')
+    if write_report:
+        (case/'field_verification.json').write_text(json.dumps(dict(passed=True,**result['metrics']),indent=2,allow_nan=False)+'\n')
     return result

@@ -1,13 +1,30 @@
 """Per-case build and serial/MPI solve on native v2312 or the installed image."""
 import os
 import hashlib
+import json
 from importlib.metadata import distribution, PackageNotFoundError
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import threading
 import uuid
 from ....runtime import SimulationError
+
+
+def iteration_limit_reason(case):
+    """Distinguish a normal unqualified budget exit from an MPI/build crash."""
+    try:
+        config=json.loads((case/'case.json').read_text())['config']
+        status=json.loads((case/'postProcessing/p006/status.json').read_text())
+        log=(case/'log.flowfieldP006Foam').read_text()
+        if (status.get('converged') is False and status.get('iteration')==config['iterations']
+                and re.search(r'^End\s*$',log,re.M) and 'FOAM FATAL' not in log):
+            return (f'P006 reached its {config["iterations"]}-iteration limit without satisfying all convergence checks. '
+                    'The saved state is unqualified. Generate a new same-geometry case with --initial-state '
+                    'to continue from complete reconstructed fields; keep the acceptance tolerances unchanged.')
+    except (OSError,ValueError,TypeError,KeyError):pass
+    return None
 
 
 def eigen_headers():
@@ -104,5 +121,6 @@ def run_phase(case,phase,runtime,info,processes=1):
             try:subprocess.run(['docker','rm','-f',name],capture_output=True,timeout=30)
             except (OSError,subprocess.SubprocessError):pass
         if isinstance(exc,KeyboardInterrupt):raise
-        raise SimulationError(f'P006 {phase} failed; inspect {log}',case_directory=case) from exc
+        reason=iteration_limit_reason(case) if phase=='solve' and isinstance(exc,subprocess.CalledProcessError) and exc.returncode==2 else None
+        raise SimulationError(reason or f'P006 {phase} failed; inspect {log}',case_directory=case) from exc
     return log

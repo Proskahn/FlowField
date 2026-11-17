@@ -1,4 +1,5 @@
 """Copy a finished same-geometry state as a new, independently verified guess."""
+import csv
 import hashlib
 import json
 import math
@@ -14,6 +15,36 @@ SURFACE_FIELDS=('phiL','phiG')
 FIELDS=VOLUME_FIELDS+SURFACE_FIELDS
 NUMERICAL={'iterations','write_interval','processes','pseudo_dt','phase_numerical_courant','field_tolerance',
            'balance_tolerance','minimum_iterations','initial_voltage'}
+
+
+def completed_coupling(source, status, config):
+    """Restore a completed full-model stage, never its convergence certificate.
+
+    Older/partially initialized guesses still use the normal continuation.
+    Explicitly requesting a lower initial voltage also keeps that behavior.
+    """
+    if status.get('momentum_fraction') != 1 or status.get('thermal_active') is not True:
+        return dict(restored=False,reason='Source has not recorded the full coupled stage')
+    path=source/'postProcessing/p006/history.csv'
+    text=path.read_text()
+    reader=csv.DictReader(text.splitlines())
+    if not reader.fieldnames or len(set(reader.fieldnames))!=len(reader.fieldnames):
+        raise ValueError('Initial-state history has missing/duplicate columns')
+    last=None
+    for row in reader:last=row
+    try:
+        final={k:float(v) for k,v in last.items()}
+        if (not all(math.isfinite(v) for v in final.values())
+                or final['iteration']!=status['iteration']
+                or final['momentum_fraction']!=1 or final['thermal_active']!=1
+                or not math.isclose(final['applied_voltage_V'],config.cell_voltage,rel_tol=0,abs_tol=1e-12)):
+            raise ValueError('Completion status and final coupled history disagree')
+    except (AttributeError,KeyError,TypeError,ValueError) as exc:
+        raise ValueError('Initial-state full-coupling evidence is inconsistent') from exc
+    if min(config.initial_voltage,config.cell_voltage)!=config.cell_voltage:
+        return dict(restored=False,reason='Requested a lower initial voltage')
+    return dict(restored=True,momentum_fraction=1.,thermal_active=True,voltage_V=final['applied_voltage_V'],
+                history_sha256=hashlib.sha256(text.encode()).hexdigest())
 
 
 def same_geometry(a,b):
@@ -95,6 +126,7 @@ def load(source, geometry, config, required_inputs, materials):
         source_field_sha256={name:hashlib.sha256(text.encode()).hexdigest() for name,text in snapshots.items()},
         preserves_target_boundary_conditions=True,
         preserves_face_fluxes=True,
+        coupling=completed_coupling(source,status,config),
         qualification_inherited=False)
     return snapshots,metadata
 
@@ -117,4 +149,10 @@ def write(case, state):
                 value=re.search(r'\bvalue\b[^;]+;',saved).group(0)
                 text=re.sub(patch_pattern,lambda _:f'{patch} {{ type calculated; {value} }}',text,count=1,flags=re.S)
         target.write_text(text)
+    if metadata['coupling']['restored']:
+        # These are already supported solver inputs. Write before case hashes
+        # are generated, so both activation flags are immutable/provenanced.
+        props=Path(case)/'constant/modelProperties'
+        with props.open('a') as stream:
+            stream.write('\ninitial_momentum_fraction 1;\ninitial_thermal_active true;\n')
     return metadata

@@ -34,7 +34,7 @@ def _values(text,key,count):
     return result
 
 
-def verify(case):
+def verify(case, *, write_report=True):
     metadata=json.loads((case/'case.json').read_text())
     m=gen.geometry(metadata['parameters']['geometry'],metadata['geometry'],metadata['mesh_level'])
     p=metadata['parameters']['model']
@@ -132,5 +132,6 @@ def verify(case):
     result={'passed':all(math.isfinite(v) and v < 1e-3 for v in checks.values()),'iteration':float(time.name),
             'voltage_V':voltage,'electrical_power_W':power,'joule_heat_W':joule,
             'total_heat_source_W':heat,'membrane_currents_A':membrane_planes,'checks':checks}
-    (case/'field_verification.json').write_text(json.dumps(result,indent=2)+'\n')
+    if write_report:
+        (case/'field_verification.json').write_text(json.dumps(result,indent=2)+'\n')
     return result

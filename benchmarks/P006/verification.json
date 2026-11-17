@@ -391,5 +391,16 @@
     "Reproduce the qualified baseline on the university server before optimization.",
     "Check mesh independence and sensitivity to estimated inputs before reporting design rankings.",
     "Compare quantitative predictions and optimized designs against the paper."
-  ]
+  ],
+  "continuation_regression": {
+    "passed": true,
+    "report": "runs/p006-continuation-fix-003/verification.json",
+    "sha256": "984881805ecdd333806d608a5ffc3adf6823eb3a2f6eb9910319a995f25a5065",
+    "cases": [
+      "runs/p006-continuation-fix-003/budget-source",
+      "runs/p006-continuation-fix-003/continued"
+    ],
+    "software_tests": 231,
+    "note": "Same-equation initialization fix: signed phase flux orientation and verified full-coupling restoration. The server case is not locally available."
+  }
 }
