@@ -3,7 +3,7 @@ import hashlib
 from pathlib import Path
 from ....evaluation import CaseDefinition
 from .case import generate_case,INPUTS,SOLVER_INPUTS
-from .config import ManifoldConfig,MODEL_REVISION
+from .config import ManifoldConfig,MODEL_REVISION,DEFAULT_TIMEOUT_S
 from .runtime import run_phase,eigen_headers
 
 
@@ -33,4 +33,4 @@ def extract(case,config):
 
 CASE=CaseDefinition(name='P006',config_type=ManifoldConfig,inputs=frozenset(INPUTS),
     commands=('checkMesh',),validate=validate,execute=execute,generate=generate_case,
-    extract=extract,revision=MODEL_REVISION,execution_outputs=('bin','log.checkMesh'),timeout_s=3600)
+    extract=extract,revision=MODEL_REVISION,execution_outputs=('bin','log.checkMesh'),timeout_s=DEFAULT_TIMEOUT_S)

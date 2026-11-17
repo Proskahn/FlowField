@@ -259,7 +259,8 @@ def restore_options(args, supplied):
             if args.p004_dataset is None and args.p004_model is None:
                 raise ResumeError('Legacy P004 resume requires the original --p004-dataset or --p004-model')
             options.update(p004_dataset=args.p004_dataset,p004_model=args.p004_model)
-    saved_ids = [entry['problem'] for entry in json.loads((output/'plan.json').read_text())['problems']]
+    saved_entries = json.loads((output/'plan.json').read_text())['problems']
+    saved_ids = [entry['problem'] for entry in saved_entries]
     if options.get('problems') == ['all']:
         options['problems'] = saved_ids
     for key,value in options.items():
@@ -276,4 +277,6 @@ def restore_options(args, supplied):
             if not (key=='problems' and old==['all'] and value==saved_ids):
                 raise ResumeError(f'{flag} differs from the saved experiment; resume keeps the original budget/settings')
         setattr(args,key,Path(value) if key in ('p004_dataset','p004_model','p005_config','config') and value is not None else value)
+    args.command_timeouts = {entry['problem']: entry['command_timeout_s'] for entry in saved_entries
+                             if 'command_timeout_s' in entry}
     return args

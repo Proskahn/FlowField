@@ -14,6 +14,7 @@ import time
 from ..problem import AbstractFlowFieldProblem
 from ..benchmarking.ioh import analyzer_logger, make_ioh_problem
 from ..problems.p000.config import MESHES
+from ..problems.level1_small_continuous.p006.config import DEFAULT_TIMEOUT_S as P006_TIMEOUT_S
 from ..registry import create_problem, list_problems, problem_config_type
 from ..config import load_config
 from ..problem import CFDProblem
@@ -395,6 +396,14 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     return summary
 
 
+def _command_timeout(identifier, args):
+    if args.timeout is not None:
+        return args.timeout
+    # A resumed run keeps the effective limits recorded in its plan.
+    saved = getattr(args, 'command_timeouts', {})
+    return saved.get(identifier, P006_TIMEOUT_S if identifier == 'P006' else 1800)
+
+
 def _make_problem(identifier, args):
     common = dict(output_root=args.output / identifier / 'cases')
     config_type = problem_config_type(identifier)
@@ -412,7 +421,7 @@ def _make_problem(identifier, args):
         if identifier == 'P005' and args.p005_oxygen_velocity is not None:
             overrides['oxygen_velocity_m_s'] = args.p005_oxygen_velocity
         common.update(config=load_config(config_type, source, **overrides),
-                      runtime=Runtime(args.backend, args.image, args.timeout))
+                      runtime=Runtime(args.backend, args.image, _command_timeout(identifier, args)))
     elif args.config is not None:
         raise ValueError(f'{identifier} has no registered configuration type')
     if identifier == 'P004':
@@ -444,7 +453,8 @@ def main(argv=None):
     parser.add_argument('--mesh', choices=('coarse','medium','fine'), default=None)
     parser.add_argument('--backend', choices=('auto','native','docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
-    parser.add_argument('--timeout', type=float, default=1800, help='Seconds per mesh/build/solver command')
+    parser.add_argument('--timeout', type=float, default=None,
+                        help='Seconds per mesh/build/solver command (default: P006 14400; other problems 1800)')
     parser.add_argument('--ioh', action='store_true')
     parser.add_argument('--failure-penalty', type=float, help='Explicit finite penalty for SimulationError; otherwise stop that problem')
     parser.add_argument('--max-seconds-per-problem', type=float, help='Soft cap; finish an in-flight evaluation before stopping')
@@ -502,6 +512,8 @@ def _run_suite(args):
             maximum_attempts=args.budget, evaluation_kind='current_lookup_or_surrogate' if identifier=='P004' else 'CFD',
             sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method=='cmaes' else None,
             initial_design_length=len(_initial(problem))))
+        if isinstance(problem, CFDProblem):
+            entries[-1]['command_timeout_s'] = problem.runtime.timeout_s
         if method in ('bo', 'turbo'):
             entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
@@ -555,7 +567,7 @@ def _run_suite(args):
         _ioh()
     cfd = [p for p in active if isinstance(p, CFDProblem)]
     if cfd:
-        runtime = Runtime(args.backend, args.image, args.timeout)
+        runtime = Runtime(args.backend, args.image, max(p.runtime.timeout_s for p in cfd))
         commands = {command for p in cfd for command in p.case_definition.commands}
         plan['runtime_preflight'] = runtime.resolve(commands)
     if not args.resume:
@@ -586,6 +598,11 @@ def _execute_suite(args,problems,entries,finished):
             _save(args.output/'suite-summary.json',suite)
             print(f'{problem.name}: already finished; no evaluations repeated',file=sys.stderr,flush=True)
             continue
+        if isinstance(problem, CFDProblem):
+            message = f'{problem.name}: command timeout = {problem.runtime.timeout_s:g} s'
+            if getattr(problem, 'requires_qualified_baseline', False):
+                message += '; baseline must qualify before optimization candidates'
+            print(message, file=sys.stderr, flush=True)
         try:
             result = optimize(problem, budget=args.budget, seed=args.seed, output=args.output/problem.name,
                 method=args.method,population=args.population,

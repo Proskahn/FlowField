@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 from ....problem import CFDProblem
 from ....runtime import Runtime, SimulationError
-from .config import ManifoldConfig, BASELINE_X, DOI, MODEL_REVISION, geometry as decode_geometry
+from .config import ManifoldConfig, BASELINE_X, DOI, MODEL_REVISION, DEFAULT_TIMEOUT_S, geometry as decode_geometry
 
 
 class P006Problem(CFDProblem):
@@ -14,7 +14,7 @@ class P006Problem(CFDProblem):
         super().__init__('P006',3,[0.]*3,[1.]*3)
         self.config=config if config is not None else ManifoldConfig()
         if not isinstance(self.config,ManifoldConfig):raise TypeError('P006 requires ManifoldConfig')
-        self.runtime=runtime or Runtime(timeout_s=3600)
+        self.runtime=runtime or Runtime(timeout_s=DEFAULT_TIMEOUT_S)
         self.output_root=Path(output_root)
         if failure_penalty is not None and (isinstance(failure_penalty,bool) or not math.isfinite(failure_penalty) or failure_penalty<=0):
             raise ValueError('failure_penalty must be positive and finite')

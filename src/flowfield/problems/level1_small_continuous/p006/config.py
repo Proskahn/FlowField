@@ -6,6 +6,8 @@ import math
 
 DOI = '10.1016/j.ijhydene.2026.157728'
 MODEL_REVISION = 'manifold-two-fluid-thermal-v2'
+# Wall-clock allowance per command, separate from the nonlinear iteration budget.
+DEFAULT_TIMEOUT_S = 14400
 PARAMETERS = ('win', 'wmid', 'wout')
 BASELINE_X = (0.375,)*3
 

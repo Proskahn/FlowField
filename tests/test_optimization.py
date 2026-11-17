@@ -188,6 +188,19 @@ class OptimizationTests(unittest.TestCase):
         skipped = next(p for p in plan['problems'] if p['problem']=='P008')
         self.assertEqual(skipped['status'], 'skipped')
         self.assertIn('frozen EWM calibration', skipped['reason'])
+        timeouts={p['problem']:p['command_timeout_s'] for p in plan['problems'] if p['status']=='ready'}
+        self.assertEqual(timeouts.pop('P006'),14400)
+        self.assertTrue(all(value==1800 for value in timeouts.values()))
+
+    def test_explicit_timeout_overrides_defaults_in_a_mixed_suite(self):
+        capture=io.StringIO()
+        with contextlib.redirect_stdout(capture):
+            result=main(['--problems','P000','P006','--timeout','7200',
+                         '--output',str(self.root/'plan'),'--dry-run'])
+        self.assertEqual(result,0)
+        self.assertEqual([p['command_timeout_s'] for p in json.loads(capture.getvalue())['problems']],
+                         [7200,7200])
+        self.assertFalse((self.root/'plan').exists())
 
     def test_explicit_p008_requires_calibration_before_creating_output(self):
         error=io.StringIO()

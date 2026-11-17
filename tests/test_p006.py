@@ -31,6 +31,55 @@ from flowfield.runtime import SimulationError
 
 
 class P006Tests(unittest.TestCase):
+    def test_default_timeout_reaches_baseline_api_and_cli(self):
+        from flowfield.problems.level1_small_continuous.p006.cli import main
+        from flowfield.problems.level1_small_continuous.p006.evaluation import CASE
+        self.assertEqual(P006Problem().runtime.timeout_s,14400)
+        self.assertEqual(CaseEvaluator(CASE).runtime.timeout_s,14400)
+        for action in ('evaluate','run'):
+            for flags,expected in (([],14400),(['--timeout','600'],600)):
+                with self.subTest(action=action,flags=flags),tempfile.TemporaryDirectory() as tmp:
+                    output,errors=io.StringIO(),io.StringIO()
+                    accepted=dict(status='ok',case_directory=tmp)
+                    with patch.object(CaseEvaluator,'run_case',autospec=True,return_value={}) as run, \
+                         patch.object(CaseEvaluator,'evaluate',autospec=True,return_value=accepted) as evaluate, \
+                         contextlib.redirect_stdout(output),contextlib.redirect_stderr(errors):
+                        self.assertEqual(main([action,'--case',tmp,*flags]),0)
+                    called=evaluate if action=='evaluate' else run
+                    self.assertEqual(called.call_args.args[0].runtime.timeout_s,expected)
+                    self.assertIn(f'command timeout = {expected} s',errors.getvalue())
+
+    def test_optimizer_timeout_is_recorded_passed_to_cfd_and_retained_on_resume(self):
+        # The per-problem default must reach the actual evaluator, including a
+        # mixed suite. Legacy numeric limits and explicit overrides still win.
+        scenarios=(([],14400),(['--timeout','1800'],1800))
+        for flags,expected in scenarios:
+            with self.subTest(flags=flags),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp)/'optimization';errors=io.StringIO()
+                accepted=dict(status='ok',objective=.8,objectives={},constraints={},
+                              case_directory='/test/p006-qualified')
+                with patch.object(P006Problem,'preflight'), \
+                     patch.object(Runtime,'resolve',return_value={'backend':'native'}), \
+                     patch.object(CaseEvaluator,'evaluate',autospec=True,return_value=accepted) as evaluate, \
+                     contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(errors):
+                    self.assertEqual(optimize_main(['--problem','P006','--optimizer','random',
+                        '--budget','1','--output',str(root),*flags]),0)
+                self.assertEqual(evaluate.call_args.args[0].runtime.timeout_s,expected)
+                plan=json.loads((root/'plan.json').read_text())
+                self.assertEqual(plan['problems'][0]['command_timeout_s'],expected)
+                self.assertIn(f'command timeout = {expected} s',errors.getvalue())
+                self.assertIn('baseline must qualify',errors.getvalue())
+                for override,resumed_limit in (([],expected),(['--timeout','7200'],7200)):
+                    output=io.StringIO()
+                    # Updating the default must not change a saved experiment's
+                    # limit. An explicit resume --timeout can change execution.
+                    with patch('flowfield.optimization.runner.P006_TIMEOUT_S',99999), \
+                         contextlib.redirect_stdout(output):
+                        self.assertEqual(optimize_main(['--resume','--dry-run',
+                            '--output',str(root),*override]),0)
+                    resumed=json.loads(output.getvalue())
+                    self.assertEqual(resumed['problems'][0]['command_timeout_s'],resumed_limit)
+
     @unittest.skipUnless(hasattr(os,'killpg'),'POSIX process groups required')
     def test_timeout_stops_wrapper_and_its_child(self):
         import fcntl

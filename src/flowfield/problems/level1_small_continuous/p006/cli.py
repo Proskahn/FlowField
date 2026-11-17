@@ -2,9 +2,11 @@
 import argparse
 from dataclasses import replace
 import json
+import sys
 from ....config import load_config
 from ....runtime import Runtime
 from . import P006Problem,ManifoldConfig
+from .config import DEFAULT_TIMEOUT_S
 
 
 def main(argv=None):
@@ -18,7 +20,8 @@ def main(argv=None):
     p.add_argument('--mesh',choices=('coarse','medium','fine'))
     p.add_argument('--processes',type=int)
     p.add_argument('--backend',choices=('auto','native','docker'),default='auto')
-    p.add_argument('--timeout',type=float,default=3600)
+    p.add_argument('--timeout',type=float,default=DEFAULT_TIMEOUT_S,
+                   help='Wall seconds per command (default: 14400, four hours); does not change convergence criteria')
     args=p.parse_args(argv)
     if args.initial_state and args.action not in ('generate','recover'):
         p.error('--initial-state is supported by generate/recover only; run/extract retain the recorded inputs')
@@ -36,6 +39,9 @@ def main(argv=None):
     overrides={k:v for k,v in dict(manifold_width_mm=args.manifold_mm,mesh=args.mesh,processes=args.processes).items() if v is not None}
     config=replace(config,**overrides)
     problem=P006Problem(config=config,output_root=args.case,runtime=Runtime(backend=args.backend,timeout_s=args.timeout))
+    if args.action in ('run','evaluate'):
+        print(f'P006: command timeout = {args.timeout:g} s; convergence criteria remain enforced.',
+              file=sys.stderr,flush=True)
     x=[(v-.7)/.8 for v in (args.widths_mm or [1.,1.,1.])]
     if args.action=='generate':
         from .case import generate_case
