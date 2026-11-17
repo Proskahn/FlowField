@@ -98,7 +98,7 @@ public:
         graph_->addInterfaces(interfaces_,lduPrimitiveMesh::nonBlockingSchedule<processorGAMGInterface>(interfaces_));
         controls_.add("solver", word("PCG"));
         controls_.add("preconditioner", word("DIC"));
-        controls_.add("tolerance", 1e-11);
+        controls_.add("tolerance", 1e-13);
         controls_.add("relTol", 0.0);
         controls_.add("maxIter", 6000);
     }
@@ -224,7 +224,7 @@ public:
         {
             assemble(potential,residual,deriv);
             chargeError=gSum(mag(residual))/current;
-            if (chargeError<1e-7) break;
+            if (chargeError<1e-11) break;
             lduMatrix A(graph_());
             A.diag()=fixedDiag;
             A.upper()=-deriv;

@@ -151,6 +151,8 @@ def extract_metrics(case,config):
         raise ValueError('A completed converged run is required')
     for row in rows[-5:]:
         if not (row['iteration']>=config.minimum_iterations and row['charge_residual']<1e-6
+            and row.get('momentum_fraction')==1 and row.get('thermal_active')==1
+            and status.get('momentum_fraction')==1 and status.get('thermal_active') is True
             and abs(row['applied_voltage_V']-config.cell_voltage)<1e-12
             and row['field_change']<config.field_tolerance and row['bounded_cells']==0
             and all(0<=row[key]<config.balance_tolerance for key in

@@ -12,7 +12,7 @@ from .geometry import PATCHES
 VOLUME_FIELDS=('Ul','Ug','p','T','sg','lambda','material','phiS','phiE')
 SURFACE_FIELDS=('phiL','phiG')
 FIELDS=VOLUME_FIELDS+SURFACE_FIELDS
-NUMERICAL={'iterations','write_interval','processes','pseudo_dt','field_tolerance',
+NUMERICAL={'iterations','write_interval','processes','pseudo_dt','phase_numerical_courant','field_tolerance',
            'balance_tolerance','minimum_iterations','initial_voltage'}
 
 

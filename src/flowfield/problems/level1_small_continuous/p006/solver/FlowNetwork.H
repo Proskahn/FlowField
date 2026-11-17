@@ -1,3 +1,4 @@
+#include <chrono>
 // Monolithic pressure/saturation Newton projection. Solves total volume and
 // gas continuity together, with bounded line searches and conservative fluxes.
 // Phase momentum predictors remain distributed OpenFOAM finite-volume matrices.
@@ -23,8 +24,10 @@ class FlowNetwork
     Foam::dictionary controls_;
     Eigen::SparseLU<Eigen::SparseMatrix<double>> factorization_;
     bool patternAnalyzed_=false;
+    Foam::scalarField massCorrection_;
 
 public:
+    const Foam::scalarField& massCorrection() const {return massCorrection_;}
     FlowNetwork(const Foam::fvMesh& mesh,const Foam::labelList& mat)
     :mesh_(mesh),mat_(mat),index_(mesh.nCells(),-1),count_(0),
      interfaces_(mesh.boundary().size()),owned_(mesh.boundary().size()),
@@ -199,6 +202,7 @@ public:
                 addCapacity(c,phiL.boundaryField()[pi][f],phiG.boundaryField()[pi][f]);
             }
         }
+        if(props.lookupOrDefault<scalar>("momentum_fraction",1.0)==0)capacity=0.;
         scalarField baseL(mesh_.nCells()),baseG(mesh_.nCells());
         // Factor out the entire cubic relative permeability before harmonic
         // interpolation. In the Darcy limit the base is exactly K/mu, so an
@@ -262,11 +266,12 @@ public:
         lduMatrix A(graph_());A.diag().setSize(2*count_);A.upper().setSize(edgeIndex_.size());A.lower().setSize(edgeIndex_.size());
         FieldField<Field,scalar> interfaceCoeffs(interfaces_.size());
         forAll(interfaces_,pi)interfaceCoeffs.set(pi,new scalarField(faces_[pi].size(),0));
+        scalarField columnActivity(2*count_,0);
         auto assemble=[&](const scalarField& trial,scalarField& res,bool jacobian,bool saveFlux)
         {
-            res=0;if(jacobian){A.diag()=0;A.upper()=0;A.lower()=0;forAll(interfaceCoeffs,pi)interfaceCoeffs[pi]=0;}
+            res=0;if(jacobian){columnActivity=0;A.diag()=0;A.upper()=0;A.lower()=0;forAll(interfaceCoeffs,pi)interfaceCoeffs[pi]=0;}
             auto add=[&](label row,label col,scalar value)
-            {if(!jacobian)return;if(row==col)A.diag()[row]+=value;
+            {if(!jacobian)return;columnActivity[col]+=mag(value);if(row==col)A.diag()[row]+=value;
              else{label a=min(row,col),b=max(row,col),e=edgeIndex_.at({a,b});if(row<col)A.upper()[e]+=value;else A.lower()[e]+=value;}};
             scalarField pv(mesh_.nCells(),0),sv(mesh_.nCells(),0),nbrP,nbrS;
             forAll(index_,c)if(index_[c]>=0)
@@ -353,10 +358,14 @@ public:
         // Momentum coefficients lag saturation within a segregated iteration.
         // Reduce local pseudo-time if a phase would lose over 20% of its
         // inventory in one update; re-solve conservation, never clip the field.
+        const auto profileStart=std::chrono::steady_clock::now();
+        label profileIterations=0,profileRetries=0;
         for(label retry=0;retry<12;++retry)
         {
+        profileRetries=retry;
         for(label iteration=0;iteration<40;++iteration)
         {
+            ++profileIterations;
             assemble(x,res,true,false);error=gSum(mag(res))/flow;
             if(mesh_.time().value()==1 && iteration==0 && retry==0)
             {
@@ -384,7 +393,16 @@ public:
                 if(!std::isfinite(jacobianError)||jacobianError>1e-4)
                     FatalErrorInFunction<<"Phase Jacobian verification failed"<<exit(FatalError);
             }
-            if(error<1e-7)break;
+            if(error<1e-10)break;
+            // At a stagnation point with all donor fluxes incoming, saturation
+            // has an exactly zero Jacobian column. Regularize only that Newton
+            // correction, leaving the nonlinear conservation residual unchanged.
+            label regularized=0;
+            scalar diagonalScale=max(gMax(mag(A.diag())),1e-20);
+            for(label j=1;j<2*count_;j+=2)if(columnActivity[j]<VSMALL)
+            {A.diag()[j]+=max(mag(A.diag()[j-1]),diagonalScale*1e-6);++regularized;}
+            reduce(regularized,sumOp<label>());
+            if(regularized)Info<<"Regularized inactive saturation columns: "<<regularized<<endl;
             scalarField delta(2*count_,0);
             scalar linearError=GREAT;label linearIterations=linearSolve(A,-res,delta,interfaceCoeffs,linearError);
             if(mesh_.time().value()<=2 || linearError>1e-4) Info<<"Projection Newton "<<iteration<<": balance="<<error<<"; linear iterations="<<linearIterations<<"; residual="<<linearError<<endl;
@@ -418,7 +436,7 @@ public:
             depletion=max(depletion,loss);
         }
         reduce(depletion,maxOp<scalar>());
-        if(std::isfinite(error)&&error<1e-5&&depletion<=.2)
+        if(std::isfinite(error)&&error<1e-8)
         {projectionAccepted=true;break;}
         // Preserve the final attempted state and its capacity for the failure
         // diagnostic; resetting here would report the unevaluated start state.
@@ -428,7 +446,7 @@ public:
             scalar change=x[index_[c]+1];
             scalar loss=change<0?-change/max(oldS[c],satFloor):change/max(1-oldS[c],satFloor);
             scalar factor=max(1.,loss/.15);
-            if(!std::isfinite(error)||error>=1e-5)factor=max(factor,10.);
+            if(!std::isfinite(error)||error>=1e-8)factor=max(factor,10.);
             capacity[c]*=factor;
         }
         if(retry>0 || mesh_.time().value()<=2)
@@ -436,18 +454,43 @@ public:
         x=initialX;
         }
         assemble(x,res,false,true);error=gSum(mag(res))/flow;
-        if(!projectionAccepted||!std::isfinite(error)||error>1e-5)
+        if(!projectionAccepted||!std::isfinite(error)||error>1e-8)
             FatalErrorInFunction<<"Pressure/saturation projection did not converge: "<<error<<exit(FatalError);
+        Info<<"PHASE_PROFILE Newton="<<profileIterations<<"; retries="<<profileRetries
+            <<"; seconds="<<std::chrono::duration<double>(std::chrono::steady_clock::now()-profileStart).count()
+            <<"; capacity_max="<<gMax(capacity)<<"; balance="<<error<<endl;
         // Steady SIMPLE pressure relaxation: retain the conservative face
         // fluxes from the full projection, but use relaxed cell pressure for
         // momentum correction. Recompute its physical pressure trace at the
         // new saturation; never scale the pressure force by a momentum diagonal.
         surfaceScalarField projectedPhiL("projectedPhiL",phiL),projectedPhiG("projectedPhiG",phiG);
-        for(label c=0;c<count_;++c)x[2*c]=initialX[2*c]+.3*(x[2*c]-initialX[2*c]);
+        for(label c=0;c<count_;++c)x[2*c]=initialX[2*c]+props.lookupOrDefault<scalar>("pressure_relaxation",.3)*(x[2*c]-initialX[2*c]);
         assemble(x,trialRes,false,true);
         phiL=projectedPhiL;phiG=projectedPhiG;
         forAll(index_,c)if(index_[c]>=0)
         {p[c]=pressureScale*x[index_[c]];sg[c]=oldS[c]+x[index_[c]+1];pc[c]=cap(mat_[c],sg[c])[0];}
         p.correctBoundaryConditions();sg.correctBoundaryConditions();pc.correctBoundaryConditions();
+        // Nonlinear left preconditioning of the outer gas-mass residual.
+        // Solve the coupled pressure/saturation Jacobian with zero total-volume
+        // RHS and the true gas defect. Small positive diagonal regularization
+        // belongs ONLY to this correction operator; no field or flux is changed.
+        // Since the pressure block is anchored by outlets, deltaS=0 implies
+        // deltaP=0 and hence the original gas conservation defect is zero.
+        const scalar meanFlux=flow/returnReduce(count_,sumOp<label>());
+        capacity=.01*meanFlux;
+        assemble(x,res,true,false);
+        scalarField rhs(2*count_,0),delta(2*count_,0);
+        forAll(index_,c)if(index_[c]>=0)
+        {const label a=index_[c];rhs[a+1]=-(res[a+1]-capacity[c]*x[a+1]);}
+        scalar correctionError=GREAT;
+        const label correctionIterations=linearSolve(A,rhs,delta,interfaceCoeffs,correctionError);
+        if(!std::isfinite(correctionError)||correctionError>1e-4)
+            FatalErrorInFunction<<"Gas-mass preconditioner failed: "<<correctionError<<exit(FatalError);
+        massCorrection_.setSize(mesh_.nCells());massCorrection_=0;
+        forAll(index_,c)if(index_[c]>=0)massCorrection_[c]=delta[index_[c]+1];
+        if(mesh_.time().value()<=3)
+            Info<<"Gas-mass preconditioner: linear residual="<<correctionError
+                <<"; iterations="<<correctionIterations
+                <<"; maximum saturation correction="<<gMax(mag(massCorrection_))<<endl;
     }
 };

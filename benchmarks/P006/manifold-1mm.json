@@ -5,7 +5,7 @@
   "contact_tolerance": 0.05,
   "iterations": 3000,
   "write_interval": 250,
-  "processes": 1,
+  "processes": 2,
   "inlet_flow_ml_min": 15.0,
   "inlet_temperature": 353.0,
   "inlet_liquid_saturation": 0.9,
@@ -45,10 +45,11 @@
   "ionomer_equivalent_weight": 1.1,
   "membrane_water_boundary": 22.0,
   "water_diffusivity_factor": 1.0,
-  "pseudo_dt": 0.01,
+  "pseudo_dt": 1e-06,
   "field_tolerance": 1e-05,
   "balance_tolerance": 0.001,
   "minimum_iterations": 60,
   "permeability_channel": 1e-06,
-  "initial_voltage": 2.2
+  "initial_voltage": 2.2,
+  "phase_numerical_courant": 0.001
 }

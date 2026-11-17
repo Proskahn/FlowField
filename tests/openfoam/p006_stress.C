@@ -82,7 +82,25 @@ int main(int argc, char *argv[])
     scalar scaledError=gMax(mag(qCheck.primitiveField()-vector(1,0,0)));
     Info<<"ROW_SCALE_CHECK unscaled_error="<<unscaledError
         <<" scaled_error="<<scaledError<<nl;
-    bool passed=totalChecked==192 && maximumError<1e-10 && oldShearError>1
+    // Independent prescribed discrete solution: the small phase velocity is
+    // O(1e-18), while its transformed velocity is O(1). Include nonuniform
+    // Dirichlet values and a coefficient jump across the MPI interface.
+    auto shape=[](const vector& x){return vector(1+x.x()+2*x.y(),2-x.y(),.5+x.z());};
+    forAll(qCheck,c)qCheck[c]=shape(mesh.C()[c])/diagonal[c];
+    forAll(mesh.boundary(),pi)if(!mesh.boundary()[pi].coupled())
+        forAll(mesh.boundary()[pi],f)
+        {const vector x=mesh.boundary()[pi].Cf()[f];
+         qCheck.boundaryFieldRef()[pi][f]=shape(x)/(x.x()<.5?1.:1e18);}
+    qCheck.correctBoundaryConditions();
+    const vectorField expected(qCheck.primitiveField());
+    fvVectorMatrix columnEquation(fvm::Sp(diagonal,qCheck)-fvm::laplacian(
+        dimensionedScalar("mu",dimDynamicViscosity,1e-6),qCheck));
+    volVectorField columnRhs("columnRhs",(columnEquation&qCheck));
+    qCheck.primitiveFieldRef()=vector::zero;qCheck.correctBoundaryConditions();
+    solveColumnScaled(columnEquation,columnRhs,diagonal,1.);
+    const scalar columnError=gMax(mag((qCheck.primitiveField()-expected)*diagonal.primitiveField()));
+    Info<<"COLUMN_SCALE_CHECK max_local_velocity_scaled_error="<<columnError<<nl;
+    bool passed=columnError<1e-8 && totalChecked==192 && maximumError<1e-10 && oldShearError>1
         && unscaledError>.9 && scaledError<1e-10;
     Info<<(passed?"STRESS_CHECK PASSED":"STRESS_CHECK FAILED")<<nl;
     return passed?0:1;

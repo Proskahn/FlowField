@@ -43,7 +43,9 @@ def _show_progress(log,stop):
                 try:iteration=int(line.split('=',1)[1]);show=iteration==1 or iteration%10==0
                 except ValueError:show=False
                 if show:print(f'[{log.parent.name}] {line.strip()}',flush=True)
-            elif (show and line.startswith('P006:')) or line.startswith('CONVERGED:'):
+            elif (show and line.startswith('P006:')) or line.startswith(
+                    ('CONVERGED:', 'Momentum continuation:', 'Voltage continuation:',
+                     'Enabling coupled energy solve')):
                 print(f'[{log.parent.name}] {line.strip()}',flush=True)
 
 

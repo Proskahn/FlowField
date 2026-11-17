@@ -124,7 +124,7 @@ class P006Tests(unittest.TestCase):
             verify_pressure_forces(m,p.config,pressure,saturation,{'L':broken,'G':expected})
 
     def finished_state(self, root):
-        p=P006Problem();case=p.write_case(p.initial_design(),root/'source')
+        p=P006Problem(config=ManifoldConfig(processes=1));case=p.write_case(p.initial_design(),root/'source')
         manifest=json.loads((case/'case.json').read_text())
         saved=case/'10';saved.mkdir()
         for name in FIELDS:shutil.copy2(case/'0'/name,saved/name)
@@ -310,22 +310,41 @@ class P006Tests(unittest.TestCase):
             manifest=json.loads((case/'case.json').read_text())
             post=case/'postProcessing/p006';post.mkdir(parents=True)
             (post/'status.json').write_text(json.dumps(dict(converged=True,iteration=5,
-                cells=manifest['cells'],processes=1)))
+                cells=manifest['cells'],processes=p.config.processes,momentum_fraction=1,thermal_active=True)))
             (case/'log.flowfieldP006Foam').write_text('CONVERGED: coupled fields and local/global balances passed.\nEnd\n')
             row=dict(iteration=1,charge_residual=0,field_change=0,bounded_cells=0,
                 liquid_balance=0,gas_balance=0,local_liquid_balance=0,local_gas_balance=0,
                 energy_balance=0,applied_voltage_V=1.4,liquid_momentum_residual=0,
-                gas_momentum_residual=0)
+                gas_momentum_residual=0,momentum_fraction=1,thermal_active=1)
             # Small field increments do not prove that the steady momentum
             # equations are satisfied; nor does a converged warm-up voltage.
             for changes in ({},dict(applied_voltage_V=2.2,liquid_momentum_residual=.1),
-                            dict(applied_voltage_V=2.2,gas_momentum_residual=.1)):
+                            dict(applied_voltage_V=2.2,gas_momentum_residual=.1),
+                            dict(applied_voltage_V=2.2,momentum_fraction=.5),
+                            dict(applied_voltage_V=2.2,thermal_active=0)):
                 with self.subTest(changes=changes):
                     with (post/'history.csv').open('w') as stream:
                         writer=csv.DictWriter(stream,fieldnames=list(row));writer.writeheader()
                         for i in range(1,6):writer.writerow(dict(row,**changes,iteration=i))
                     with self.assertRaisesRegex(ValueError,'convergence or conservation'):
                         extract_metrics(case,p.config)
+
+            # The last iteration alone cannot qualify a continuation stage.
+            row.update(applied_voltage_V=2.2,T_std_K=1.)
+            for bad_iteration in range(1,6):
+                with (post/'history.csv').open('w') as stream:
+                    writer=csv.DictWriter(stream,fieldnames=list(row));writer.writeheader()
+                    for i in range(1,6):
+                        writer.writerow(dict(row,iteration=i,thermal_active=0 if i==bad_iteration else 1))
+                with self.assertRaisesRegex(ValueError,'convergence or conservation'):
+                    extract_metrics(case,p.config)
+            with (post/'history.csv').open('w') as stream:
+                writer=csv.DictWriter(stream,fieldnames=list(row));writer.writeheader()
+                for i in range(1,6):writer.writerow(dict(row,iteration=i))
+            with patch('flowfield.problems.level1_small_continuous.p006.metrics.verify_fields',
+                       return_value={'temperature_std_K':1.}) as verify:
+                self.assertEqual(extract_metrics(case,p.config)['objective'],1.)
+                verify.assert_called_once()
 
 
 if __name__=='__main__':unittest.main()

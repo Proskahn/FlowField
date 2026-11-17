@@ -5,7 +5,7 @@ import json
 import math
 
 DOI = '10.1016/j.ijhydene.2026.157728'
-MODEL_REVISION = 'manifold-two-fluid-thermal-v1'
+MODEL_REVISION = 'manifold-two-fluid-thermal-v2'
 PARAMETERS = ('win', 'wmid', 'wout')
 BASELINE_X = (0.375,)*3
 
@@ -19,7 +19,7 @@ class ManifoldConfig:
     contact_tolerance: float = .05  # Paper Eq. 29 does not give delta.
     iterations: int = 3000
     write_interval: int = 250
-    processes: int = 1
+    processes: int = 2  # Verified fresh-start coarse baseline; serial can be selected explicitly.
     inlet_flow_ml_min: float = 15.
     inlet_temperature: float = 353.
     inlet_liquid_saturation: float = .9
@@ -60,7 +60,8 @@ class ManifoldConfig:
     ionomer_equivalent_weight: float = 1.1
     membrane_water_boundary: float = 22.
     water_diffusivity_factor: float = 1.
-    pseudo_dt: float = .01
+    pseudo_dt: float = 1e-6  # Numerical phase storage; not a physical time step.
+    phase_numerical_courant: float = .001
     field_tolerance: float = 1e-5
     balance_tolerance: float = 1e-3
     minimum_iterations: int = 60

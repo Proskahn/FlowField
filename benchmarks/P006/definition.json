@@ -1,6 +1,6 @@
 {
   "problem_id": "P006",
-  "model_revision": "manifold-two-fluid-thermal-v1",
+  "model_revision": "manifold-two-fluid-thermal-v2",
   "paper_validated": false,
   "dimension": 3,
   "variable_type": "real",
@@ -114,37 +114,51 @@
     "openfoam": "OpenCFD v2312",
     "phase_projection": "bounded Newton pressure/saturation",
     "linear": "Eigen SparseLU serial; local SparseLU-preconditioned GMRES MPI",
-    "outer": "Local pseudo-time with phase-depletion retries, optional voltage continuation, and safeguarded Anderson acceleration after momentum settles; phase acceptance unchanged",
+    "outer": "Damped Anderson on intrinsic velocities and block-preconditioned gas conservation; Darcy-to-full-momentum continuation, then coupled heat; strict physical acceptance unchanged",
     "output_time": "outer iteration count, not physical seconds",
     "momentum": "Separate superficial phase velocities; conservative steady-equivalent form of Eq.13 using Eqs.11-12, full viscous stress and Darcy drag",
     "phase_mobility": "Cubic upwind relative permeability; harmonic interpolation of the remaining momentum coefficient",
     "phase_fraction_floor": 1e-06,
-    "velocity_correction": "Full relaxed momentum predictor followed by pressure projection and diagonal cell correction using a physical Gauss pressure force",
+    "velocity_correction": "Unrelaxed, column/row-scaled separate momentum predictors; coupled pressure/saturation solve; two refreshed momentum block solves and a physical residual assembly",
     "wall_stress": "Zero face velocity at internal no-slip walls; full Newtonian normal stress; symmetric active masks across processor interfaces",
     "initial_voltage": "Requested voltage by default; min(initial_voltage, cell_voltage) if a lower warm-up is configured",
     "anderson": {
-      "memory": 30,
-      "damping": 0.5,
-      "activation_after_iteration": 50,
-      "momentum_residual_below": 0.01,
-      "field_change_below": 0.05,
-      "saturation_coordinate_step_limit": 0.04,
+      "memory": 40,
+      "damping": 0.2,
+      "activation_momentum_fraction_above": 0.000256,
+      "saturation_step_limit": 0.05,
+      "temperature_step_limit_K": 1.0,
+      "gas_mass_preconditioner": "Coupled pressure/saturation Jacobian, zero total-volume RHS, true gas defect RHS; auxiliary saturation diagonal 0.01 times mean cell flow; no field or flux modification",
       "candidates_are_initial_guesses_only": true
     },
     "jacobian_check": "Separate scaled pressure/saturation finite-difference directions with fixed donors only during this diagnostic; relative-error limit 1e-4; actual nonlinear fluxes retain unfrozen donors",
     "initial_state": "Finished, hash-verified same-geometry case; internal volume fields and saved face fluxes copied into a new case, fresh prescribed volume-field boundary conditions and inlet fluxes; no inherited qualification",
     "pressure_gradient": "Geometric face-pressure interpolation within one material; physical half-cell Darcy resistance weights at material interfaces; independent of numerical pseudo-time and equation relaxation",
-    "pressure_relaxation": 0.3,
-    "pressure_relaxation_fluxes": "Conservative full-projection face fluxes are retained; cell pressure and its physical force are relaxed for steady SIMPLE iteration",
-    "initial_porous_gas_fraction": 1e-06,
+    "pressure_relaxation": 1,
+    "pressure_relaxation_fluxes": "Full projected cell pressure and conservative phase fluxes",
+    "initial_porous_gas_fraction": "1 - inlet_liquid_saturation",
     "initial_channel_gas_fraction": "1 - inlet_liquid_saturation",
     "pseudo_courant": {
-      "initial": 0.5,
-      "maximum": 2.0,
-      "growth_factor": 1.02,
-      "growth_requires": "iteration>50, phase momentum residuals<.005, field change<.01",
-      "reduction": "halve toward .5 if momentum>.02 or field change>.1"
-    }
+      "early": 1000,
+      "early_through_momentum_fraction": 0.000256,
+      "late": 0.001
+    },
+    "momentum_initialization": {
+      "initial_fraction": 0,
+      "first_nonzero_fraction": 1e-06,
+      "growth_factor": 2,
+      "final_fraction": 1,
+      "advance_requires": "Local phase and per-material momentum residuals and field change below 1e-3"
+    },
+    "initial_pressure_guess": "Cathode 50*(x/18+y/25) Pa, anode 100 minus this value, x/y in mm; solids zero; outlet pressure remains zero",
+    "pseudo_dt": {
+      "early": 1,
+      "late": 1e-06,
+      "physical_time": false
+    },
+    "thermal": "Fully solved energy block; activates only after full momentum and requested voltage settle; outer updates bounded",
+    "default_processes": 2,
+    "default_processes_reason": "Fresh coarse baseline qualified with two MPI processes; serial repeat from that solution independently qualified. Fresh serial initialization remains unqualified."
   },
   "acceptance": {
     "consecutive_iterations": 5,
@@ -163,7 +177,10 @@
     "saved_superficial_intrinsic_velocity_consistency_max": 1e-08,
     "per_phase_per_material_momentum_residual_max": 0.001,
     "momentum_residual_excludes_pseudo_time_and_relaxation": true,
-    "independent_pressure_force_relative_error_max": 1e-06
+    "independent_pressure_force_relative_error_max": 1e-06,
+    "full_momentum_fraction_required": 1,
+    "active_heat_required": true,
+    "continuation_state_checked_for_all_five_iterations": true
   },
   "optimization": {
     "algorithm": "SciPy PRIMA COBYLA",

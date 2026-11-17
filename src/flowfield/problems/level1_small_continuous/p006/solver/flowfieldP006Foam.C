@@ -84,26 +84,31 @@ int main(int argc, char *argv[])
         mesh,dimensionedVector("zero",p.dimensions()/dimLength,vector::zero));
     ChargeNetwork charge(mesh,mat);
     FlowNetwork flowNetwork(mesh,mat);
-    OuterAcceleration acceleration(mat);
+    OuterAcceleration acceleration(mat,eps);
     const label totalCells=returnReduce(mesh.nCells(),sumOp<label>());
     fileName out=runTime.globalPath()/"postProcessing"/"p006";
     std::ofstream history;
     if (Pstream::master())
     {
         mkDir(out);history.open((out/"history.csv").c_str());history<<std::setprecision(12);
-        history<<"iteration,current_anode_A,current_cathode_A,charge_residual,T_mean_K,T_std_K,T_min_K,T_max_K,flow_cv,dp_anode_Pa,dp_cathode_Pa,liquid_balance,gas_balance,local_liquid_balance,local_gas_balance,field_change,heat_W,energy_balance,bounded_cells,lambda_min,lambda_max,applied_voltage_V,liquid_momentum_residual,gas_momentum_residual";
+        history<<"iteration,current_anode_A,current_cathode_A,charge_residual,T_mean_K,T_std_K,T_min_K,T_max_K,flow_cv,dp_anode_Pa,dp_cathode_Pa,liquid_balance,gas_balance,local_liquid_balance,local_gas_balance,field_change,heat_W,energy_balance,bounded_cells,lambda_min,lambda_max,applied_voltage_V,liquid_momentum_residual,gas_momentum_residual,momentum_fraction,thermal_active";
         for (label i=0;i<9;++i) history<<",branch_"<<i+1<<"_kg_s";
         history<<'\n';
     }
-    bool converged=false,thermalActive=false;label stable=0;
-    scalar pseudoCo=.5;
+    bool converged=false,thermalActive=props.lookupOrDefault<Switch>("initial_thermal_active",false);label stable=0;
+    if(thermalActive)Info<<"Enabling coupled energy solve at the requested voltage."<<endl;
+    scalar pseudoCo=100.0;scalar momentumFraction=props.lookupOrDefault<scalar>("initial_momentum_fraction",0.);
     Info<<"P006 two-fluid/charge/water/heat: "<<totalCells<<" cells, "<<Pstream::nProcs()<<" processes. Iteration labels are not seconds."<<endl;
     while (runTime.loop())
     {
         Info<<"\nIteration = "<<runTime.timeName()<<endl;
         props.set("cell_voltage",appliedVoltage);
-        const scalar dt=par("pseudo_dt")*min(1.,.01*std::pow(1.1,min(runTime.value()-1,49.)));
-        acceleration.begin(qL,qG,p,sg,T,phiL,phiG);
+        props.set("momentum_fraction",momentumFraction);
+        props.set("pressure_relaxation",1.0);
+        const bool darcyInitialization=momentumFraction<=.000256;
+        pseudoCo=darcyInitialization?1000.:props.lookupOrDefault<scalar>("phase_numerical_courant",.001);
+        const scalar dt=darcyInitialization?1.:par("pseudo_dt");
+        acceleration.begin(qL,qG,p,sg,T,water,phiL,phiG);
         Ul=qL/max(eps*(scalar(1)-sg),dimensionedScalar("floor",dimless,1e-9));
         Ug=qG/max(eps*sg,dimensionedScalar("floor",dimless,1e-9));
         Ul.correctBoundaryConditions();Ug.correctBoundaryConditions();
@@ -141,6 +146,7 @@ int main(int argc, char *argv[])
             ag.boundaryFieldRef()[pi]=1-par("inlet_liquid_saturation");
             pc.boundaryFieldRef()[pi]=0;
         }
+        refreshPhasePressureForces(p,pc,dragL,dragG,mat,fluid,nbrMat,nbrFluid,nbrCentres,forceL,forceG);
         scalar chargeError;
         charge.solve(props,T,sg,sigmaS,sigmaE,phiS,phiE,iv,heat,coverage,chargeError);
         // Dissolved water: diffusion and electro-osmotic drag in PEM; CL reservoirs.
@@ -181,6 +187,7 @@ int main(int argc, char *argv[])
         forAll(mat,c)if(fluid[c])
         {pseudoL[c]+=rhoL*fluxSumL[c]/(pseudoCo*mesh.V()[c]*sqr(safeL[c]));
          pseudoG[c]+=rhoG[c]*fluxSumG[c]/(pseudoCo*mesh.V()[c]*sqr(safeG[c]));}
+        pseudoL*=0.;pseudoG*=0.;
         surfaceScalarField massL("massL",phiL*dimensionedScalar("rhoL",dimDensity,rhoL));
         surfaceScalarField massG("massG",phiG*fvc::interpolate(rhoG));
         // The transpose/deviatoric contribution completes the Newtonian tensor
@@ -219,12 +226,12 @@ int main(int argc, char *argv[])
         // conservative inertia div(rho*q*q)/eps_eff^2. This includes Sm*q
         // exactly at steady conservation, without treating transient phase
         // imbalance as an artificial momentum production term.
-        fvVectorMatrix LEqn((1/sqr(safeL))*fvm::div(massL,qL)
-            -fvm::laplacian(muLF,qL)+fvm::Sp(dragL+pseudoL,qL)==pseudoL*qL+stressL);
-        fvVectorMatrix GEqn((1/sqr(safeG))*fvm::div(massG,qG)
-            -fvm::laplacian(muGF,qG)+fvm::Sp(dragG+pseudoG,qG)==pseudoG*qG+stressG);
+        fvVectorMatrix LEqn(momentumFraction*(1/sqr(safeL))*fvm::div(massL,qL)
+            -momentumFraction*fvm::laplacian(muLF,qL)+fvm::Sp(dragL+pseudoL,qL)==pseudoL*qL+momentumFraction*stressL);
+        fvVectorMatrix GEqn(momentumFraction*(1/sqr(safeG))*fvm::div(massG,qG)
+            -momentumFraction*fvm::laplacian(muGF,qG)+fvm::Sp(dragG+pseudoG,qG)==pseudoG*qG+momentumFraction*stressG);
         auto wall=[&](label c,scalar area,scalar distance)
-        {LEqn.diag()[c]+=viscL[c]*area/distance;GEqn.diag()[c]+=viscG[c]*area/distance;};
+        {LEqn.diag()[c]+=momentumFraction*viscL[c]*area/distance;GEqn.diag()[c]+=momentumFraction*viscG[c]*area/distance;};
         forAll(mesh.neighbour(),f)
         {
             label o=mesh.owner()[f],n=mesh.neighbour()[f];
@@ -238,20 +245,14 @@ int main(int argc, char *argv[])
             {label c=patch.faceCells()[f],b=patch.start()-mesh.nInternalFaces()+f;
              if (fluid[c]&&!nbrFluid[b])wall(c,patch.magSf()[f],mag(patch.Cf()[f]-mesh.C()[c]));}
         }
-        // Preserve the physical steady operators before adding algebraic
-        // relaxation. Small pseudo-time increments alone are not convergence.
-        fvVectorMatrix physicalL(LEqn),physicalG(GEqn);
-        physicalL-=fvm::Sp(pseudoL,qL)-pseudoL*qL;
-        physicalG-=fvm::Sp(pseudoG,qG)-pseudoG*qG;
-        LEqn.relax();GEqn.relax();
+        // The outer Anderson method controls the update; use unrelaxed momentum matrices.
         scalar ld=gMax(mag(LEqn.diag())),gd=gMax(mag(GEqn.diag()));
         forAll(solids,s) {LEqn.diag()[solids[s]]=ld;GEqn.diag()[solids[s]]=gd;}
         LEqn.setValues(solids,solidU);GEqn.setValues(solids,solidU);
-        // Standard segregated momentum predictor: solve the full relaxed
-        // matrices with the previous pressure force before updating H. The
-        // following projection supplies the current pressure force and final
-        // diagonal correction; no full solve is made after that projection.
-        solveRowScaled(LEqn,forceL);solveRowScaled(GEqn,forceG);
+        // Solve the momentum predictors at the current pressure before the
+        // coupled pressure/saturation update. Fresh momentum solves below use
+        // the projected saturation; the outer Anderson method closes the coupling.
+        solveColumnScaled(LEqn,forceL,dragL,muL/par("permeability_channel"));solveColumnScaled(GEqn,forceG,dragG,par("oxygen_viscosity")/par("permeability_channel"));
         // Pressure-free H predictors; capillary force is applied on faces below.
         volScalarField rqL("rqL",1.0/LEqn.A()),rqG("rqG",1.0/GEqn.A());
         volVectorField HqL("HqL",rqL*LEqn.H()),HqG("HqG",rqG*GEqn.H());
@@ -270,19 +271,15 @@ int main(int argc, char *argv[])
         forAll(mesh.boundary(),pi)if(mesh.boundary()[pi].name().ends_with("Inlet"))
         {al.boundaryFieldRef()[pi]=par("inlet_liquid_saturation");
          ag.boundaryFieldRef()[pi]=1-par("inlet_liquid_saturation");}
-        // SIMPLE velocity correction uses the same diagonal inverse and H
-        // predictor as the pressure projection. A second full momentum solve
-        // here would change its off-diagonal predictor after continuity had
-        // already been projected. At a fixed point this diagonal correction
-        // satisfies the complete, unmodified phase momentum matrix.
+        // Supply a diagonal velocity guess for the fresh momentum block.
         // Reconstruct pressure force before applying the cell momentum inverse.
         // Reconstructing its coefficient-weighted flux directly would make
         // the pressure force depend on pseudo-time and equation relaxation.
         forceL=-fvc::surfaceIntegrate(pressureFaceL*mesh.Sf());
         forceG=-fvc::surfaceIntegrate(pressureFaceG*mesh.Sf());
         forAll(solids,i){forceL[solids[i]]=vector::zero;forceG[solids[i]]=vector::zero;}
-        volVectorField projectedL("projectedL",HqL+rqL*forceL);
-        volVectorField projectedG("projectedG",HqG+rqG*forceG);
+        volVectorField projectedL("projectedL",(al/safeL)*HqL+pow3(al/safeL)*rqL*forceL);
+        volVectorField projectedG("projectedG",(ag/safeG)*HqG+pow3(ag/safeG)*rqG*forceG);
         Ul=projectedL/max(al,dimensionedScalar("floor",dimless,1e-9));
         Ug=projectedG/max(ag,dimensionedScalar("floor",dimless,1e-9));
         // Pseudo-time and matrix relaxation already damp the update. Apply
@@ -291,11 +288,105 @@ int main(int argc, char *argv[])
         Ul.correctBoundaryConditions();Ug.correctBoundaryConditions();
         forAll(solids,s){Ul[solids[s]]=vector::zero;Ug[solids[s]]=vector::zero;}
         qL==al*Ul;qG==ag*Ug;
+        // A nonlinear block sweep: refresh momentum at the projected saturation.
+        // Face conservation is re-coupled by the next outer block evaluation.
+        auto refreshMomentum=[&](bool apply)
+        {
+            forAll(mat,c)if(fluid[c])
+            {
+                scalar perm=par(mat[c]==1||mat[c]==7 ? "permeability_channel" : mat[c]==2||mat[c]==6 ? "permeability_ptl" : "permeability_cl");
+                dragL[c]=muL/(perm*pow3(max(1-sg[c],1e-6)));
+                dragG[c]=muG[c]/(perm*pow3(max(sg[c],1e-6)));
+            }
+            dragL.correctBoundaryConditions();dragG.correctBoundaryConditions();
+        volScalarField safeL("safeL",max(al,dimensionedScalar("floor",dimless,1e-9)));
+        volScalarField safeG("safeG",max(ag,dimensionedScalar("floor",dimless,1e-9)));
+        volScalarField viscL("viscL",dimensionedScalar("muL",dimDynamicViscosity,muL)/safeL);
+        volScalarField viscG("viscG",muG/safeG);
+        surfaceScalarField muLF(IOobject("muLF",runTime.timeName(),mesh),fvc::interpolate(viscL));harmonic(muLF,viscL,nbrCentres,&fluid);
+        surfaceScalarField muGF(IOobject("muGF",runTime.timeName(),mesh),fvc::interpolate(viscG));harmonic(muGF,viscG,nbrCentres,&fluid);
+        volScalarField pseudoL("pseudoL",dimensionedScalar("rhoDt",dimDensity/dimTime,rhoL/dt)/safeL);
+        volScalarField pseudoG("pseudoG",rhoG/(safeG*dimensionedScalar("dt",dimTime,dt)));
+        // Match momentum pseudo-time to local phase convection. A global dt
+        // lets fast gas momentum jump while saturation remains nearly frozen.
+        volScalarField fluxSumL("fluxSumL",fvc::surfaceSum(mag(phiL)));
+        volScalarField fluxSumG("fluxSumG",fvc::surfaceSum(mag(phiG)));
+        forAll(mat,c)if(fluid[c])
+        {pseudoL[c]+=rhoL*fluxSumL[c]/(pseudoCo*mesh.V()[c]*sqr(safeL[c]));
+         pseudoG[c]+=rhoG[c]*fluxSumG[c]/(pseudoCo*mesh.V()[c]*sqr(safeG[c]));}
+        pseudoL*=0.;pseudoG*=0.;
+        surfaceScalarField massL("massL",phiL*dimensionedScalar("rhoL",dimDensity,rhoL));
+        surfaceScalarField massG("massG",phiG*fvc::interpolate(rhoG));
+        // The transpose/deviatoric contribution completes the Newtonian tensor
+        // accompanying the implicit vector Laplacian in the printed equation.
+        surfaceVectorField tauL("tauL",phaseTransposeStressFlux(muLF,qL,fluid,nbrFluid));
+        surfaceVectorField tauG("tauG",phaseTransposeStressFlux(muGF,qG,fluid,nbrFluid));
+        auto wallStress=[&](label c,const vector& sf,scalar distance,scalar orientation)
+        {
+            vector normal=orientation*sf/mag(sf);
+            return std::array<vector,2>{{-viscL[c]*(qL[c]&normal)*sf/(3*distance),
+                                        -viscG[c]*(qG[c]&normal)*sf/(3*distance)}};
+        };
+        forAll(mesh.neighbour(),f)
+        {
+            label o=mesh.owner()[f],n=mesh.neighbour()[f];
+            if(fluid[o]==fluid[n])continue;
+            label c=fluid[o]?o:n;
+            auto stress=wallStress(c,mesh.Sf()[f],mag(mesh.Cf()[f]-mesh.C()[c]),fluid[o]?1:-1);
+            tauL[f]=stress[0];tauG[f]=stress[1];
+        }
+        forAll(mesh.boundary(),pi)
+        {
+            const auto& patch=mesh.boundary()[pi];
+            forAll(patch,f)
+            {
+                label c=patch.faceCells()[f],b=patch.start()-mesh.nInternalFaces()+f;
+                bool wall=patch.coupled()?fluid[c]&&!nbrFluid[b]:fluid[c]&&patch.name()=="externalWalls";
+                if(!wall)continue;
+                auto stress=wallStress(c,patch.Sf()[f],mag(patch.Cf()[f]-mesh.C()[c]),1);
+                tauL.boundaryFieldRef()[pi][f]=stress[0];tauG.boundaryFieldRef()[pi][f]=stress[1];
+            }
+        }
+        volVectorField stressL("stressL",fvc::surfaceIntegrate(tauL));
+        volVectorField stressG("stressG",fvc::surfaceIntegrate(tauG));
+        // Combining Eq.13 with rho*div(q)=Sm (Eqs.11-12) gives the
+        // conservative inertia div(rho*q*q)/eps_eff^2. This includes Sm*q
+        // exactly at steady conservation, without treating transient phase
+        // imbalance as an artificial momentum production term.
+        fvVectorMatrix LEqn(momentumFraction*(1/sqr(safeL))*fvm::div(massL,qL)
+            -momentumFraction*fvm::laplacian(muLF,qL)+fvm::Sp(dragL+pseudoL,qL)==pseudoL*qL+momentumFraction*stressL);
+        fvVectorMatrix GEqn(momentumFraction*(1/sqr(safeG))*fvm::div(massG,qG)
+            -momentumFraction*fvm::laplacian(muGF,qG)+fvm::Sp(dragG+pseudoG,qG)==pseudoG*qG+momentumFraction*stressG);
+        auto wall=[&](label c,scalar area,scalar distance)
+        {LEqn.diag()[c]+=momentumFraction*viscL[c]*area/distance;GEqn.diag()[c]+=momentumFraction*viscG[c]*area/distance;};
+        forAll(mesh.neighbour(),f)
+        {
+            label o=mesh.owner()[f],n=mesh.neighbour()[f];
+            if (fluid[o]==fluid[n])continue;
+            label c=fluid[o]?o:n;wall(c,mesh.magSf()[f],mag(mesh.Cf()[f]-mesh.C()[c]));
+        }
+        forAll(mesh.boundary(),pi) if (mesh.boundary()[pi].coupled())
+        {
+            const auto& patch=mesh.boundary()[pi];
+            forAll(patch,f)
+            {label c=patch.faceCells()[f],b=patch.start()-mesh.nInternalFaces()+f;
+             if (fluid[c]&&!nbrFluid[b])wall(c,patch.magSf()[f],mag(patch.Cf()[f]-mesh.C()[c]));}
+        }
+
+            if(apply)
+            {
+                scalar ld=gMax(mag(LEqn.diag())),gd=gMax(mag(GEqn.diag()));
+                forAll(solids,i){LEqn.diag()[solids[i]]=ld;GEqn.diag()[solids[i]]=gd;}
+                LEqn.setValues(solids,solidU);GEqn.setValues(solids,solidU);
+                solveColumnScaled(LEqn,forceL,dragL,muL/par("permeability_channel"));
+                solveColumnScaled(GEqn,forceG,dragG,par("oxygen_viscosity")/par("permeability_channel"));
+                return std::array<scalar,2>{{0,0}};
+            }
         // Matrix application includes processor terms once. v2312's vector
         // residual() path also adds coupled boundary sources before its ldu
         // interface update; avoid that decomposition-dependent diagnostic.
-        volVectorField residualL("momentumResidualL",(physicalL&qL)-forceL);
-        volVectorField residualG("momentumResidualG",(physicalG&qG)-forceG);
+        volVectorField residualL("momentumResidualL",(LEqn&qL)-forceL);
+        volVectorField residualG("momentumResidualG",(GEqn&qG)-forceG);
         scalar momentumL=0,momentumG=0;
         // Check each fluid material separately so the large porous resistance
         // cannot hide a channel momentum defect in a global normalization.
@@ -314,6 +405,15 @@ int main(int argc, char *argv[])
             momentumL=max(momentumL,numL/max(denL,1e-12));
             momentumG=max(momentumG,numG/max(denG,1e-12));
         }
+
+            return std::array<scalar,2>{{momentumL,momentumG}};
+        };
+        refreshMomentum(true);refreshMomentum(true);
+        const auto momentumError=refreshMomentum(false);
+        const scalar momentumL=momentumError[0],momentumG=momentumError[1];
+        Ul=qL/max(al,dimensionedScalar("floor",dimless,1e-9));
+        Ug=qG/max(ag,dimensionedScalar("floor",dimless,1e-9));
+        Ul.correctBoundaryConditions();Ug.correctBoundaryConditions();
         label bounded=0;
         // LTE conjugate heat transfer; convective cooling only on exposed BP faces.
         surfaceScalarField kF(IOobject("kF",runTime.timeName(),mesh),fvc::interpolate(k));harmonic(kF,k,nbrCentres);
@@ -333,8 +433,10 @@ int main(int argc, char *argv[])
             }
         }
         if(thermalActive) TEqn.solve();
-        scalar thermalRelax=min(.5,1./max(gMax(mag(T.primitiveField()-oldT)),SMALL));
-        T.primitiveFieldRef()=thermalRelax*T.primitiveField()+(1-thermalRelax)*oldT;T.correctBoundaryConditions();
+        // Solve the thermal block fully. A globally capped inner update can
+        // make F(T)-T insensitive to a uniform temperature shift.
+        // The outer Anderson update bounds every proposed temperature.
+        T.correctBoundaryConditions();
         scalar tmin=gMin(T.primitiveField()),tmax=gMax(T.primitiveField());
         if(!std::isfinite(tmin)||!std::isfinite(tmax)||tmin<273.15||tmax>373.15)
             FatalErrorInFunction<<"Temperature outside no-phase-change validity: "<<tmin<<' '<<tmax<<exit(FatalError);
@@ -401,37 +503,39 @@ int main(int argc, char *argv[])
          {label c=patch.faceCells()[f];if(mat[c]==0||mat[c]==8){scalar h=1/(1/par("external_heat_transfer")+1/(patch.deltaCoeffs()[f]*k[c]));cooling+=h*patch.magSf()[f]*(T[c]-par("ambient_temperature"));}}}
         reduce(cooling,sumOp<scalar>());scalar energyError=mag(energy+cooling)/max(mag(heatW),.01);
         scalar lambdaMin=gMin(water.primitiveField()),lambdaMax=gMax(water.primitiveField());
-        Info<<"P006: V="<<appliedVoltage<<"; I="<<Ia<<" A; sigmaT="<<sdT<<" K; CV="<<cv<<"; change="<<change<<"; phase balances="<<localL<<','<<localG<<"; momentum="<<momentumL<<','<<momentumG<<"; bounded="<<bounded<<endl;
+        Info<<"P006: V="<<appliedVoltage<<"; I="<<Ia<<" A; sigmaT="<<sdT<<" K; CV="<<cv<<"; change="<<change<<"; phase balances="<<localL<<','<<localG<<"; momentum="<<momentumL<<','<<momentumG<<"; momentum fraction="<<momentumFraction<<"; bounded="<<bounded<<endl;
         if(Pstream::master())
-        {history<<runTime.value()<<','<<Ia<<','<<Ic<<','<<chargeError<<','<<mean<<','<<sdT<<','<<lo<<','<<hi<<','<<cv<<','<<dp[0]<<','<<dp[1]<<','<<errL<<','<<errG<<','<<localL<<','<<localG<<','<<change<<','<<heatW<<','<<energyError<<','<<bounded<<','<<lambdaMin<<','<<lambdaMax<<','<<appliedVoltage<<','<<momentumL<<','<<momentumG;for(label i=0;i<9;++i)history<<','<<branches[i];history<<'\n';history.flush();}
-        if(!thermalActive && max(localL,localG)<.01 && max(momentumL,momentumG)<.01 && change<.001 && !bounded)
+        {history<<runTime.value()<<','<<Ia<<','<<Ic<<','<<chargeError<<','<<mean<<','<<sdT<<','<<lo<<','<<hi<<','<<cv<<','<<dp[0]<<','<<dp[1]<<','<<errL<<','<<errG<<','<<localL<<','<<localG<<','<<change<<','<<heatW<<','<<energyError<<','<<bounded<<','<<lambdaMin<<','<<lambdaMax<<','<<appliedVoltage<<','<<momentumL<<','<<momentumG<<','<<momentumFraction<<','<<(thermalActive?1:0);for(label i=0;i<9;++i)history<<','<<branches[i];history<<'\n';history.flush();}
+        bool modelChanged=false;
+        if(momentumFraction<1 && max(localL,localG)<.001 && max(momentumL,momentumG)<.001 && change<.001 && !bounded)
+        {momentumFraction=momentumFraction==0 ? 1e-6 : min(1.,2*momentumFraction);modelChanged=true;acceleration.reset();Info<<"Momentum continuation: next fraction="<<momentumFraction<<endl;}
+        if(!modelChanged && momentumFraction>=1 && !thermalActive && max(localL,localG)<.01 && max(momentumL,momentumG)<.01 && change<.001 && !bounded)
         {
-            acceleration.reset();
+            modelChanged=true;acceleration.reset();
             if(appliedVoltage<targetVoltage)
             {appliedVoltage=min(targetVoltage,appliedVoltage+.005);Info<<"Voltage continuation: next voltage "<<appliedVoltage<<endl;}
             else {thermalActive=true;Info<<"Enabling coupled energy solve at the requested voltage."<<endl;}
         }
-        if(thermalActive&&change<par("field_tolerance")&&chargeError<1e-6&&max(max(errL,errG),max(localL,localG))<par("balance_tolerance")&&max(momentumL,momentumG)<par("balance_tolerance")&&energyError<par("balance_tolerance")&&!bounded&&runTime.value()>=par("minimum_iterations"))++stable;else stable=0;
+        if(!modelChanged&&momentumFraction>=1&&thermalActive&&change<par("field_tolerance")&&chargeError<1e-6&&max(max(errL,errG),max(localL,localG))<par("balance_tolerance")&&max(momentumL,momentumG)<par("balance_tolerance")&&energyError<par("balance_tolerance")&&!bounded&&runTime.value()>=par("minimum_iterations"))++stable;else stable=0;
+        if(modelChanged)runTime.writeNow();
         runTime.write();
         if(stable>=5){converged=true;runTime.writeNow();Info<<"CONVERGED: coupled fields and local/global balances passed."<<endl;break;}
         // Once momentum has settled, accelerate the remaining coupled phase
         // transport even when its steady mass balance is still converging.
         // Waiting for mass conservation first can prevent acceleration of the
         // very transport modes that have stalled. Acceptance is unchanged.
-        if(runTime.value()>50 && max(momentumL,momentumG)<.01 && change<.05)
-            acceleration.observe(qL,qG,p,sg,T,phiL,phiG);
+        if(!modelChanged && momentumFraction>.000256)
+        {
+            // Scale the nonlinear saturation residual by actual conservation.
+            // Numerical storage must not hide a remaining phase imbalance.
+            const scalarField& phaseResidual=flowNetwork.massCorrection();
+            acceleration.observe(qL,qG,p,sg,T,water,phiL,phiG,phaseResidual);
+        }
         else acceleration.reset();
-        // Increase only the numerical local pseudo-time after the momentum
-        // predictor settles. The physical steady operators and all acceptance
-        // checks are independent of this Courant factor.
-        if(runTime.value()>50 && max(momentumL,momentumG)<.005 && change<.01)
-            pseudoCo=min(2.,1.02*pseudoCo);
-        else if(max(momentumL,momentumG)>.02 || change>.1)
-            pseudoCo=max(.5,.5*pseudoCo);
         runTime.printExecutionTime(Info);
     }
     runTime.writeNow();
     if(Pstream::master())
-    {std::ofstream status((out/"status.json").c_str());status<<"{\"converged\":"<<(converged?"true":"false")<<",\"iteration\":"<<runTime.value()<<",\"cells\":"<<totalCells<<",\"processes\":"<<Pstream::nProcs()<<"}\n";}
+    {std::ofstream status((out/"status.json").c_str());status<<"{\"converged\":"<<(converged?"true":"false")<<",\"iteration\":"<<runTime.value()<<",\"cells\":"<<totalCells<<",\"processes\":"<<Pstream::nProcs()<<",\"momentum_fraction\":"<<momentumFraction<<",\"thermal_active\":"<<(thermalActive?"true":"false")<<"}\n";}
     Info<<"End"<<endl;return converged?0:2;
 }

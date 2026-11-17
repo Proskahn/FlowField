@@ -51,7 +51,7 @@ boundary (walls { type wall; faces ((0 4 7 3)(1 2 6 5)(0 1 5 4)(3 7 6 2)(0 3 2 1
         run_phase(case,'build',runtime,info)
         log=run_phase(case,'solve',runtime,info,processes=args.processes)
         report['checks']=[line for line in log.read_text().splitlines()
-                          if line.startswith(('STRESS_CHECK','ROW_SCALE_CHECK'))]
+                          if line.startswith(('STRESS_CHECK','ROW_SCALE_CHECK','COLUMN_SCALE_CHECK'))]
         report['passed']='STRESS_CHECK PASSED' in report['checks']
         if not report['passed']:raise RuntimeError('Missing stress check success marker')
     except Exception as exc:

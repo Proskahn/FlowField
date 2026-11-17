@@ -1,100 +1,113 @@
-// Safeguarded Anderson acceleration of the steady outer fixed-point iteration.
-// Candidates are used only as the next initial guess. Every reported result is
-// the unmodified output of a complete conservative CFD iteration.
+// Anderson acceleration of the nonlinear block-preconditioned equations.
 #include <Eigen/QR>
 #include <deque>
 class OuterAcceleration
 {
     Foam::labelList material_;
-    Foam::scalarField input_,previousInput_,previousResidual_,candidate_;
+    Foam::scalarField porosity_,input_,candidate_,previousInput_,previousResidual_;
     std::deque<Foam::scalarField> dx_,df_;
-    bool havePrevious_=false,pending_=false;
-    static double saturationCoordinate(double s)
-    {double a=std::min(std::max((s-1e-6)/(1-2e-6),1e-12),1-1e-12);return std::log(a/(1-a))/5.;}
-    static double saturation(double a)
-    {a=std::min(std::max(5*a,-27.),27.);return 1e-6+(1-2e-6)/(1+std::exp(-a));}
-    static Foam::scalarField pack(const Foam::volVectorField& l,const Foam::volVectorField& g,
-        const Foam::volScalarField& p,const Foam::volScalarField& s,const Foam::volScalarField& t,
+    bool pending_=false,havePrevious_=false;
+    Foam::label iteration_=0;
+    static double coordinate(double s){return s;}
+    static double saturation(double s){return std::min(std::max(s,1e-6),1-1e-6);}
+    Foam::scalarField pack(const Foam::volVectorField& l,const Foam::volVectorField& g,
+        const Foam::volScalarField& p,const Foam::volScalarField& s,const Foam::volScalarField& t,const Foam::volScalarField& water,
         const Foam::surfaceScalarField& fl,const Foam::surfaceScalarField& fg)
     {
-        Foam::scalarField x(9*p.size()+2*p.mesh().nFaces());
-        forAll(p,c){for(Foam::label d=0;d<3;++d){x[9*c+d]=l[c][d]/.3;x[9*c+3+d]=g[c][d]/3.;}
-            x[9*c+6]=p[c]/100.;x[9*c+7]=saturationCoordinate(s[c]);x[9*c+8]=t[c]/10.;}
-        Foam::label i=9*p.size();
+        using namespace Foam;scalarField x(10*p.size()+2*p.mesh().nFaces());
+        forAll(p,c){
+            const scalar gas=saturation(s[c]);
+            const scalar alphaL=porosity_[c]>0?porosity_[c]*(1-gas):1.;
+            const scalar alphaG=porosity_[c]>0?porosity_[c]*gas:1.;
+            for(label d=0;d<3;++d){x[10*c+d]=l[c][d]/(.3*alphaL);x[10*c+3+d]=g[c][d]/(3.*alphaG);}
+            x[10*c+6]=p[c]/100.;x[10*c+7]=coordinate(s[c]);x[10*c+8]=t[c]/10.;x[10*c+9]=water[c]/22.;}
+        label i=10*p.size();
         forAll(fl,f){x[i++]=fl[f]/(.3*p.mesh().magSf()[f]);x[i++]=fg[f]/(3*p.mesh().magSf()[f]);}
         forAll(fl.boundaryField(),pi)forAll(fl.boundaryField()[pi],f)
-        {double area=p.mesh().magSf().boundaryField()[pi][f];x[i++]=fl.boundaryField()[pi][f]/(.3*area);x[i++]=fg.boundaryField()[pi][f]/(3*area);}
+        {double a=p.mesh().magSf().boundaryField()[pi][f];x[i++]=fl.boundaryField()[pi][f]/(.3*a);x[i++]=fg.boundaryField()[pi][f]/(3*a);}
         return x;
     }
+
 public:
-    explicit OuterAcceleration(const Foam::labelList& material):material_(material){}
-    void reset(){dx_.clear();df_.clear();havePrevious_=false;pending_=false;}
-    void begin(Foam::volVectorField& l,Foam::volVectorField& g,
-        Foam::volScalarField& p,Foam::volScalarField& s,Foam::volScalarField& t,
-        Foam::surfaceScalarField& fl,Foam::surfaceScalarField& fg)
+    explicit OuterAcceleration(const Foam::labelList& m,const Foam::volScalarField& eps)
+        :material_(m),porosity_(eps.primitiveField()){}
+    void reset(){pending_=false;havePrevious_=false;dx_.clear();df_.clear();}
+    void begin(Foam::volVectorField& l,Foam::volVectorField& g,Foam::volScalarField& p,
+        Foam::volScalarField& s,Foam::volScalarField& t,Foam::volScalarField& water,Foam::surfaceScalarField& fl,Foam::surfaceScalarField& fg)
     {
         using namespace Foam;
-        input_=pack(l,g,p,s,t,fl,fg);
+        const bool candidateApplied=pending_;
         if(pending_)
         {
-            scalar step=1;
-            forAll(p,c)
-            {
-                scalar dt=10*(candidate_[9*c+8]-input_[9*c+8]);
-                if(dt>0)step=min(step,.99*(373.15-t[c])/dt);
-                if(dt<0)step=min(step,.99*(273.15-t[c])/dt);
-            }
-            // Limit extrapolation, not the physical solution or field bounds.
-            forAll(input_,i)
-            // A 0.04 log-odds-coordinate step changes phase odds by at most
-            // exp(0.2), limiting loss of either phase to less than 19%.
-            {scalar change=mag(candidate_[i]-input_[i]);scalar limit=i<9*p.size()?(i%9==8?.1:i%9==7?.04:5.):5.;
-             if(change>limit)step=min(step,limit/change);}
-            reduce(step,minOp<scalar>());
-            if(step>.001)
-            {
-                input_+=step*(candidate_-input_);
-                forAll(p,c){for(label d=0;d<3;++d){l[c][d]=.3*input_[9*c+d];g[c][d]=3*input_[9*c+3+d];}
-                    p[c]=100*input_[9*c+6];
-                    if(material_[c]!=0&&material_[c]!=4&&material_[c]!=8)s[c]=saturation(input_[9*c+7]);
-                    t[c]=10*input_[9*c+8];}
-                label i=9*p.size();
-                forAll(fl,f){fl[f]=input_[i++]*.3*p.mesh().magSf()[f];fg[f]=input_[i++]*3*p.mesh().magSf()[f];}
-                forAll(fl.boundaryField(),pi)forAll(fl.boundaryField()[pi],f)
-                {scalar area=p.mesh().magSf().boundaryField()[pi][f];fl.boundaryFieldRef()[pi][f]=input_[i++]*.3*area;fg.boundaryFieldRef()[pi][f]=input_[i++]*3*area;}
-                l.correctBoundaryConditions();g.correctBoundaryConditions();p.correctBoundaryConditions();s.correctBoundaryConditions();t.correctBoundaryConditions();
-            }
-            else reset();
+            forAll(p,c){
+                if(material_[c]!=0&&material_[c]!=4&&material_[c]!=8)s[c]=saturation(candidate_[10*c+7]);
+                const scalar alphaL=porosity_[c]>0?porosity_[c]*(1-s[c]):1.;
+                const scalar alphaG=porosity_[c]>0?porosity_[c]*s[c]:1.;
+                for(label d=0;d<3;++d){l[c][d]=.3*alphaL*candidate_[10*c+d];g[c][d]=3.*alphaG*candidate_[10*c+3+d];}
+                p[c]=100*candidate_[10*c+6];
+                t[c]=10*candidate_[10*c+8];water[c]=22*candidate_[10*c+9];}
+            label i=10*p.size();
+            forAll(fl,f){fl[f]=candidate_[i++]*.3*p.mesh().magSf()[f];fg[f]=candidate_[i++]*3*p.mesh().magSf()[f];}
+            forAll(fl.boundaryField(),pi)forAll(fl.boundaryField()[pi],f)
+            {double a=p.mesh().magSf().boundaryField()[pi][f];fl.boundaryFieldRef()[pi][f]=candidate_[i++]*.3*a;fg.boundaryFieldRef()[pi][f]=candidate_[i++]*3*a;}
+            l.correctBoundaryConditions();g.correctBoundaryConditions();p.correctBoundaryConditions();s.correctBoundaryConditions();t.correctBoundaryConditions();water.correctBoundaryConditions();
             pending_=false;
         }
+        input_=pack(l,g,p,s,t,water,fl,fg);
+        // Keep the candidate coordinate in the residual when applying bounds;
+        // clipping must not create an artificial zero at a saturation limit.
+        if(candidateApplied)forAll(p,c)input_[10*c+7]=candidate_[10*c+7];
     }
-    void observe(const Foam::volVectorField& l,const Foam::volVectorField& g,
-        const Foam::volScalarField& p,const Foam::volScalarField& s,const Foam::volScalarField& t,
-        const Foam::surfaceScalarField& fl,const Foam::surfaceScalarField& fg)
+
+    void observe(const Foam::volVectorField& l,const Foam::volVectorField& g,const Foam::volScalarField& p,
+        const Foam::volScalarField& s,const Foam::volScalarField& t,const Foam::volScalarField& water,
+        const Foam::surfaceScalarField& fl,const Foam::surfaceScalarField& fg,const Foam::scalarField& phaseResidual)
     {
         using namespace Foam;
-        scalarField result=pack(l,g,p,s,t,fl,fg),f(result-input_);
+        scalarField r(pack(l,g,p,s,t,water,fl,fg)-input_);
+        forAll(material_,c)if(material_[c]!=0&&material_[c]!=4&&material_[c]!=8)
+            r[10*c+7]=phaseResidual[c]+saturation(input_[10*c+7])-input_[10*c+7];
+        scalar error=std::sqrt(gSum(sqr(r)));
         if(havePrevious_)
         {
-            scalar now=gSum(sqr(f)),before=gSum(sqr(previousResidual_));
-            if(now>4*max(before,VSMALL)){dx_.clear();df_.clear();}
-            else {dx_.push_back(scalarField(input_-previousInput_));df_.push_back(scalarField(f-previousResidual_));}
-            if(dx_.size()>30){dx_.pop_front();df_.pop_front();}
+            if(error>2*std::sqrt(gSum(sqr(previousResidual_)))){dx_.clear();df_.clear();}
+            else{dx_.emplace_back(input_-previousInput_);df_.emplace_back(r-previousResidual_);}
+            if(dx_.size()>40){dx_.pop_front();df_.pop_front();}
         }
-        candidate_=input_+.5*f;
+        const scalar damping=.2;
+        scalarField direction(damping*r);
         const label n=dx_.size();
         if(n)
         {
             Eigen::MatrixXd gram(n,n);Eigen::VectorXd rhs(n);
-            for(label i=0;i<n;++i){rhs[i]=gSum(df_[i]*f);for(label j=0;j<n;++j)gram(i,j)=gSum(df_[i]*df_[j]);}
-            scalar regularization=max(gram.diagonal().maxCoeff()*1e-8,1e-20);
+            for(label i=0;i<n;++i)
+            {rhs[i]=gSum(df_[i]*r);for(label j=0;j<n;++j)gram(i,j)=gSum(df_[i]*df_[j]);}
+            const scalar regularization=max(gram.diagonal().maxCoeff()*1e-10,1e-24);
             gram.diagonal().array()+=regularization;
             Eigen::VectorXd gamma=gram.colPivHouseholderQr().solve(rhs);
-            scalar largest=gamma.cwiseAbs().maxCoeff();if(largest>10)gamma*=10/largest;
-            if(gamma.allFinite())for(label i=0;i<n;++i)candidate_-=gamma[i]*(dx_[i]+.5*df_[i]);
+            const scalar largest=gamma.cwiseAbs().maxCoeff();
+            if(largest>10)gamma*=10/largest;
+            if(gamma.allFinite())for(label i=0;i<n;++i)direction-=gamma[i]*(dx_[i]+damping*df_[i]);
         }
-        // Log-odds coordinates preserve saturation bounds during extrapolation.
-        // Face fluxes are included because momentum advection uses their lagged values.
-        previousInput_=input_;previousResidual_=f;havePrevious_=true;pending_=true;
+        scalar step=1;
+        forAll(p,c)
+        {
+            scalar dt=10*direction[10*c+8];
+            if(dt>0)step=min(step,.99*(373.15-10*input_[10*c+8])/dt);
+            if(dt<0)step=min(step,.99*(273.15-10*input_[10*c+8])/dt);
+            scalar dw=22*direction[10*c+9];
+            if(dw>0)step=min(step,.99*(30-22*input_[10*c+9])/dw);
+            if(dw<0)step=min(step,.99*(.64-22*input_[10*c+9])/dw);
+        }
+        forAll(direction,i)
+        {scalar limit=i<10*p.size()?(i%10==8?.1:i%10==9?.05:i%10==7?.05:5.):5.;
+         if(mag(direction[i])>limit)step=min(step,limit/mag(direction[i]));}
+        reduce(step,minOp<scalar>());
+        candidate_=input_+step*direction;
+        forAll(material_,c)if(material_[c]!=0&&material_[c]!=4&&material_[c]!=8)
+            candidate_[10*c+7]=min(max(candidate_[10*c+7],1e-6+1e-9),1-1e-6-1e-9);
+        Info<<"Anderson block residual "<<++iteration_<<": norm="<<error
+            <<"; history="<<n<<"; step="<<step<<endl;
+        previousInput_=input_;previousResidual_=r;havePrevious_=true;pending_=true;
     }
 };

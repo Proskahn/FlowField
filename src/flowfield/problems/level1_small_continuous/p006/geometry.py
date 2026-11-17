@@ -201,13 +201,20 @@ def case_files(case, m, config):
                 value=f'nonuniform List<scalar> {len(flux)}\n(\n'+'\n'.join(f'{v:.12g}' for v in flux)+'\n)'
             body+=f'{patch} {{ type calculated; value {value}; }}\n'
         write(case/'0'/('phi'+phase),body+'}\n','surfaceScalarField')
-    field(case,'p','1 -1 -2 0 0 0 0',0,press)
+    # Deterministic pressure guess only, not an imposed pressure drop. The
+    # counterflow outlets remain fixed at zero; momentum determines the result.
+    pressure=[]
+    for (i,j,k),mat in zip(m['cells'],m['ids']):
+        x=(m['x'][i]+m['x'][i+1])/2
+        y=(m['y'][j]+m['y'][j+1])/2
+        estimate=50*(x/18+y/25)
+        pressure.append(estimate if mat in (1,2,3) else 100-estimate if mat in (5,6,7) else 0)
+    field(case,'p','1 -1 -2 0 0 0 0',pressure,press)
     field(case,'T','0 0 0 1 0 0 0',c.inlet_temperature,temp)
-    # Start porous layers liquid-filled to avoid imposing an artificial
-    # capillary-pressure jump before gas is generated. The steady equations
-    # and prescribed inlet saturation are unchanged.
-    field(case,'sg','0 0 0 0 0 0 0',[1-c.inlet_liquid_saturation if i in (1,7)
-          else 1e-6 if i in (2,3,5,6) else 0 for i in m['ids']],sat)
+    # Initialize both phases away from their degeneracy limits. This is an
+    # initial guess; capillary transport and gas production set the steady state.
+    field(case,'sg','0 0 0 0 0 0 0',[1-c.inlet_liquid_saturation if i in FLUID
+          else 0 for i in m['ids']],sat)
     field(case,'material','0 0 0 0 0 0 0',m['ids'],{})
     field(case,'lambda','0 0 0 0 0 0 0',c.membrane_water_boundary,{})
     field(case,'phiS','1 2 -3 0 0 -1 0',[c.cell_voltage if i in (5,6,8) else 0 for i in m['ids']],
@@ -242,9 +249,9 @@ fluxRequired { default no; p; sg; lambda; }
     write(case/'system/fvSolution','''solvers
 {
     p { solver PCG; preconditioner DIC; tolerance 1e-11; relTol 0; maxIter 6000; }
-    "(Ul|Ug|qL|qG|sg|lambda|T)" { solver PBiCGStab; preconditioner DILU; tolerance 1e-10; relTol 0; maxIter 4000; }
+    "(Ul|Ug|qL|qG|sg|lambda|T)" { solver PBiCGStab; preconditioner DILU; tolerance 1e-13; relTol 0; maxIter 4000; }
 }
-relaxationFactors { equations { qL 0.7; qG 0.7; } }
+// Coupled outer acceleration controls updates; momentum blocks are unrelaxed.
 ''')
     write(case/'system/decomposeParDict',f'numberOfSubdomains {c.processes};\nmethod scotch;\n')
     write(case/'system/meshQualityDict', """maxConcave 80;
