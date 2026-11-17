@@ -26,6 +26,9 @@ def mesh_check(case,name,manifest):
         if name=='P002':
             from ..problems.level2_medium_parametric.p002.mesh_checks import assess_mesh
             data=assess_mesh(case,text,manifest)
+        elif name=='P008':
+            from ..problems.level1_small_continuous.p008.mesh_checks import assess_mesh
+            data=assess_mesh(case,text,manifest)
         elif name=='P005':
             from ..problems.level1_small_continuous.p005.metrics import verify_mesh_log
             data=verify_mesh_log(text,manifest['mesh'])

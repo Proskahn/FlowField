@@ -1,0 +1,156 @@
+{
+  "problem": "P008",
+  "title": "Optimization design of flow channel depth-to-width ratio for anion exchange membrane water electrolyzers based on entropy weight method and multi-physics coupling",
+  "authors": [
+    "Haolin Li",
+    "Jingxian Chen",
+    "Cunman Zhang",
+    "Hong Lv"
+  ],
+  "journal": "Journal of Environmental Chemical Engineering 14 (2026) 122524",
+  "doi": "10.1016/j.jece.2026.122524",
+  "model_revision": "aem-mixture-darcy-thermal-v2",
+  "paper_validated": false,
+  "scope": "3D coupled AEM equation reconstruction with declared closures; not an exact reproduction of the COMSOL model",
+  "dimensions": 3,
+  "design_variables": [
+    {
+      "name": "width_category",
+      "encoding": "x0 in [0,1/3): 8 x 1.5 mm; [1/3,2/3): 10 x 1.2 mm; [2/3,1]: 12 x 1.0 mm"
+    },
+    {
+      "name": "depth",
+      "encoding": "0.4 + 0.6*x1 mm"
+    }
+  ],
+  "baseline_normalized": [
+    0.16666666666666666,
+    0.6666666666666666
+  ],
+  "published": {
+    "footprint_mm": [
+      20,
+      20
+    ],
+    "channel_width_mm": 1.5,
+    "channel_depth_mm": 0.8,
+    "rib_width_mm": 1.0,
+    "channels": 8,
+    "total_bp_thickness_mm": 2,
+    "ptl_thickness_mm": 0.4,
+    "cl_thickness_mm": 0.01,
+    "aem_thickness_mm": 0.04,
+    "liquid_feed_per_side_ml_min": 50,
+    "inlet_temperature_K": 333.15,
+    "ambient_temperature_K": 293.15,
+    "external_heat_transfer_W_m2_K": 50,
+    "voltage_V": 2.2,
+    "initial_gas_fraction": 0.02,
+    "width_panel_mm": [
+      1.5,
+      1.2,
+      1.0
+    ],
+    "depth_panel_mm": [
+      1.0,
+      0.8,
+      0.6
+    ],
+    "reported_best_depth_width_ratio": 0.4
+  },
+  "estimated_or_interpreted_inputs": {
+    "koh_conductivity_scale": "Default 1: printed Eq32 as S/m; alternative 100 for customary S/cm materially changes predictions and failed the tested temperature bound. Authors intent unresolved.",
+    "energy": "Default COMSOL-style LTE phase-fluid advection. Printed solid/fluid-capacity expression retained as a diagnostic only.",
+    "kinetic_reference_temperature_K": 298.15,
+    "channel_slip": "Zero advective slip; no drag/slip closure supplied",
+    "channel_dispersion_reference_m2_s": {
+      "oxygen": 2e-05,
+      "hydrogen": 6e-05
+    },
+    "channel_dispersion": "Unreported effective phase dispersion; not a measured/recovered paper value",
+    "liquid_properties": "Estimated dilute-KOH constants; see default-config.json",
+    "gas_species": "Pure phase inventories with channel counter-dispersion; no dissolved species or concentration-overpotential feedback",
+    "pressure_nernst": "Reference activities, logarithm zero",
+    "surface_averages": "Volume averages except area-average inlet pressure",
+    "whole_cell_temperature_gradient": "Volume mean magnitude; reduction not specified in paper",
+    "outer_thermal_surfaces": "All non-port exterior walls",
+    "bp": "2 mm total, channel cut into BP"
+  },
+  "numerical": {
+    "openfoam": "OpenCFD v2312",
+    "processes_per_case": 1,
+    "steady": true,
+    "baseline_mesh_cells": {
+      "coarse": 9000,
+      "medium": 37800,
+      "fine": 102424
+    },
+    "field_tolerance": 1e-05,
+    "balance_tolerance": 0.001,
+    "consecutive_iterations": 5,
+    "diagnostic_csv_every": 1,
+    "console_every": 10,
+    "field_write_interval": 100,
+    "purge_write": 2,
+    "cells_across_each_catalyst_layer": {
+      "coarse": 8,
+      "medium": 12,
+      "fine": 16
+    },
+    "linear_solver": "Row-equilibrated BiCGStab/ILUT with verified residual and SparseLU fallback; direct option available for cross-checks",
+    "mesh_policy": "An explicit warning is retained for orthogonal CL aspect ratios <= 1400. All other checks must pass; flagged cell membership and physical dimensions are independently checked."
+  },
+  "indicators": [
+    {
+      "name": "current_density_A_cm2",
+      "direction": "benefit"
+    },
+    {
+      "name": "membrane_temperature_uniformity",
+      "direction": "cost"
+    },
+    {
+      "name": "temperature_gradient_K_m",
+      "direction": "cost"
+    },
+    {
+      "name": "cathode_mean_velocity_m_s",
+      "direction": "benefit"
+    },
+    {
+      "name": "anode_mean_velocity_m_s",
+      "direction": "benefit"
+    },
+    {
+      "name": "cathode_cl_gas_fraction",
+      "direction": "cost"
+    },
+    {
+      "name": "anode_cl_gas_fraction",
+      "direction": "cost"
+    },
+    {
+      "name": "cathode_pressure_drop_Pa",
+      "direction": "cost"
+    },
+    {
+      "name": "anode_pressure_drop_Pa",
+      "direction": "cost"
+    }
+  ],
+  "optimization": "EWM panels plus frozen-calibration optimization. Qualified baseline required; --problem all skips uncalibrated P008. No claim of the published optimum.",
+  "limitations": [
+    "Current predictions are sensitive to catalyst-layer resolution; mesh independence has not been established.",
+    "Baseline current differs from the paper; parameter/equation ambiguities unresolved.",
+    "No VOF bubble dynamics, vapor or dissolved multicomponent transport.",
+    "No MPI/GPU implementation.",
+    "Passed baseline is neither mesh independence nor paper validation."
+  ],
+  "commands": {
+    "install": "python -m pip install -e '.[p008,optim]'",
+    "evaluate": "flowfield-p008 evaluate --case runs/p008-baselines --backend native --timeout 14400",
+    "checker": "flowfield-check run --problem P008 --study mesh numerics --backend native --timeout 14400 --output runs/check-p008-001",
+    "paper_panels": "flowfield-p008 paper-study --case runs/p008-paper-001 --backend native --timeout 14400",
+    "optimizer": "flowfield-optimize --problem P008 --optimizer cmaes --population 8 --budget 25 --config runs/p008-paper-001/optimization-config.json --backend native --timeout 14400 --output runs/p008-cmaes-001"
+  }
+}

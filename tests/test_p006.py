@@ -10,6 +10,11 @@ from importlib.metadata import PackageNotFoundError
 from unittest.mock import patch
 import contextlib
 import io
+import os
+import signal
+import subprocess
+import sys
+import time
 
 from flowfield import create_problem, CaseEvaluator
 from flowfield.problems.level1_small_continuous.p006 import P006Problem, ManifoldConfig
@@ -19,12 +24,92 @@ from flowfield.problems.level1_small_continuous.p006.metrics import values, vect
 from flowfield.problems.level1_small_continuous.p006.case import generate_case
 from flowfield.problems.level1_small_continuous.p006.warm_start import FIELDS
 from flowfield.problems.level1_small_continuous.p006.pressure import pressure_forces,verify_pressure_forces
-from flowfield.problems.level1_small_continuous.p006.runtime import iteration_limit_reason
+from flowfield.problems.level1_small_continuous.p006.runtime import iteration_limit_reason, _run_command, run_phase
+from flowfield.runtime import Runtime
 from flowfield.optimization import optimize, main as optimize_main
 from flowfield.runtime import SimulationError
 
 
 class P006Tests(unittest.TestCase):
+    @unittest.skipUnless(hasattr(os,'killpg'),'POSIX process groups required')
+    def test_timeout_stops_wrapper_and_its_child(self):
+        import fcntl
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);pidfile=root/'child.pid';lockfile=root/'child.lock'
+            child_code=('import fcntl, os, time\nfrom pathlib import Path\n'
+                        f'f=open({str(lockfile)!r},"w")\nfcntl.flock(f,fcntl.LOCK_EX)\n'
+                        f'Path({str(pidfile)!r}).write_text(str(os.getpid()))\ntime.sleep(60)\n')
+            parent_code=('import subprocess, sys\n'
+                         f'p=subprocess.Popen([sys.executable,"-c",{child_code!r}])\n'
+                         'p.wait()\n')
+            with (root/'log').open('w') as stream:
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    _run_command([sys.executable,'-c',parent_code],cwd=root,env=os.environ.copy(),
+                                 stdout=stream,timeout=1)
+            pid=int(pidfile.read_text())
+            # The child's OS lock disappears when it exits, even before its
+            # adopted zombie is reaped. No global process inspection needed.
+            with lockfile.open('r+') as lock:
+                deadline=time.monotonic()+2
+                while True:
+                    try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);break
+                    except BlockingIOError:
+                        if time.monotonic()>=deadline:
+                            os.kill(pid,signal.SIGKILL)
+                            self.fail('Child survived the wrapper timeout and still holds its lock')
+                        time.sleep(.01)
+
+    def test_runtime_distinguishes_timeout_from_solver_exit(self):
+        scenarios=[(subprocess.TimeoutExpired(['solver'],1800),'timed out after 1800 seconds'),
+                   (subprocess.CalledProcessError(1,['solver']),'exited with status 1')]
+        for failure,message in scenarios:
+            with self.subTest(message=message),tempfile.TemporaryDirectory() as tmp:
+                case=Path(tmp)
+                with patch('flowfield.problems.level1_small_continuous.p006.runtime._run_command',side_effect=failure):
+                    with self.assertRaisesRegex(SimulationError,message) as error:
+                        run_phase(case,'solve',Runtime(backend='native',timeout_s=1800),dict(backend='native'))
+                self.assertEqual(error.exception.case_directory,str(case.resolve()))
+
+    def test_failed_baseline_stops_before_candidates_with_either_penalty_policy(self):
+        methods=['random']+(['cmaes'] if importlib.util.find_spec('cma') else [])
+        scenarios=[(m,p,r) for m in methods for p,r in ((None,1e6),(1e6,None),(1e6,1e6))]
+        for method, problem_penalty, runner_penalty in scenarios:
+            with self.subTest(method=method,problem_penalty=problem_penalty,runner_penalty=runner_penalty), \
+                 tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);p=P006Problem(output_root=root/'cases',failure_penalty=problem_penalty)
+                with patch.object(p,'preflight'), \
+                     patch.object(CaseEvaluator,'evaluate',side_effect=SimulationError(
+                         'Pressure/saturation projection did not converge',case_directory='/test/p006-baseline')) as evaluate:
+                    with self.assertRaisesRegex(SimulationError,'baseline did not qualify') as error:
+                        optimize(p,method=method,population=8,budget=100,output=root/'optimization',
+                                 with_ioh=False,failure_penalty=runner_penalty)
+                self.assertEqual(evaluate.call_count,1)
+                self.assertEqual(error.exception.case_directory,'/test/p006-baseline')
+                summary=json.loads((root/'optimization/summary.json').read_text())
+                self.assertEqual(summary['attempts'],1)
+                self.assertEqual(summary['failed_evaluations'],1)
+                self.assertEqual(summary['successful_evaluations'],0)
+                self.assertEqual(summary['complete_generations'],0)
+                self.assertIsNone(summary['best_objective'])
+                self.assertIn('Pressure/saturation projection',summary['error'])
+                self.assertFalse((root/'optimization/best.json').exists())
+
+    def test_candidate_penalties_remain_available_after_a_qualified_baseline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p=P006Problem(output_root=root/'cases')
+            def accepted(value):
+                return dict(status='ok',objective=value,objectives={},constraints={},feasible=True,
+                            case_directory='/test/p006-qualified')
+            with patch.object(p,'preflight'),patch.object(CaseEvaluator,'evaluate',side_effect=[
+                accepted(.8),SimulationError('candidate failed'),accepted(.7)]) as evaluate:
+                summary=optimize(p,method='random',budget=3,output=root/'optimization',
+                                 with_ioh=False,failure_penalty=1e6)
+            self.assertEqual(evaluate.call_count,3)
+            self.assertEqual(summary['successful_evaluations'],2)
+            self.assertEqual(summary['failed_evaluations'],1)
+            self.assertEqual(summary['baseline_objective'],.8)
+            self.assertEqual(summary['best_objective'],.7)
+
     def test_missing_eigen_stops_optimization_before_cases_or_penalties(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
@@ -124,8 +209,8 @@ class P006Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'physical pressure force'):
             verify_pressure_forces(m,p.config,pressure,saturation,{'L':broken,'G':expected})
 
-    def finished_state(self, root):
-        p=P006Problem(config=ManifoldConfig(processes=1));case=p.write_case(p.initial_design(),root/'source')
+    def finished_state(self, root, processes=1):
+        p=P006Problem(config=ManifoldConfig(processes=processes));case=p.write_case(p.initial_design(),root/'source')
         manifest=json.loads((case/'case.json').read_text())
         saved=case/'10';saved.mkdir()
         for name in FIELDS:shutil.copy2(case/'0'/name,saved/name)
@@ -135,7 +220,7 @@ class P006Tests(unittest.TestCase):
         (saved/'T').write_text(text.replace('value uniform 353.0','value uniform 351.0'))
         post=case/'postProcessing/p006';post.mkdir(parents=True)
         (post/'status.json').write_text(json.dumps(dict(converged=False,iteration=10,
-            cells=manifest['cells'],processes=1)))
+            cells=manifest['cells'],processes=processes)))
         (case/'log.flowfieldP006Foam').write_text('Iteration = 10\nEnd\n')
         (case/'result.json').write_text(json.dumps(dict(status='failed',input_sha256=manifest['input_sha256'])))
         return p,case
@@ -166,14 +251,65 @@ class P006Tests(unittest.TestCase):
                 generate_case(root/'continued',p.decode(p.initial_design()),p.config,initial_state=source)
             self.assertFalse((root/'continued').exists())
 
-    def coupled_state(self, root):
-        p,source=self.finished_state(root)
+    def coupled_state(self, root, processes=1):
+        p,source=self.finished_state(root,processes)
         path=source/'postProcessing/p006/status.json'
         status=json.loads(path.read_text());status.update(momentum_fraction=1.,thermal_active=True)
         path.write_text(json.dumps(status))
         (source/'postProcessing/p006/history.csv').write_text(
             'iteration,momentum_fraction,thermal_active,applied_voltage_V\n10,1,1,2.2\n')
         return p,source
+
+    def test_recovery_reconstructs_a_copy_and_preserves_completed_coupling(self):
+        from flowfield.problems.level1_small_continuous.p006.recovery import recover_completed
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root,processes=2)
+            (source/'processor0').mkdir();shutil.move(source/'10',source/'processor0/10')
+            original={str(x.relative_to(source)):x.read_bytes() for x in source.rglob('*') if x.is_file()}
+            def reconstruct(argv,**kw):
+                copied=Path(argv[2]);self.assertNotEqual(copied,source)
+                self.assertEqual(argv[-2:],['-time','10'])
+                shutil.copytree(copied/'processor0/10',copied/'10')
+            with patch.dict(os.environ,WM_PROJECT_VERSION='v2312'), \
+                 patch('flowfield.problems.level1_small_continuous.p006.recovery.shutil.which',return_value='/test/reconstructPar'), \
+                 patch('flowfield.problems.level1_small_continuous.p006.recovery._run_command',side_effect=reconstruct) as command, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                result=recover_completed(source,root/'recovery')
+            self.assertEqual(command.call_count,1);self.assertEqual(result['status'],'prepared')
+            self.assertEqual(original,{str(x.relative_to(source)):x.read_bytes() for x in source.rglob('*') if x.is_file()})
+            continued=Path(result['continuation_case']);m=json.loads((continued/'case.json').read_text())
+            self.assertEqual(m['config'],p.config.to_dict())
+            self.assertEqual(m['design_geometry'],p.decode(p.initial_design()))
+            self.assertTrue(m['initial_state']['coupling']['restored'])
+            self.assertFalse(m['initial_state']['qualification_inherited'])
+            self.assertFalse((continued/'result.json').exists())
+            self.assertEqual(json.loads((Path(result['recovered_case'])/'result.json').read_text())['status'],'failed')
+            CaseEvaluator(p.case_definition)._load_case(continued)
+
+    def test_recovery_rejects_live_or_nested_sources_before_writing(self):
+        from flowfield.problems.level1_small_continuous.p006.recovery import recover_completed
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);_,source=self.coupled_state(root)
+            with self.assertRaisesRegex(ValueError,'inside the source'):
+                recover_completed(source,source/'recovery')
+            self.assertFalse((source/'recovery').exists())
+            with (source/'log.flowfieldP006Foam').open('a') as stream:stream.write('Iteration = 11\n')
+            with self.assertRaisesRegex(ValueError,'must have finished'):
+                recover_completed(source,root/'recovery')
+            self.assertFalse((root/'recovery').exists())
+
+    def test_failed_reconstruction_never_prepares_a_continuation(self):
+        from flowfield.problems.level1_small_continuous.p006.recovery import recover_completed
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);_,source=self.coupled_state(root,processes=2)
+            with patch.dict(os.environ,WM_PROJECT_VERSION='v2312'), \
+                 patch('flowfield.problems.level1_small_continuous.p006.recovery.shutil.which',return_value='/test/reconstructPar'), \
+                 patch('flowfield.problems.level1_small_continuous.p006.recovery._run_command',side_effect=subprocess.CalledProcessError(1,['reconstructPar'])), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(subprocess.CalledProcessError):recover_completed(source,root/'recovery')
+            self.assertFalse((root/'recovery/continuation').exists())
+            record=json.loads((root/'recovery/recovery.json').read_text())
+            self.assertEqual(record['status'],'failed');self.assertIn('CalledProcessError',record['error'])
 
     def test_unconverged_full_coupled_guess_retains_stage_and_fresh_acceptance(self):
         with tempfile.TemporaryDirectory() as tmp:

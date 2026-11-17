@@ -5,6 +5,7 @@ from .evaluation import CaseEvaluator, CaseDefinition
 from .mesh import PolyMesh, MeshGenerator
 from .config import load_config
 from .registry import create_problem, get_problem, list_problems, register_problem
+from .problems.level4_high_dimensional_topology.p007 import P007Problem
 from .problems import P000Problem, P001Problem, P002Problem, P003Problem, P004Problem, P004HydraulicProblem, P005Problem
 from .problems.p000.config import ChannelConfig, decode_design, reference_pressure_drop
 from .problems.level1_small_continuous import DualLayerConfig
@@ -17,8 +18,11 @@ __all__ = [
     "FlowFieldProblem", "AbstractFlowFieldProblem", "CFDProblem", "EvaluationResult",
     "CaseEvaluator", "CaseDefinition", "PolyMesh", "MeshGenerator", "load_config",
     "create_problem", "get_problem", "list_problems", "register_problem",
-    "P000Problem", "P001Problem", "P002Problem", "P003Problem", "P004Problem",
+    "P000Problem", "P001Problem", "P002Problem", "P003Problem", "P004Problem", "P007Problem",
     "P004HydraulicProblem", "P005Problem", "ChannelConfig", "PPFCConfig", "PEMConfig",
     "TopologyConfig", "HydraulicConfig", "DualLayerConfig", "decode_design",
     "reference_pressure_drop",
 ]
+
+from .problems.level1_small_continuous.p008 import P008Problem, AEMConfig
+__all__ += ["P008Problem", "AEMConfig"]

@@ -1,0 +1,68 @@
+{
+  "problem": "P007",
+  "title": "Research on heat and mass transfer of PEMEC anode flow channel based on topology optimization",
+  "authors": "Yuan Jin et al.",
+  "journal": "Fuel 404 (2026) 136144",
+  "doi": "10.1016/j.fuel.2025.136144",
+  "scope": "2D dimensionless steady flow and heat topology model only, Eqs. 1-16",
+  "paper_validated": false,
+  "dimensional_cell_model_included": false,
+  "published": {
+    "domain": [
+      5,
+      5
+    ],
+    "port_width": 0.15,
+    "Re": 130,
+    "Pr": 6.78,
+    "Vf": 0.635,
+    "q": 0.01,
+    "beta": 8,
+    "projection_threshold": 0.5,
+    "pumping_power": 1,
+    "schemes": [
+      [
+        0.25,
+        0.75
+      ],
+      [
+        0.4,
+        0.6
+      ],
+      [
+        0.6,
+        0.4
+      ],
+      [
+        0.8,
+        0.2
+      ],
+      [
+        1,
+        0
+      ]
+    ]
+  },
+  "reconstruction_choices": {
+    "Da": 0.0001,
+    "H": 1,
+    "filter_radius": 0.15,
+    "filter_boundary": "zero normal gradient",
+    "thermal_boundary": "T*=0 inlet; zero normal gradient outlet and no-slip walls",
+    "port_location": "centered on opposing left/right boundaries, interpreted from figures",
+    "volume_constraint": "area-averaged projected gamma <= 0.635",
+    "symmetry": "reflect density across horizontal centerline; solve the full square",
+    "dimensionless_heat_equation": "gamma Re Pr u.grad(T) = laplacian(T) + (1-gamma) H (1-T)",
+    "heat_normalization": "H treated once as h L^2/k; paper Eqs. 9 and 13 use inconsistent H notation",
+    "design_discretization": "16 by 16 cell controls, 128 independent variables with mirror symmetry",
+    "baseline": "uniform gamma1=0.5; no fixed-fluid cells inside the square",
+    "optimizer": "existing FlowField black-box algorithms; SNOPT and CFD adjoint not reproduced",
+    "numerics": "OpenCFD OpenFOAM v2312; SIMPLE, first-order upwind advection, orthogonal diffusion, 2D empty z faces"
+  },
+  "limitations": [
+    "Exact Da, H, filter radius and design mesh are unreported.",
+    "Published final channel geometry and 65-iteration SNOPT trace are not reproduced.",
+    "A converged baseline is not paper validation or mesh independence.",
+    "Sharp material layouts should be rechecked on finer meshes; grey density is not a manufactured channel."
+  ]
+}

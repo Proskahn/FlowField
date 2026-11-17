@@ -8,6 +8,7 @@ from .config import ManifoldConfig, BASELINE_X, DOI, MODEL_REVISION, geometry as
 
 class P006Problem(CFDProblem):
     config_type=ManifoldConfig
+    requires_qualified_baseline=True
 
     def __init__(self,output_root='runs',*,config=None,runtime=None,failure_penalty=None):
         super().__init__('P006',3,[0.]*3,[1.]*3)

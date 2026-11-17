@@ -107,6 +107,14 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
     sampler = create_sampler(method, problem, seed=seed, initial=x0,
                              population=population, sigma=sigma, **extra)
     baseline = yield list(x0), 'baseline', 0, None
+    if getattr(problem,'requires_qualified_baseline',False) and (
+            baseline.get('status')!='ok' or not baseline.get('metadata',{}).get('valid_cfd',True)
+            or not baseline.get('feasible',True)
+            or any(float(v)>1e-12 for v in baseline.get('constraints',{}).values())):
+        detail = baseline.get('error') or 'The baseline must be valid CFD and satisfy its constraints.'
+        case = baseline.get('case_directory') or baseline.get('metadata', {}).get('case_directory')
+        raise SimulationError(f'{problem.name}: baseline did not qualify; optimization was not started. {detail}',
+                              case_directory=case)
     sampler.initialize(list(x0), baseline)
     state.update(getattr(sampler, 'diagnostics', {}))
     spent = 1
@@ -172,6 +180,7 @@ def optimize(problem, *, output, resume=False, **options):
             raise ResumeError(f'Missing experiment.json in {output}; a console log alone cannot resume a run')
     elif output.exists():
         raise FileExistsError(f'Output must be new: {output}')
+    if hasattr(problem,'validate_optimization'):problem.validate_optimization()
     problem.preflight()
     if not resume:
         output.mkdir(parents=True,exist_ok=False)
@@ -478,6 +487,14 @@ def _run_suite(args):
             entries.append(dict(problem=identifier,status='skipped',reason='Current labels/model unavailable; no coupled fuel-cell solver'))
             continue
         problem = _make_problem(identifier,args)
+        if hasattr(problem, 'validate_optimization'):
+            try:
+                problem.validate_optimization()
+            except ValueError as exc:
+                if args.problems != ['all']:
+                    raise
+                entries.append(dict(problem=identifier, status='skipped', reason=str(exc)))
+                continue
         method = _method(problem,args.method)
         problems.append(problem)
         entries.append(dict(problem=identifier,status='ready',dimension=problem.dimension,
@@ -515,10 +532,11 @@ def _run_suite(args):
         print(json.dumps(plan,indent=2))
         return 0
     if not problems:
-        raise ValueError('No runnable problems selected; P004 requires a current dataset/model')
+        raise ValueError('No runnable problems selected; review the required datasets and calibration inputs')
     active = [p for p in problems if p.name not in finished]
     # Construct adapters before any CFD budget is spent.
     for problem in active:
+        if hasattr(problem,'validate_optimization'):problem.validate_optimization()
         problem.preflight()
         extra = (dict(bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates)
                  if _method(problem,args.method) == 'bo' else {})

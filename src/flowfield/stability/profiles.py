@@ -9,11 +9,18 @@ PROFILES = {
     'P004-hydraulic': ('log.simpleFoam', None),
     'P005': ('log.interFoam', 'postProcessing/detachment.csv'),
     'P006': ('log.flowfieldP006Foam', 'postProcessing/p006/history.csv'),
+    'P008': ('log.flowfieldP008Foam', 'postProcessing/p008/history.csv'),
+    'P007': ('log.flowfieldP007Foam', 'postProcessing/p007/history.csv'),
 }
 
 
 def limits(name, c):
     """Final physical acceptance limits, not linear-solver residual tolerances."""
+    if name == 'P008':
+        return dict(field_change=c.field_tolerance,charge_residual=1e-7,**dict.fromkeys(('liquid_balance','gas_balance','momentum_residual','energy_balance'),c.balance_tolerance))
+    if name == 'P007':
+        return dict(field_change=c.outer_tolerance, **dict.fromkeys(
+            ('volume_error','local_continuity','power_error','momentum_residual','energy_balance'), c.balance_tolerance))
     if name == 'P006':
         return dict(field_change=c.field_tolerance, charge_residual=1e-6,
             **dict.fromkeys(('liquid_balance','gas_balance','local_liquid_balance','local_gas_balance',
@@ -48,7 +55,9 @@ def stricter(name, c):
             'P001':('residual_tolerance','mass_balance_tolerance','stability_tolerance'),
             'P003':('outer_tolerance','balance_tolerance'),
             'P004-hydraulic':('residual_tolerance','balance_tolerance','steady_tolerance'),
-            'P006':('field_tolerance','balance_tolerance')}[name]
+            'P006':('field_tolerance','balance_tolerance'),
+            'P008':('field_tolerance','balance_tolerance'),
+            'P007':('outer_tolerance','balance_tolerance')}[name]
     return replace(c,**{k:getattr(c,k)/10 for k in keys})
 
 
@@ -72,10 +81,14 @@ def experiments(name, config, studies):
 def observables(name, extracted):
     """Compare dimensional physical outputs, never penalty scores."""
     m=extracted['metrics']
+    if name=='P008':
+        from ..problems.level1_small_continuous.p008.ewm import INDICATORS
+        return {k:m[k] for k,_ in INDICATORS}
     keys={'P000':('pressure_drop_pa',), 'P001':('uniformity','pressure_drop_pa'),
           'P002':('voltage_V','pressure_sum_Pa'),
           'P003':('power_domain_W','current_std_A_m2','inlet_flow_half_cell_m3_s'),
           'P004-hydraulic':('pressure_drop_pa',),
-          'P006':('temperature_std_K','current_anode_A','dp_anode_Pa','dp_cathode_Pa','flow_cv')}
+          'P006':('temperature_std_K','current_anode_A','dp_anode_Pa','dp_cathode_Pa','flow_cv'),
+          'P007':('heat_transfer','dissipation','inlet_flow','inlet_pressure')}
     if name == 'P005': return {'detachment_time_s':m['detachment_time_s']} if m['detached'] else {}
     return {k:m[k] for k in keys[name]}

@@ -175,16 +175,26 @@ class OptimizationTests(unittest.TestCase):
         self.assertLessEqual(len(p.calls),1)
         self.assertEqual(s['stop_reason'],'soft_wall_time_limit')
 
-    def test_dry_run_has_140_cfd_attempts_and_skips_unavailable_current(self):
+    def test_dry_run_has_160_cfd_attempts_and_skips_missing_inputs(self):
         capture=io.StringIO()
         with contextlib.redirect_stdout(capture):
             result=main(['--problems','all','--budget','20','--output',str(self.root/'plan'),'--dry-run'])
         plan=json.loads(capture.getvalue())
         self.assertEqual(result,0)
-        self.assertEqual(plan['maximum_cfd_attempts'],140)
+        self.assertEqual(plan['maximum_cfd_attempts'],160)
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P003')['sigma_normalized'],.005)
         self.assertFalse((self.root/'plan').exists())
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P004')['status'],'skipped')
+        skipped = next(p for p in plan['problems'] if p['problem']=='P008')
+        self.assertEqual(skipped['status'], 'skipped')
+        self.assertIn('frozen EWM calibration', skipped['reason'])
+
+    def test_explicit_p008_requires_calibration_before_creating_output(self):
+        error=io.StringIO()
+        with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
+            main(['--problem','P008','--output',str(self.root/'uncalibrated'),'--dry-run'])
+        self.assertIn('frozen EWM calibration',error.getvalue())
+        self.assertFalse((self.root/'uncalibrated').exists())
 
     def test_native_ioh_counts_the_same_calls_including_penalties(self):
         try:

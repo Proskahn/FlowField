@@ -19,7 +19,9 @@ def final_fields(case, name, config, expected_step, cells, max_bytes=128*1024*10
     results={};errors=[];unchecked=[]
     required={'P000':('p','U'),'P001':('p','U'), 'P004-hydraulic':('p','U'),
         'P002':('p','U','T','Cgas'),'P003':('p','oxygen','water','nitrogen'),
-        'P005':('alpha.water','p_rgh','U'),'P006':('p','sg','T','Ul','Ug','qL','qG')}[name]
+        'P005':('alpha.water','p_rgh','U'),'P006':('p','sg','T','Ul','Ug','qL','qG'),
+        'P008':('p','T','sg','U','Ul','Ug','phiS','phiE','phiL','phiG','iVol','heatSource'),
+        'P007':('p','U','T','gamma','brinkman','phi')}[name]
     for p in sorted(directory.iterdir()):
         if not p.is_file():continue
         key=p.stem if p.suffix=='.gz' else p.name
@@ -53,8 +55,9 @@ def final_fields(case, name, config, expected_step, cells, max_bytes=128*1024*10
             if not vals:
                 results[key]=dict(count=0);continue
             low,high=min(vals),max(vals);bounds=None
-            if key in ('sg','oxygen','water','nitrogen','alpha.water'):bounds=(0,1)
-            elif key=='T':bounds=(273.15,373.15) if name=='P006' else (0,None)
+            if key in ('sg','oxygen','water','nitrogen','alpha.water','gamma'):bounds=(0,1)
+            elif key=='T':bounds=(273.15,373.15) if name in ('P006','P008') else (0,1) if name=='P007' else (0,None)
+            elif key=='brinkman':bounds=(0,None)
             elif key in ('k','epsilon','nut','Cgas'):bounds=(0,None)
             tol=getattr(config,'alpha_tolerance',1e-8) if key=='alpha.water' else 1e-8
             if bounds and (low<bounds[0]-tol or (bounds[1] is not None and high>bounds[1]+tol)):

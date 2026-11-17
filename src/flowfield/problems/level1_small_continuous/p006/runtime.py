@@ -6,10 +6,37 @@ from importlib.metadata import distribution, PackageNotFoundError
 from pathlib import Path
 import shutil
 import re
+import signal
 import subprocess
 import threading
 import uuid
 from ....runtime import SimulationError
+
+
+def _run_command(argv, *, cwd, env, stdout, timeout):
+    """Bound this command and its own child processes, including native MPI.
+
+    The parallel command starts a shell and mpirun. Killing just that shell on
+    timeout can leave ranks solving after the evaluator has recorded a failure.
+    A private process group lets cleanup target only this invocation.
+    """
+    process=subprocess.Popen(argv,cwd=cwd,env=env,stdout=stdout,stderr=subprocess.STDOUT,
+                             start_new_session=True)
+    try:
+        code=process.wait(timeout=timeout)
+        if code:
+            raise subprocess.CalledProcessError(code,argv)
+    except BaseException:
+        try:os.killpg(process.pid,signal.SIGTERM)
+        except ProcessLookupError:pass
+        try:process.wait(timeout=2)
+        except subprocess.TimeoutExpired:pass
+        # The wrapper can exit before its children; clean the whole private
+        # group even if waiting for the wrapper has already returned.
+        try:os.killpg(process.pid,signal.SIGKILL)
+        except ProcessLookupError:pass
+        process.wait()
+        raise
 
 
 def iteration_limit_reason(case):
@@ -112,7 +139,7 @@ def run_phase(case,phase,runtime,info,processes=1):
             if phase=='solve':
                 watcher=threading.Thread(target=_show_progress,args=(log,stop),daemon=True);watcher.start()
             try:
-                subprocess.run(argv,cwd=case,env=env,stdout=stream,stderr=subprocess.STDOUT,check=True,timeout=runtime.timeout_s)
+                _run_command(argv,cwd=case,env=env,stdout=stream,timeout=runtime.timeout_s)
             finally:
                 stop.set()
                 if watcher is not None:watcher.join(timeout=2)
@@ -122,5 +149,10 @@ def run_phase(case,phase,runtime,info,processes=1):
             except (OSError,subprocess.SubprocessError):pass
         if isinstance(exc,KeyboardInterrupt):raise
         reason=iteration_limit_reason(case) if phase=='solve' and isinstance(exc,subprocess.CalledProcessError) and exc.returncode==2 else None
-        raise SimulationError(reason or f'P006 {phase} failed; inspect {log}',case_directory=case) from exc
+        if isinstance(exc,subprocess.TimeoutExpired):
+            reason=(f'P006 {phase} timed out after {runtime.timeout_s:g} seconds; this case is unqualified. '
+                    f'Inspect {log}. Use a fresh case with a larger --timeout; this does not change convergence tolerances.')
+        elif reason is None and isinstance(exc,subprocess.CalledProcessError):
+            reason=f'P006 {phase} exited with status {exc.returncode}; inspect {log}'
+        raise SimulationError(reason or f'P006 {phase} failed: {exc}; inspect {log}',case_directory=case) from exc
     return log

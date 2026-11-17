@@ -1,0 +1,163 @@
+{
+  "date": "2026-11-17",
+  "openfoam": "OpenCFD v2312",
+  "platform": "local ARM64 Docker; not university-server timing",
+  "solver_source_sha256": "bf4fa9aaee3db113beb7bc5efa04522fd46a658ecb438fe1bc89320041937877",
+  "stability_report": "runs/p007-check-v2/report.html",
+  "cases": [
+    {
+      "experiment": "baseline",
+      "status": "passed",
+      "metrics": {
+        "heat_transfer": 9.32848315445982,
+        "dissipation": 0.9638696466280481,
+        "inlet_flow": 0.055362534826127796,
+        "outlet_flow": 0.055362534826126096,
+        "inlet_pressure": 18.062769819715,
+        "pumping_power": 1.0000007232003019,
+        "volume_fraction": 0.5000000000000001,
+        "min_temperature": 0.00027165495536691,
+        "max_temperature": 0.49714351739027,
+        "iteration": 160,
+        "cells": 4480,
+        "units": "dimensionless; area integrals per unit depth",
+        "checks": {
+          "power_error": 7.232003018664557e-07,
+          "volume_error": 3.0707210423012625e-14,
+          "inlet_velocity_power_error": 2.8865777764514876e-15,
+          "saved_energy_balance": 5.292594625532875e-12,
+          "wall_flux": 0.0,
+          "outlet_pressure": 0.0,
+          "heat_history_error": 1.9042290262924456e-15,
+          "dissipation_history_error": 1.9581269609075003e-15,
+          "power_history_error": 1.1102222217121106e-14,
+          "flow_history_error": 6.266777637349516e-16,
+          "temperature_history_error": 4.9404924595819466e-15,
+          "volume_history_error": 2.220446049250313e-16
+        }
+      }
+    },
+    {
+      "experiment": "mesh-medium",
+      "status": "passed",
+      "metrics": {
+        "heat_transfer": 9.370572231476405,
+        "dissipation": 0.9774364599136538,
+        "inlet_flow": 0.0562048960458268,
+        "outlet_flow": 0.056204896045825604,
+        "inlet_pressure": 17.792057520572,
+        "pumping_power": 1.0000007433851203,
+        "volume_fraction": 0.5000000000000001,
+        "min_temperature": 0.00016997337322029,
+        "max_temperature": 0.49488878046536,
+        "iteration": 160,
+        "cells": 10080,
+        "units": "dimensionless; area integrals per unit depth",
+        "checks": {
+          "power_error": 7.43385120349771e-07,
+          "volume_error": 2.123462252290136e-14,
+          "inlet_velocity_power_error": 8.069094944530522e-13,
+          "saved_energy_balance": 3.7861099914887355e-10,
+          "wall_flux": 0.0,
+          "outlet_pressure": 0.0,
+          "heat_history_error": 3.7913518951027215e-15,
+          "dissipation_history_error": 5.8028400011864225e-12,
+          "power_history_error": 7.549510955256955e-15,
+          "flow_history_error": 1.7283995076780176e-15,
+          "temperature_history_error": 4.9960036108132044e-15,
+          "volume_history_error": 3.3306690738754696e-16
+        }
+      }
+    },
+    {
+      "experiment": "mesh-fine",
+      "status": "passed",
+      "metrics": {
+        "heat_transfer": 9.387262159114897,
+        "dissipation": 0.9827750802424946,
+        "inlet_flow": 0.0565426647489327,
+        "outlet_flow": 0.05654266474894249,
+        "inlet_pressure": 17.685772312247998,
+        "pumping_power": 1.000000694677395,
+        "volume_fraction": 0.5,
+        "min_temperature": 0.00012188470627108,
+        "max_temperature": 0.49424971987342,
+        "iteration": 160,
+        "cells": 17920,
+        "units": "dimensionless; area integrals per unit depth",
+        "checks": {
+          "power_error": 6.946773949412233e-07,
+          "volume_error": 1.731573731426924e-13,
+          "inlet_velocity_power_error": 1.1102222533788537e-15,
+          "saved_energy_balance": 1.9361309537471186e-11,
+          "wall_flux": 0.0,
+          "outlet_pressure": 0.0,
+          "heat_history_error": 9.461527809125013e-16,
+          "dissipation_history_error": 2.8242042532031204e-15,
+          "power_history_error": 2.5979200729065178e-14,
+          "flow_history_error": 1.2271961243280823e-16,
+          "temperature_history_error": 2.609024107869118e-15,
+          "volume_history_error": 1.1102230246251565e-16
+        }
+      }
+    },
+    {
+      "experiment": "numerics",
+      "status": "passed",
+      "metrics": {
+        "heat_transfer": 9.32848239090032,
+        "dissipation": 0.9638689460454607,
+        "inlet_flow": 0.055362517773296205,
+        "outlet_flow": 0.05536251777329479,
+        "inlet_pressure": 18.062763631918,
+        "pumping_power": 1.0000000726069083,
+        "volume_fraction": 0.5000000000000001,
+        "min_temperature": 0.00027165505425064,
+        "max_temperature": 0.49714359562718,
+        "iteration": 179,
+        "cells": 4480,
+        "units": "dimensionless; area integrals per unit depth",
+        "checks": {
+          "power_error": 7.260690826349503e-08,
+          "volume_error": 2.5568460636012647e-14,
+          "inlet_velocity_power_error": 3.5527134208489633e-15,
+          "saved_energy_balance": 5.276352211331398e-12,
+          "wall_flux": 0.0,
+          "outlet_pressure": 0.0,
+          "heat_history_error": 2.0946521003741637e-15,
+          "dissipation_history_error": 9.214721807815505e-16,
+          "power_history_error": 1.976196840347236e-14,
+          "flow_history_error": 1.8800338702950478e-15,
+          "temperature_history_error": 1.4432899320127035e-15,
+          "volume_history_error": 2.220446049250313e-16
+        }
+      }
+    }
+  ],
+  "mesh_max_relative_changes": [
+    0.014987328132627105,
+    0.00597374464426676
+  ],
+  "software_tests": 241,
+  "software_tests_passed": true,
+  "optimization": {
+    "status": "completed",
+    "algorithm": "CMA-ES",
+    "seed": 42,
+    "budget": 9,
+    "population": 4,
+    "sigma": 0.08,
+    "successful_evaluations": 9,
+    "failed_evaluations": 0,
+    "baseline_objective": -7.270012594242247,
+    "best_feasible_objective": -7.270012594242247,
+    "improvement": 0.0,
+    "wall_time_s": 129.72846895782277,
+    "ioh": true,
+    "meaning": "Pipeline smoke test only; no improvement found and no optimized design claimed",
+    "independent_audit_passed": true
+  },
+  "paper_validated": false,
+  "mesh_independence_established": false,
+  "iteration_limit_rejected": true
+}
