@@ -16,8 +16,9 @@ from .problems.level1_small_continuous.p006 import P006Problem
 from .problems.level4_high_dimensional_topology.p007 import P007Problem
 
 from .problems.level1_small_continuous.p008 import P008Problem
+from .problems.level1_small_continuous.p009 import P009Problem
 
-_FACTORIES = {"P008": P008Problem, "P007": P007Problem, "P006": P006Problem, "P005": P005Problem, "P000": P000Problem, "P001": P001Problem, "P002": P002Problem, "P003": P003Problem, "P004": P004Problem, "P004-hydraulic": P004HydraulicProblem}
+_FACTORIES = {"P009": P009Problem, "P008": P008Problem, "P007": P007Problem, "P006": P006Problem, "P005": P005Problem, "P000": P000Problem, "P001": P001Problem, "P002": P002Problem, "P003": P003Problem, "P004": P004Problem, "P004-hydraulic": P004HydraulicProblem}
 
 _CONFIG_TYPES = {name: factory.config_type for name, factory in _FACTORIES.items()
                  if hasattr(factory, 'config_type')}

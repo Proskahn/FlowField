@@ -8,6 +8,7 @@ from .nsga2 import NSGAIISampler
 from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler
 from .cobyla import COBYLASampler
+from .lqcmaes import LQCMAESSampler
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,8 @@ def resolve_optimizer(problem, name='auto'):
 def optimizer_label(name, problem):
     if name == 'cmaes' and problem.dimension > 100:
         return 'Sep-CMA-ES'
+    if name == 'lqcmaes' and problem.dimension > 100:
+        return 'Sep-lq-CMA-ES'
     if name == 'random' and getattr(problem, 'variable_type', 'real') == 'integer':
         return 'FeasiblePathRandomSearch'
     return optimizer_definition(name).label
@@ -81,6 +84,7 @@ def create_sampler(name, problem, **options):
 
 register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'))
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
+register_optimizer('lqcmaes', LQCMAESSampler, label='lq-CMA-ES', revision='1-pycma-population-replay')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
 register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO', revision='2')
 register_optimizer('turbo', TuRBOSampler, label='TuRBO-1', revision='2')

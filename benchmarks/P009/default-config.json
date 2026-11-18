@@ -1,0 +1,20 @@
+{
+  "mesh": "coarse",
+  "diameter_mm": 160.0,
+  "inlet_width_mm": 4.0,
+  "inlet_height_mm": 1.5,
+  "manifold_width_mm": 1.0,
+  "port_length_mm": 4.0,
+  "measurement_height_mm": 1.0,
+  "porosity": 0.8,
+  "permeability_m2": 2.5e-09,
+  "inertial_coefficient_m_inv": 0.0,
+  "density_kg_m3": 1050.0,
+  "dynamic_viscosity_pa_s": 0.0012,
+  "max_iterations": 3000,
+  "residual_tolerance": 1e-06,
+  "balance_tolerance": 0.0001,
+  "steady_tolerance": 0.001,
+  "stability_window": 20,
+  "write_interval": 100
+}

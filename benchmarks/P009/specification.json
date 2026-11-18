@@ -1,0 +1,247 @@
+{
+  "problem": "P009",
+  "doi": "10.1002/ese3.70173",
+  "title": "CFD-Based Flow Field Optimization for High-Performance Anion Exchange Membrane Electrolyzers",
+  "authors": "Peng-Jen Chen et al.",
+  "year": 2025,
+  "source_pdf_sha256": "2320644b0d4306f02d1feb435b35807c6f01791cce9b7ea5c13cb7cd661d7ea1",
+  "model_revision": "chen-brinkman-disk-v1",
+  "paper_validated": false,
+  "scope": "3D steady laminar isothermal single-phase oxygen-side flow; porous nickel disk; no electrochemistry, gas production, or heat equation",
+  "reported": {
+    "density_kg_m3": 1050,
+    "dynamic_viscosity_pa_s": 0.0012,
+    "permeability_m2": 2.5e-09,
+    "temperature_K": 298.15,
+    "porosity": 0.8,
+    "study_diameter_mm": 100,
+    "optimization_diameter_mm": 160,
+    "inlet_width_mm": 4,
+    "inlet_height_mm": 1.5,
+    "measurement_plane_above_electrode_mm": 1,
+    "objective": "maximize mean speed (m/s) / pressure drop (bar)",
+    "table3_reference": {
+      "diameter_mm": 100,
+      "angle_deg": 91,
+      "flow_lpm": 0.16,
+      "thickness_mm": 2.44
+    }
+  },
+  "optimization": {
+    "variables": [
+      "angle_deg",
+      "flow_lpm",
+      "thickness_mm"
+    ],
+    "bounds": [
+      [
+        70,
+        115
+      ],
+      [
+        0.3,
+        1.2
+      ],
+      [
+        1.6,
+        2.24
+      ]
+    ],
+    "initial_design": [
+      92.5,
+      0.75,
+      1.92
+    ],
+    "product_baseline": [
+      92.5,
+      0.66,
+      2.44
+    ],
+    "reported_optimum": [
+      70,
+      0.3,
+      1.92
+    ]
+  },
+  "table5": [
+    {
+      "case": 1,
+      "angle_deg": 70,
+      "flow_lpm": 1.2,
+      "thickness_mm": 1.92,
+      "F": 0.0287
+    },
+    {
+      "case": 2,
+      "angle_deg": 92.5,
+      "flow_lpm": 0.3,
+      "thickness_mm": 1.6,
+      "F": 0.0364
+    },
+    {
+      "case": 3,
+      "angle_deg": 92.5,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.92,
+      "F": 0.0321
+    },
+    {
+      "case": 4,
+      "angle_deg": 115,
+      "flow_lpm": 0.3,
+      "thickness_mm": 1.92,
+      "F": 0.038
+    },
+    {
+      "case": 5,
+      "angle_deg": 92.5,
+      "flow_lpm": 1.2,
+      "thickness_mm": 1.6,
+      "F": 0.0298
+    },
+    {
+      "case": 6,
+      "angle_deg": 70,
+      "flow_lpm": 0.75,
+      "thickness_mm": 2.24,
+      "F": 0.0317
+    },
+    {
+      "case": 7,
+      "angle_deg": 92.5,
+      "flow_lpm": 1.2,
+      "thickness_mm": 2.24,
+      "F": 0.0281
+    },
+    {
+      "case": 8,
+      "angle_deg": 92.5,
+      "flow_lpm": 1.2,
+      "thickness_mm": 1.6,
+      "F": 0.0298
+    },
+    {
+      "case": 9,
+      "angle_deg": 70,
+      "flow_lpm": 0.3,
+      "thickness_mm": 1.92,
+      "F": 0.0388
+    },
+    {
+      "case": 10,
+      "angle_deg": 92.5,
+      "flow_lpm": 1.2,
+      "thickness_mm": 1.6,
+      "F": 0.0298
+    },
+    {
+      "case": 11,
+      "angle_deg": 115,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.6,
+      "F": 0.0327
+    },
+    {
+      "case": 12,
+      "angle_deg": 70,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.6,
+      "F": 0.0337
+    },
+    {
+      "case": 13,
+      "angle_deg": 115,
+      "flow_lpm": 0.75,
+      "thickness_mm": 2.24,
+      "F": 0.031
+    },
+    {
+      "case": 14,
+      "angle_deg": 70,
+      "flow_lpm": 0.3,
+      "thickness_mm": 1.92,
+      "F": 0.0388
+    },
+    {
+      "case": 15,
+      "angle_deg": 115,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.6,
+      "F": 0.0327
+    },
+    {
+      "case": 16,
+      "angle_deg": 92.5,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.92,
+      "F": 0.0321
+    },
+    {
+      "case": 17,
+      "angle_deg": 115,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.6,
+      "F": 0.0327
+    },
+    {
+      "case": 18,
+      "angle_deg": 92.5,
+      "flow_lpm": 0.3,
+      "thickness_mm": 2.24,
+      "F": 0.035
+    },
+    {
+      "case": 19,
+      "angle_deg": 115,
+      "flow_lpm": 1.2,
+      "thickness_mm": 1.92,
+      "F": 0.0279
+    },
+    {
+      "case": 20,
+      "angle_deg": 92.5,
+      "flow_lpm": 0.75,
+      "thickness_mm": 1.92,
+      "F": 0.0321
+    }
+  ],
+  "reconstruction_choices": {
+    "manifold_width_mm": 1,
+    "port_length_mm": 4,
+    "outlet": "single top-aligned rectangular stem joining a chord of the disk",
+    "inlet_distributor": "annular peripheral channel with central angle theta",
+    "C2_m_inv": 0,
+    "velocity": "continuous superficial/mixture velocity with printed gamma^2 and gamma^3 drag coefficients",
+    "spatial_discretization": "OpenFOAM finite volume on extruded barycentric hexahedra; not COMSOL P2+P1",
+    "RSM": "full quadratic coded variables; repeated table rows retain multiplicity",
+    "GA": {
+      "seed": 42,
+      "population": 64,
+      "generations": 100,
+      "selection": "tournament of 3",
+      "crossover": "blend [-0.25,1.25]",
+      "mutation": "per-component probability 1/3, Gaussian sigma 0.1",
+      "elitism": 2
+    }
+  },
+  "known_gaps": [
+    "Exact CAD, peripheral channel width/section and stem lengths unavailable",
+    "Inertial coefficient C2 and porosity-permeability relation unreported",
+    "Raw experimental pressure data not tabulated",
+    "Table 2 error at 4M cells is 0.053 bar; text says 0.006 bar",
+    "Flow rates in LPM are labeled velocity",
+    "Printed Eq.7 requires inferred coding and does not maximize at reported 1.92 mm",
+    "Product baseline thickness 2.44 mm exceeds optimization bound 2.24 mm",
+    "The paper claims Re<1000, inconsistent with rectangular-inlet Reynolds numbers for much of Table 4",
+    "Several prose statements reverse the plotted thickness-pressure trend"
+  ],
+  "mesh_quality": {
+    "command": "checkMesh -allTopology -meshQuality",
+    "maxNonOrtho": 65,
+    "maxSkewness": 1,
+    "minFaceWeight": 0.1,
+    "minVolRatio": 0.1,
+    "minDeterminant": 1e-05,
+    "rationale": "Anisotropic sub-inlet layer; all explicit criteria must pass together."
+  }
+}

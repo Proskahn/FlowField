@@ -17,7 +17,7 @@ def final_fields(case, name, config, expected_step, cells, max_bytes=128*1024*10
     if expected_step is not None and not math.isclose(t,expected_step,rel_tol=1e-8,abs_tol=1e-12):
         return dict(status='failed',reason=f'Saved time {t} differs from solver step {expected_step}.',fields={})
     results={};errors=[];unchecked=[]
-    required={'P000':('p','U'),'P001':('p','U'), 'P004-hydraulic':('p','U'),
+    required={'P009':('p','U','phi'), 'P000':('p','U'),'P001':('p','U'), 'P004-hydraulic':('p','U'),
         'P002':('p','U','T','Cgas'),'P003':('p','oxygen','water','nitrogen'),
         'P005':('alpha.water','p_rgh','U'),'P006':('p','sg','T','Ul','Ug','qL','qG'),
         'P008':('p','T','sg','U','Ul','Ug','phiS','phiE','phiL','phiG','iVol','heatSource'),

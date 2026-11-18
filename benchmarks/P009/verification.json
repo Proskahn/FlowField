@@ -1,0 +1,695 @@
+{
+  "problem": "P009",
+  "model_revision": "chen-brinkman-disk-v1",
+  "created_utc": "2026-11-18T15:02:03.989296+00:00",
+  "execution_status": "completed",
+  "paper_validated": false,
+  "mesh_independence_established": false,
+  "conclusion": "The workflow runs and its accepted CFD passes numerical checks. Quantitative reproduction of the paper is not achieved.",
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "python": "3.13.12",
+  "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "gmsh": "4.13.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "cma": "4.5.0",
+    "ioh": "0.3.22"
+  },
+  "table3_reference": {
+    "case_directory": "runs/p009-small-reference-001/P009-04a20c2182f34860ba839ea47d7cae13",
+    "physical_design": [
+      91,
+      0.16,
+      2.44
+    ],
+    "diameter_mm": 100,
+    "metrics": {
+      "pressure_drop_pa": 1251.0992529004832,
+      "mean_speed_m_s": 0.0158058888664289,
+      "flow_cv": 0.9197260343664371,
+      "performance_m_s_per_bar": 1.263360107504289,
+      "pumping_power_W": 0.0033362646744012885,
+      "mass_balance_relative_error": 2.5139614943196493e-10,
+      "imposed_flow_relative_error": 2.5139501591553426e-10,
+      "sealed_wall_relative_flux": 0.0,
+      "statistics_final_window_relative_range": 2.372708850405142e-06,
+      "inlet_reynolds": 848.4848484848486,
+      "paper_reynolds_under_1000": true,
+      "iterations": 96,
+      "cells": 55104,
+      "mesh_ok": true,
+      "converged": true,
+      "paper_validated": false,
+      "saved_field_verification": {
+        "checks": {
+          "saved_local_continuity": 1.3191444269499053e-08,
+          "saved_inlet_flux_history_error": 1.8899422635611554e-14,
+          "saved_outlet_flux_history_error": 2.8587361969832605e-15,
+          "saved_walls_flux_history_error": 0.0,
+          "saved_pressure_history_error": 8.541738571945222e-15,
+          "saved_plane_speed_history_error": 2.853544698216474e-15,
+          "saved_plane_speed2_history_error": 0.0
+        },
+        "plane_area_m2": 0.007846296217111819,
+        "pressure_drop_pa": 1251.0992529004725,
+        "mean_speed_m_s": 0.015805888866428947,
+        "mean_speed_squared_m2_s2": 0.000461153035455536
+      },
+      "measurement": "area-weighted speed moments on nickel-only plane, 1 mm above electrode wall",
+      "velocity_convention": "single continuous mixture/superficial velocity; Eq.3 porosity factors retained"
+    }
+  },
+  "tests": {
+    "full_suite": {
+      "passed": 277,
+      "log": "runs/p009-full-tests.log"
+    },
+    "final_targeted": {
+      "passed": 25,
+      "log": "runs/p009-final-targeted-tests.log"
+    },
+    "corner_meshes": {
+      "passed": 8,
+      "distinct_geometries": 4,
+      "scope": "Mesh checks only; flow does not change geometry",
+      "root": "runs/p009-corners-001"
+    },
+    "budget_exhaustion": {
+      "expected": "rejected",
+      "observed": "rejected",
+      "iterations": 5,
+      "report": "runs/p009-negative-inspection/report.json"
+    },
+    "corrupted_saved_flux": {
+      "test": "Tampered saved internal flux, finite field and unchanged runtime histories",
+      "expected": "rejected",
+      "observed": "rejected",
+      "reason": "Independent saved-field verification failed: {'saved_local_continuity': 18.181818197498547, 'saved_inlet_flux_history_error': 1.540059904098728e-16, 'saved_outlet_flux_history_error': 1.6940658945086007e-15, 'saved_walls_flux_history_error': 0.0, 'saved_pressure_history_error': 1.6615165124239225e-15, 'saved_plane_speed_history_error': 2.301294660000832e-15, 'saved_plane_speed2_history_error': 9.512815126713153e-15}",
+      "source_case": "/Users/zhuang/FlowField/runs/p009-paper-002/product-baseline/P009-2e10657465a74ddcbc048aa78898f99e",
+      "original_unchanged": true
+    }
+  },
+  "paper_study": {
+    "path": "runs/p009-paper-002/study.json",
+    "actual_cfd_solves": 15,
+    "table5_rows": 20,
+    "unique_table5_designs": 13,
+    "duplicate_rows_reused": 7,
+    "mesh": "coarse",
+    "cases": [
+      {
+        "label": "product-baseline",
+        "physical_design": [
+          92.5,
+          0.66,
+          2.44
+        ],
+        "case_directory": "runs/p009-paper-002/product-baseline/P009-2e10657465a74ddcbc048aa78898f99e",
+        "cells": 130524,
+        "iterations": 101,
+        "pressure_drop_pa": 8758.212825184399,
+        "mean_speed_m_s": 0.0422129839968716,
+        "flow_cv": 1.1852846189819446,
+        "performance_m_s_per_bar": 0.4819817106463479
+      },
+      {
+        "label": "table5-01",
+        "physical_design": [
+          70,
+          1.2,
+          1.92
+        ],
+        "case_directory": "runs/p009-paper-002/table5-01/P009-6ae6c95ff1ea492daa40620285f2668a",
+        "cells": 102714,
+        "iterations": 111,
+        "pressure_drop_pa": 21021.423854630957,
+        "mean_speed_m_s": 0.100120057936295,
+        "flow_cv": 1.2119029714322118,
+        "performance_m_s_per_bar": 0.4762762914094368
+      },
+      {
+        "label": "table5-02",
+        "physical_design": [
+          92.5,
+          0.3,
+          1.6
+        ],
+        "case_directory": "runs/p009-paper-002/table5-02/P009-abd54c05ff944d8cab153f314690b587",
+        "cells": 93780,
+        "iterations": 168,
+        "pressure_drop_pa": 3795.0199529576566,
+        "mean_speed_m_s": 0.0290067806444963,
+        "flow_cv": 0.9626835358280245,
+        "performance_m_s_per_bar": 0.7643380273110238
+      },
+      {
+        "label": "table5-03",
+        "physical_design": [
+          92.5,
+          0.75,
+          1.92
+        ],
+        "case_directory": "runs/p009-paper-002/table5-03/P009-af44fb62e094401ea7550807a7231cd8",
+        "cells": 102966,
+        "iterations": 182,
+        "pressure_drop_pa": 10561.3893769314,
+        "mean_speed_m_s": 0.0613311552810684,
+        "flow_cv": 1.1525301110247144,
+        "performance_m_s_per_bar": 0.5807110512848841
+      },
+      {
+        "label": "table5-04",
+        "physical_design": [
+          115,
+          0.3,
+          1.92
+        ],
+        "case_directory": "runs/p009-paper-002/table5-04/P009-305c3742f78f42d58f5c77d33f052df3",
+        "cells": 103416,
+        "iterations": 130,
+        "pressure_drop_pa": 3222.4491512146396,
+        "mean_speed_m_s": 0.0237689875493044,
+        "flow_cv": 1.0535024195083467,
+        "performance_m_s_per_bar": 0.7376062874520499
+      },
+      {
+        "label": "table5-05",
+        "physical_design": [
+          92.5,
+          1.2,
+          1.6
+        ],
+        "case_directory": "runs/p009-paper-002/table5-05/P009-65b3336a6a014eccb8278799360ce50b",
+        "cells": 93780,
+        "iterations": 124,
+        "pressure_drop_pa": 22151.76832912239,
+        "mean_speed_m_s": 0.12047849114121,
+        "flow_cv": 1.119836301145967,
+        "performance_m_s_per_bar": 0.5438775331665954
+      },
+      {
+        "label": "table5-06",
+        "physical_design": [
+          70,
+          0.75,
+          2.24
+        ],
+        "case_directory": "runs/p009-paper-002/table5-06/P009-deab4cd07d334dc49301959dea37194a",
+        "cells": 111912,
+        "iterations": 122,
+        "pressure_drop_pa": 10479.477915213258,
+        "mean_speed_m_s": 0.0528047404714248,
+        "flow_cv": 1.202094023724617,
+        "performance_m_s_per_bar": 0.5038871296705264
+      },
+      {
+        "label": "table5-07",
+        "physical_design": [
+          92.5,
+          1.2,
+          2.24
+        ],
+        "case_directory": "runs/p009-paper-002/table5-07/P009-06f8db35c5fc440993cf0de5485613e0",
+        "cells": 112152,
+        "iterations": 110,
+        "pressure_drop_pa": 22174.418143694882,
+        "mean_speed_m_s": 0.0852441111158062,
+        "flow_cv": 1.3005514612565043,
+        "performance_m_s_per_bar": 0.3844254697616256
+      },
+      {
+        "label": "table5-09",
+        "physical_design": [
+          70,
+          0.3,
+          1.92
+        ],
+        "case_directory": "runs/p009-paper-002/table5-09/P009-e6efff40f55443a99beba8afa6b0c6cf",
+        "cells": 102714,
+        "iterations": 265,
+        "pressure_drop_pa": 3273.4609018486726,
+        "mean_speed_m_s": 0.0242202281447619,
+        "flow_cv": 1.0315835929947033,
+        "performance_m_s_per_bar": 0.7398966681130553
+      },
+      {
+        "label": "table5-11",
+        "physical_design": [
+          115,
+          0.75,
+          1.6
+        ],
+        "case_directory": "runs/p009-paper-002/table5-11/P009-4e389ef969ba4cdb92516503d82277ee",
+        "cells": 94224,
+        "iterations": 216,
+        "pressure_drop_pa": 11353.583433533775,
+        "mean_speed_m_s": 0.0736862889244045,
+        "flow_cv": 1.0724422107210185,
+        "performance_m_s_per_bar": 0.6490134974193766
+      },
+      {
+        "label": "table5-12",
+        "physical_design": [
+          70,
+          0.75,
+          1.6
+        ],
+        "case_directory": "runs/p009-paper-002/table5-12/P009-61580d5aa06c4b6c97d33b5a874aafb4",
+        "cells": 93516,
+        "iterations": 165,
+        "pressure_drop_pa": 11656.692238948364,
+        "mean_speed_m_s": 0.0749807107139197,
+        "flow_cv": 1.0497187634968819,
+        "performance_m_s_per_bar": 0.6432417462596083
+      },
+      {
+        "label": "table5-13",
+        "physical_design": [
+          115,
+          0.75,
+          2.24
+        ],
+        "case_directory": "runs/p009-paper-002/table5-13/P009-ee336bbd23064eb6903ce42105bb754e",
+        "cells": 112608,
+        "iterations": 147,
+        "pressure_drop_pa": 9764.202611181176,
+        "mean_speed_m_s": 0.052105809165695,
+        "flow_cv": 1.2287633748969502,
+        "performance_m_s_per_bar": 0.5336412120947556
+      },
+      {
+        "label": "table5-18",
+        "physical_design": [
+          92.5,
+          0.3,
+          2.24
+        ],
+        "case_directory": "runs/p009-paper-002/table5-18/P009-bbc60c00f71a4739a36718e230ae5cd4",
+        "cells": 112152,
+        "iterations": 124,
+        "pressure_drop_pa": 3016.5096989060144,
+        "mean_speed_m_s": 0.0205546176887469,
+        "flow_cv": 1.1054972397048606,
+        "performance_m_s_per_bar": 0.6814039980113892
+      },
+      {
+        "label": "table5-19",
+        "physical_design": [
+          115,
+          1.2,
+          1.92
+        ],
+        "case_directory": "runs/p009-paper-002/table5-19/P009-99b2d49f58794b86b6985c4e51606a94",
+        "cells": 103416,
+        "iterations": 115,
+        "pressure_drop_pa": 19637.060702361483,
+        "mean_speed_m_s": 0.0988469511920741,
+        "flow_cv": 1.2319099150594457,
+        "performance_m_s_per_bar": 0.5033693824666291
+      },
+      {
+        "label": "ga-confirmation",
+        "physical_design": [
+          70.0,
+          0.3,
+          1.6
+        ],
+        "case_directory": "runs/p009-paper-002/ga-confirmation/P009-1fa8c057d098439caa7ff0e5e1545660",
+        "cells": 93516,
+        "iterations": 131,
+        "pressure_drop_pa": 3792.593660697755,
+        "mean_speed_m_s": 0.0293372346222938,
+        "flow_cv": 0.9482892627669617,
+        "performance_m_s_per_bar": 0.7735401481659491
+      }
+    ],
+    "model": {
+      "terms": [
+        "1",
+        "A",
+        "B",
+        "C",
+        "A2",
+        "B2",
+        "C2",
+        "AB",
+        "AC",
+        "BC"
+      ],
+      "coefficients": [
+        0.5807110512848845,
+        0.007952058758330162,
+        -0.1272647483928075,
+        -0.062022563570481276,
+        0.011931653262513697,
+        0.021469611677684342,
+        -0.00954966779992759,
+        0.007171026794338724,
+        0.005348442429711778,
+        -0.018249246626316072
+      ],
+      "bounds": [
+        [
+          70.0,
+          115.0
+        ],
+        [
+          0.3,
+          1.2
+        ],
+        [
+          1.6,
+          2.24
+        ]
+      ],
+      "coding": "(physical-midpoint)/half_range",
+      "observations": 20,
+      "unique_designs": 13,
+      "rank": 10,
+      "condition_number": 5.125642848592664,
+      "r2": 0.9994714759687926,
+      "adjusted_r2": 0.9989958043407059,
+      "rmse": 0.0022762690706362807,
+      "max_abs_error": 0.005281571400105545,
+      "grouped_holdout_predicted_r2": null,
+      "validation_note": "Duplicate designs held out together; no claim of independent physical validation.",
+      "qualified_cfd_panel": true,
+      "config_sha256": "005eeba23f4b858261050be3fc9cef9e7f5ced02c2d4ffb0546107f43cef0b45"
+    },
+    "ga": {
+      "normalized_design": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "physical_design": {
+        "angle_deg": 70.0,
+        "flow_lpm": 0.3,
+        "thickness_mm": 1.6
+      },
+      "predicted_performance": 0.780168124227848,
+      "seed": 42,
+      "population": 64,
+      "generations": 100,
+      "settings_source": "declared reconstruction; paper omits settings"
+    },
+    "confirmed_F": 0.7735401481659491,
+    "prediction_relative_error": 0.008568367236805655,
+    "cfd_improvement_percent": 60.49159772652264,
+    "independent_audit": "runs/p009-study-independent-audit.json",
+    "maximum_saved_local_continuity": 3.9884371876714594e-08
+  },
+  "paper_comparison": {
+    "product_baseline": {
+      "paper_F": 0.0323,
+      "cfd_F": 0.4819817106463479
+    },
+    "reported_optimum": {
+      "design": [
+        70,
+        0.3,
+        1.92
+      ],
+      "paper_F": 0.0388,
+      "cfd_F": 0.7398966681130553
+    },
+    "table5_relative_error_min": 12.680621699701978,
+    "table5_relative_error_max": 19.998297453599555,
+    "reported_improvement_percent": 20.123839009287913,
+    "reference_audit": "benchmarks/P009/reference-audit.json"
+  },
+  "numerical_sensitivity": {
+    "report": "runs/p009-check-001/report.json",
+    "status": "failed",
+    "cases": [
+      {
+        "case_directory": "runs/p009-check-001/P009/baseline",
+        "provenance": {
+          "current_immutable_case_validation": "incompatible_older_input_set",
+          "original_input_hashes": "passed",
+          "mesh_hashes": "passed",
+          "unchanged_current_physics_and_mesher_inputs": true,
+          "added_input_files": [
+            "system/meshQualityDict"
+          ],
+          "reason": "The numerical suite started before explicit meshQualityDict was added; original cases remain unchanged."
+        },
+        "cells": 102966,
+        "iterations": 182,
+        "pressure_drop_pa": 10561.38937624743,
+        "mean_speed_m_s": 0.0613311552800314,
+        "flow_cv": 1.1525301110442803,
+        "performance_m_s_per_bar": 0.5807110513126729
+      },
+      {
+        "case_directory": "runs/p009-check-001/P009/mesh-medium",
+        "provenance": {
+          "current_immutable_case_validation": "incompatible_older_input_set",
+          "original_input_hashes": "passed",
+          "mesh_hashes": "passed",
+          "unchanged_current_physics_and_mesher_inputs": true,
+          "added_input_files": [
+            "system/meshQualityDict"
+          ],
+          "reason": "The numerical suite started before explicit meshQualityDict was added; original cases remain unchanged."
+        },
+        "cells": 374160,
+        "iterations": 138,
+        "pressure_drop_pa": 10285.204691662802,
+        "mean_speed_m_s": 0.061805606354523,
+        "flow_cv": 1.133258438235655,
+        "performance_m_s_per_bar": 0.6009176113395457
+      },
+      {
+        "case_directory": "runs/p009-check-001/P009/mesh-fine",
+        "provenance": {
+          "current_immutable_case_validation": "incompatible_older_input_set",
+          "original_input_hashes": "passed",
+          "mesh_hashes": "passed",
+          "unchanged_current_physics_and_mesher_inputs": true,
+          "added_input_files": [
+            "system/meshQualityDict"
+          ],
+          "reason": "The numerical suite started before explicit meshQualityDict was added; original cases remain unchanged."
+        },
+        "cells": 1391508,
+        "iterations": 208,
+        "pressure_drop_pa": 10516.714899898936,
+        "mean_speed_m_s": 0.0622686625308183,
+        "flow_cv": 1.1343748700887661,
+        "performance_m_s_per_bar": 0.5920923322873066
+      },
+      {
+        "case_directory": "runs/p009-check-001/P009/numerics",
+        "provenance": {
+          "current_immutable_case_validation": "incompatible_older_input_set",
+          "original_input_hashes": "passed",
+          "mesh_hashes": "passed",
+          "unchanged_current_physics_and_mesher_inputs": true,
+          "added_input_files": [
+            "system/meshQualityDict"
+          ],
+          "reason": "The numerical suite started before explicit meshQualityDict was added; original cases remain unchanged."
+        },
+        "cells": 102966,
+        "iterations": 250,
+        "pressure_drop_pa": 10561.380218970526,
+        "mean_speed_m_s": 0.0613311423391775,
+        "flow_cv": 1.152529165547288,
+        "performance_m_s_per_bar": 0.5807114322900097
+      }
+    ],
+    "comparisons": [
+      {
+        "problem": "P009",
+        "study": "mesh",
+        "reference": "/Users/zhuang/FlowField/runs/p009-check-001/P009/baseline",
+        "repeat": "/Users/zhuang/FlowField/runs/p009-check-001/P009/mesh-medium",
+        "status": "failed",
+        "relative_tolerance": 0.02,
+        "absolute_tolerance": 1e-10,
+        "observables": {
+          "pressure_drop_pa": {
+            "reference": 10561.38937624743,
+            "repeat": 10285.204691662802,
+            "absolute_difference": 276.1846845846285,
+            "relative_difference": 0.02615041210446875,
+            "allowed_difference": 211.2277875250486,
+            "passed": false
+          },
+          "mean_speed_m_s": {
+            "reference": 0.0613311552800314,
+            "repeat": 0.061805606354523,
+            "absolute_difference": 0.0004744510744916011,
+            "relative_difference": 0.007676505457613398,
+            "allowed_difference": 0.00123611222709046,
+            "passed": true
+          },
+          "flow_cv": {
+            "reference": 1.1525301110442803,
+            "repeat": 1.133258438235655,
+            "absolute_difference": 0.019271672808625295,
+            "relative_difference": 0.016721188126845282,
+            "allowed_difference": 0.023050602320885606,
+            "passed": true
+          },
+          "performance_m_s_per_bar": {
+            "reference": 0.5807110513126729,
+            "repeat": 0.6009176113395457,
+            "absolute_difference": 0.020206560026872822,
+            "relative_difference": 0.03362617378084331,
+            "allowed_difference": 0.012018352326790913,
+            "passed": false
+          }
+        },
+        "interpretation": "Sensitivity screen at the declared tolerance, not a mesh-independence or stability proof."
+      },
+      {
+        "problem": "P009",
+        "study": "mesh",
+        "reference": "/Users/zhuang/FlowField/runs/p009-check-001/P009/mesh-medium",
+        "repeat": "/Users/zhuang/FlowField/runs/p009-check-001/P009/mesh-fine",
+        "status": "failed",
+        "relative_tolerance": 0.02,
+        "absolute_tolerance": 1e-10,
+        "observables": {
+          "pressure_drop_pa": {
+            "reference": 10285.204691662802,
+            "repeat": 10516.714899898936,
+            "absolute_difference": 231.51020823613362,
+            "relative_difference": 0.022013547998563542,
+            "allowed_difference": 210.3342979980787,
+            "passed": false
+          },
+          "mean_speed_m_s": {
+            "reference": 0.061805606354523,
+            "repeat": 0.0622686625308183,
+            "absolute_difference": 0.00046305617629530116,
+            "relative_difference": 0.007436423996839875,
+            "allowed_difference": 0.0012453733506163662,
+            "passed": true
+          },
+          "flow_cv": {
+            "reference": 1.133258438235655,
+            "repeat": 1.1343748700887661,
+            "absolute_difference": 0.001116431853111166,
+            "relative_difference": 0.0009841824625609029,
+            "allowed_difference": 0.022687497501775324,
+            "passed": true
+          },
+          "performance_m_s_per_bar": {
+            "reference": 0.6009176113395457,
+            "repeat": 0.5920923322873066,
+            "absolute_difference": 0.008825279052239066,
+            "relative_difference": 0.014686337836839305,
+            "allowed_difference": 0.012018352326790913,
+            "passed": true
+          }
+        },
+        "interpretation": "Sensitivity screen at the declared tolerance, not a mesh-independence or stability proof."
+      },
+      {
+        "problem": "P009",
+        "study": "numerics",
+        "reference": "/Users/zhuang/FlowField/runs/p009-check-001/P009/baseline",
+        "repeat": "/Users/zhuang/FlowField/runs/p009-check-001/P009/numerics",
+        "status": "passed",
+        "relative_tolerance": 0.02,
+        "absolute_tolerance": 1e-10,
+        "observables": {
+          "pressure_drop_pa": {
+            "reference": 10561.38937624743,
+            "repeat": 10561.380218970526,
+            "absolute_difference": 0.009157276905170875,
+            "relative_difference": 8.670522957675999e-07,
+            "allowed_difference": 211.2277875250486,
+            "passed": true
+          },
+          "mean_speed_m_s": {
+            "reference": 0.0613311552800314,
+            "repeat": 0.0613311423391775,
+            "absolute_difference": 1.2940853902354554e-08,
+            "relative_difference": 2.1099967615591162e-07,
+            "allowed_difference": 0.0012266232056006281,
+            "passed": true
+          },
+          "flow_cv": {
+            "reference": 1.1525301110442803,
+            "repeat": 1.152529165547288,
+            "absolute_difference": 9.454969922551015e-07,
+            "relative_difference": 8.203664122913101e-07,
+            "allowed_difference": 0.023050602320885606,
+            "passed": true
+          },
+          "performance_m_s_per_bar": {
+            "reference": 0.5807110513126729,
+            "repeat": 0.5807114322900097,
+            "absolute_difference": 3.8097733678910117e-07,
+            "relative_difference": 6.560527580570164e-07,
+            "allowed_difference": 0.011614228745800193,
+            "passed": true
+          }
+        },
+        "interpretation": "Sensitivity screen at the declared tolerance, not a mesh-independence or stability proof."
+      }
+    ],
+    "independent_audit": "runs/p009-numerics-independent-audit.json",
+    "current_mesh_policy_audit": "runs/p009-mesh-policy-audit/summary.json"
+  },
+  "cmaes_ioh_smoke": {
+    "status": "completed",
+    "problem": "P009",
+    "algorithm": "CMA-ES",
+    "budget": 2,
+    "seed": 42,
+    "attempts": 2,
+    "successful_evaluations": 2,
+    "failed_evaluations": 0,
+    "baseline_objective": -0.5807110513126729,
+    "best_objective": -0.5807110513126729,
+    "best_design": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "best_feasible_objective": -0.5807110513126729,
+    "best_feasible_design": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "complete_generations": 0,
+    "partial_generation_evaluations": 1,
+    "stop_reason": "evaluation_budget",
+    "resumed": false,
+    "replayed_evaluations": 0,
+    "new_attempts": 2,
+    "recovered_interruptions": 0,
+    "session_wall_time_s": 256.7108187088743,
+    "wall_time_s": 256.7108187088743,
+    "objective_improvement": 0.0
+  },
+  "artifacts": {
+    "baseline_fields": "runs/p009-baseline-preview.png",
+    "comparison": "runs/p009-verification.png",
+    "paper_study_inspection": "runs/p009-paper-inspection/report.html",
+    "optimizer_inspection": "runs/p009-cmaes-inspection/report.html"
+  },
+  "limitations": [
+    "Exact CAD and C2 are missing; declared geometry estimates and C2=0 are used.",
+    "The baseline and Table 5 absolute values do not agree with the paper.",
+    "The coarse mesh study is an executable reconstruction, not mesh-independent evidence.",
+    "The printed RSM and the table refit do not return the reported 1.92 mm optimum.",
+    "The stated inlet geometry and flow exceed the paper claimed Re<1000; physical validity of laminar flow is unverified.",
+    "No gas, thermal or electrochemical model is included."
+  ]
+}

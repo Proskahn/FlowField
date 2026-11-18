@@ -6,3 +6,6 @@ __all__ = ["P005Problem", "DualLayerConfig"]
 
 from .p008 import P008Problem, AEMConfig
 __all__ += ["P008Problem", "AEMConfig"]
+
+from .p009 import P009Problem, ChenConfig
+__all__ += ["P009Problem", "ChenConfig"]

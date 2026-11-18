@@ -83,7 +83,7 @@ class FrameworkTests(unittest.TestCase):
         subprocess.run(command, cwd=root, check=True, capture_output=True)
         result = subprocess.run([sys.executable, "-m", "flowfield", "list"], cwd=root,
                                 check=True, capture_output=True, text=True)
-        self.assertEqual(json.loads(result.stdout)["problems"], ["P000", "P001", "P002", "P003", "P004", "P004-hydraulic", "P005", "P006", "P007", "P008"])
+        self.assertEqual(json.loads(result.stdout)["problems"], ["P000", "P001", "P002", "P003", "P004", "P004-hydraulic", "P005", "P006", "P007", "P008", "P009"])
 
 
 class P000InterfaceTests(unittest.TestCase):

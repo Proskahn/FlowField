@@ -2,6 +2,7 @@
 from dataclasses import replace
 
 PROFILES = {
+    'P009': ('log.simpleFoam', None),
     'P000': ('log.simpleFoam', None),
     'P001': ('log.simpleFoam', None),
     'P002': ('log.flowfieldP002Foam', 'postProcessing/pem/history_0.csv'),
@@ -51,7 +52,8 @@ def stricter(name, c):
     if name == 'P002':
         return replace(c,model_overrides=dict(c.model_overrides,
             outerTolerance=c.model['outerTolerance']/10,balanceTolerance=c.model['balanceTolerance']/10))
-    keys = {'P000':('residual_tolerance','mass_balance_tolerance'),
+    keys = {'P009':('residual_tolerance','balance_tolerance','steady_tolerance'),
+            'P000':('residual_tolerance','mass_balance_tolerance'),
             'P001':('residual_tolerance','mass_balance_tolerance','stability_tolerance'),
             'P003':('outer_tolerance','balance_tolerance'),
             'P004-hydraulic':('residual_tolerance','balance_tolerance','steady_tolerance'),
@@ -84,7 +86,8 @@ def observables(name, extracted):
     if name=='P008':
         from ..problems.level1_small_continuous.p008.ewm import INDICATORS
         return {k:m[k] for k,_ in INDICATORS}
-    keys={'P000':('pressure_drop_pa',), 'P001':('uniformity','pressure_drop_pa'),
+    keys={'P009':('pressure_drop_pa','mean_speed_m_s','flow_cv','performance_m_s_per_bar'),
+          'P000':('pressure_drop_pa',), 'P001':('uniformity','pressure_drop_pa'),
           'P002':('voltage_V','pressure_sum_Pa'),
           'P003':('power_domain_W','current_std_A_m2','inlet_flow_half_cell_m3_s'),
           'P004-hydraulic':('pressure_drop_pa',),

@@ -25,6 +25,7 @@ from .state import (ResumeError, append_json, check_legacy_pid, load_history,
 from .nsga2 import ParetoArchive
 from .bo import bo_settings
 from .turbo import turbo_settings
+from .lqcmaes import lq_settings
 
 PROBLEMS = list_problems()
 
@@ -132,13 +133,13 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
             results.append((yield list(x), 'candidate', sampler.generation,
                             getattr(sampler, 'proposal_metadata', None)))
             spent += 1
-            if sampler.generation is not None:
+            if sampler.generation is not None and not sampler.manages_generations:
                 state['partial_generation_evaluations'] = len(results)
             if budget is not None and spent >= budget and len(results) < len(batch):
                 return
         sampler.tell(batch, results)
         state.update(getattr(sampler, 'diagnostics', {}))
-        if sampler.generation is not None:
+        if sampler.generation is not None and not sampler.manages_generations:
             state['complete_generations'] += 1
             state['partial_generation_evaluations'] = 0
 
@@ -198,7 +199,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     problem.decode(x0)
     if problem.name == 'P004' and getattr(problem,'dataset',None) is None and getattr(problem,'model',None) is None:
         raise ValueError('P004 current evaluation requires --p004-dataset or --p004-model')
-    if method == 'cmaes':
+    if method in ('cmaes', 'lqcmaes'):
         try:
             import cma
             import numpy
@@ -215,7 +216,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         _ioh()
     wrapped = _FailurePolicy(problem,failure_penalty)
     archive = ParetoArchive() if optimizer_definition(method).multi_objective else None
-    diagonal = method == 'cmaes' and problem.dimension > 100
+    diagonal = method in ('cmaes', 'lqcmaes') and problem.dimension > 100
     algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
@@ -241,6 +242,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             constraint_handling='feasibility first, then sum of positive violations; invalid CFD last')
     if method == 'bo':
         experiment['optimizer_settings'] = bo_settings(bo_initial_points, bo_candidates)
+    if method == 'lqcmaes':
+        experiment['optimizer_settings'] = lq_settings()
     if method == 'turbo':
         experiment['optimizer_settings'] = turbo_settings(problem.dimension, turbo_initial_points, turbo_candidates)
     if method == 'cobyla':
@@ -510,7 +513,7 @@ def _run_suite(args):
         entries.append(dict(problem=identifier,status='ready',dimension=problem.dimension,
             algorithm=optimizer_label(method, problem),
             maximum_attempts=args.budget, evaluation_kind='current_lookup_or_surrogate' if identifier=='P004' else 'CFD',
-            sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method=='cmaes' else None,
+            sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method in ('cmaes','lqcmaes') else None,
             initial_design_length=len(_initial(problem))))
         if isinstance(problem, CFDProblem):
             entries[-1]['command_timeout_s'] = problem.runtime.timeout_s
@@ -556,7 +559,7 @@ def _run_suite(args):
             extra = dict(turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
         create_sampler(args.method, problem, seed=args.seed, initial=_initial(problem),
                        population=args.population, sigma=args.p003_sigma if problem.name=='P003' else args.sigma, **extra)
-    if any(_method(p,args.method)=='cmaes' for p in active):
+    if any(_method(p,args.method) in ('cmaes','lqcmaes') for p in active):
         import cma
     if any(p.name=='P001' for p in active):
         import gmsh

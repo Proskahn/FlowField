@@ -63,7 +63,7 @@ class ArchitectureTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_all_cfd_cases_use_shared_lifecycle_and_preserve_single_execution(self):
-        for name in ('P000', 'P001', 'P002', 'P003', 'P004-hydraulic', 'P005', 'P006', 'P007', 'P008'):
+        for name in ('P000', 'P001', 'P002', 'P003', 'P004-hydraulic', 'P005', 'P006', 'P007', 'P008', 'P009'):
             with self.subTest(problem=name):
                 problem = create_problem(name)
                 self.assertIsInstance(problem, CFDProblem)

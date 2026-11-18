@@ -16,6 +16,12 @@ def main(argv=None):
     p.add_argument('--backend',choices=('auto','native','docker'),default='auto');p.add_argument('--timeout',type=float,default=14400)
     p.add_argument('--cases',nargs='+',help='Qualified case directories to fit a frozen EWM calibration')
     args=p.parse_args(argv)
+    case=Path(args.case)
+    if args.action=='generate' and case.exists():
+        p.error(f'Case directory already exists: {case}. Use a new --case directory; existing files are preserved.')
+    if args.action in ('run','extract') and not (case/'case.json').is_file():
+        p.error(f'Missing {case / "case.json"}. This is not a complete generated P008 case. '
+                'Generate a new case successfully before run/extract; preserve the existing directory.')
     if args.action in ('run','extract','calibrate') and any(v is not None for v in (args.config,args.mesh,args.width_mm,args.depth_mm)):
         p.error('run/extract/calibrate use recorded immutable case configurations')
     if args.action=='paper-study' and (args.width_mm is not None or args.depth_mm is not None):p.error('Paper study uses the reported width/depth panels')

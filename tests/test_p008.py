@@ -1,5 +1,7 @@
 """Geometry, reported electrochemical inputs, fixed EWM scores and acceptance gates."""
 import json
+import contextlib
+import io
 import math
 from pathlib import Path
 import tempfile
@@ -13,6 +15,26 @@ from flowfield.problems.level1_small_continuous.p008.metrics import mesh_arrays
 from flowfield.evaluation import CaseEvaluator
 
 class P008Tests(unittest.TestCase):
+    def test_cli_preserves_existing_or_incomplete_cases(self):
+        from unittest.mock import patch
+        from flowfield.problems.level1_small_continuous.p008.cli import main
+        with tempfile.TemporaryDirectory() as tmp:
+            case=Path(tmp)/'incomplete';case.mkdir()
+            marker=case/'keep.txt';marker.write_text('existing data')
+            for action,message in (('generate','already exists'),('run','not a complete'),('extract','not a complete')):
+                error=io.StringIO()
+                with self.subTest(action=action),contextlib.redirect_stderr(error), \
+                     patch.object(P008Problem,'write_case') as generate, \
+                     patch.object(P008Problem,'run_case') as run, \
+                     patch.object(P008Problem,'extract_results') as extract:
+                    with self.assertRaises(SystemExit) as stopped:main([action,'--case',str(case)])
+                    self.assertEqual(stopped.exception.code,2)
+                    generate.assert_not_called();run.assert_not_called();extract.assert_not_called()
+                self.assertIn(message,error.getvalue())
+                self.assertNotIn('Traceback',error.getvalue())
+                self.assertEqual(marker.read_text(),'existing data')
+                self.assertEqual(list(case.iterdir()),[marker])
+
     def test_width_depth_and_fixed_open_area(self):
         p=P008Problem()
         for x,n,w in ((1/6,8,1.5),(.5,10,1.2),(5/6,12,1.)):

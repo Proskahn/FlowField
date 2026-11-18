@@ -17,10 +17,12 @@ p004-ml = ["numpy>=1.24"]
 ioh = ["ioh==0.3.22"]
 p001 = ["gmsh==4.13.1"]
 p006 = ["scipy>=1.16,<1.19", "cmeel-eigen==3.4.1"]
+p009 = ["gmsh==4.13.1", "numpy>=1.24", "scipy>=1.10"]
 p008 = ["numpy>=1.24", "cmeel-eigen==3.4.1"]
 p007 = ["numpy>=1.24", "scipy>=1.10"]
 
 [project.scripts]
+flowfield-p009 = "flowfield.problems.level1_small_continuous.p009.cli:main"
 flowfield-p008 = "flowfield.problems.level1_small_continuous.p008.cli:main"
 flowfield-check = "flowfield.stability.cli:main"
 flowfield-p007 = "flowfield.problems.level4_high_dimensional_topology.p007.cli:main"

@@ -14,9 +14,13 @@ class Sampler(ABC):
     batch when the evaluation budget is exhausted and journals every observation.
     Implementations must be deterministic for a fixed seed and observation stream
     if they want to support journal-based resume.
+    Adaptive evaluation algorithms may set manages_generations=True and supply
+    complete_generations/partial_generation_evaluations in diagnostics; a serial
+    request then need not represent a complete algorithm generation.
     """
     generation = None
     stop_reason = None
+    manages_generations = False
 
     def initialize(self, x, result):
         """Observe the problem's baseline; model-based algorithms can train on it."""
