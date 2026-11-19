@@ -9,6 +9,7 @@ from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler
 from .cobyla import COBYLASampler
 from .lqcmaes import LQCMAESSampler
+from .repair import evaluation_repair_settings
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,13 @@ def optimizer_label(name, problem):
     return optimizer_definition(name).label
 
 
+def optimizer_revision(name, problem):
+    revision = optimizer_definition(name).revision
+    if evaluation_repair_settings(problem, name):
+        revision += '+candidate-repair-1'
+    return revision
+
+
 def create_sampler(name, problem, **options):
     name = resolve_optimizer(problem, name)
     sampler = optimizer_definition(name).factory(problem, **options)
@@ -82,7 +90,8 @@ def create_sampler(name, problem, **options):
     return sampler
 
 
-register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'))
+register_optimizer('random', RandomSampler, label='RandomSearch', variable_types=('real', 'integer'),
+                   revision='2-volume-repair')
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
 register_optimizer('lqcmaes', LQCMAESSampler, label='lq-CMA-ES', revision='1-pycma-population-replay')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)

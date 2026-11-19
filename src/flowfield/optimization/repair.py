@@ -1,10 +1,39 @@
-"""Optional problem-owned feasibility repair for model-based samplers.
+"""Optional problem-owned feasibility repair for optimizer adapters.
 
 The hook accepts physical design rows and a componentwise lower anchor. It
 must leave feasible rows unchanged and return rows on the anchor-to-input
 segments. Samplers apply it BEFORE novelty checks and acquisition scoring;
-training, journals and CFD then use the same repaired design coordinates.
+Models may instead explicitly learn the composed objective f(repair(x)) in
+search coordinates (CMA-ES, lq-CMA-ES and COBYLA). Journals always identify the
+actual evaluated coordinates and retain the original proposals.
 """
+
+
+EVALUATION_REPAIR_OPTIMIZERS = ('cmaes', 'lqcmaes', 'nsga2', 'cobyla')
+
+
+def evaluation_repair_settings(problem, optimizer):
+    """Opt in to repair in the remaining adapters without changing other problems."""
+    if optimizer not in EVALUATION_REPAIR_OPTIMIZERS or not getattr(problem, 'repair_before_evaluation', False):
+        return {}
+    return dict(candidate_repair=problem.candidate_repair,
+                repair_stage='before CFD',
+                repair_feedback=('population uses repaired design coordinates' if optimizer == 'nsga2'
+                                 else 'search coordinates optimize f(repair(x))'))
+
+
+def evaluation_repair(problem, initial):
+    if not getattr(problem, 'repair_before_evaluation', False):
+        return None
+    try:
+        repair = CandidateRepair(problem)
+        if repair.info is None:
+            raise ValueError('repair_before_evaluation requires candidate_repair metadata')
+        repair.check_initial(initial)
+        return repair
+    except ImportError as exc:
+        raise RuntimeError('Install volume-repair dependencies with: '
+                           'python -m pip install -e ".[p003]"') from exc
 
 
 class CandidateRepair:
@@ -40,6 +69,22 @@ class CandidateRepair:
             normalized = (self.np.asarray(initial)-self.lower)/self.span
             if not self.np.array_equal(self.apply(normalized[None, :])[0], normalized):
                 raise ValueError('Initial design violates candidate constraints; supply a feasible baseline')
+
+    def prepare_batch(self, designs):
+        """Return physical evaluated designs and per-design proposal metadata."""
+        original = self.np.asarray(designs, dtype=float)
+        normalized = (original-self.lower)/self.span
+        repaired = self.apply(normalized)
+        changed = self.np.any(repaired != normalized, axis=1)
+        physical = original.copy()
+        physical[changed] = self.lower+self.span*repaired[changed]
+        metadata = []
+        for raw, proposed, evaluated in zip(original, normalized, repaired):
+            info = self.metadata(proposed, evaluated)
+            if info is not None:
+                info['proposed_x'] = raw.tolist()
+            metadata.append(info)
+        return physical.tolist(), metadata
 
     def distinct(self, candidates):
         """Stable indices: repair may map several proposals to the same design."""

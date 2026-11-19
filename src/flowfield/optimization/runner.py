@@ -18,7 +18,7 @@ from ..problems.level1_small_continuous.p006.config import DEFAULT_TIMEOUT_S as 
 from ..registry import create_problem, list_problems, problem_config_type
 from ..config import load_config
 from ..problem import CFDProblem
-from .registry import create_sampler, list_optimizers, resolve_optimizer, optimizer_label, optimizer_definition
+from .registry import create_sampler, list_optimizers, resolve_optimizer, optimizer_label, optimizer_definition, optimizer_revision
 from ..runtime import DEFAULT_IMAGE, Runtime, SimulationError
 from .state import (ResumeError, append_json, check_legacy_pid, load_history,
     next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment)
@@ -26,6 +26,8 @@ from .nsga2 import ParetoArchive
 from .bo import bo_settings
 from .turbo import turbo_settings
 from .lqcmaes import lq_settings
+from .samplers import random_settings
+from .repair import evaluation_repair_settings
 
 PROBLEMS = list_problems()
 
@@ -128,10 +130,13 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
             state.update(getattr(sampler, 'diagnostics', {}))
             return
         results = []
-        for x in batch:
+        metadata = sampler.batch_proposal_metadata
+        if metadata is not None and len(metadata) != len(batch):
+            raise ValueError('Proposal metadata must match the complete batch')
+        for index, x in enumerate(batch):
             problem.validate_design(x)
             results.append((yield list(x), 'candidate', sampler.generation,
-                            getattr(sampler, 'proposal_metadata', None)))
+                            metadata[index] if metadata is not None else getattr(sampler, 'proposal_metadata', None)))
             spent += 1
             if sampler.generation is not None and not sampler.manages_generations:
                 state['partial_generation_evaluations'] = len(results)
@@ -220,7 +225,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
-        optimizer_revision=optimizer_definition(method).revision, problem=problem.name,
+        optimizer_revision=optimizer_revision(method, problem), problem=problem.name,
         problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
         initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla') else None,
         sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo', 'cobyla') else None, diagonal_covariance=diagonal,
@@ -234,6 +239,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         experiment.update(optimization_mode='multi_objective',
                           objective_source='named raw objectives, all minimized; scalar fallback if empty',
                           ioh_trace='scalar diagnostic only; Pareto results in pareto.json')
+    if method == 'random':
+        experiment['optimizer_settings'] = random_settings(problem)
     if method == 'nsga2':
         experiment['optimizer_settings'] = dict(initial_population='baseline plus uniform samples',
             crossover='bounded SBX', crossover_probability=.9, crossover_eta=15,
@@ -254,6 +261,11 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             proposal_recovery='SciPy replay; previously evaluated CFD values are reused')
     if method in ('bo', 'turbo'):
         experiment['optimizer_settings']['candidate_repair'] = getattr(problem, 'candidate_repair', None)
+    repair_settings = evaluation_repair_settings(problem, method)
+    if repair_settings:
+        experiment.setdefault('optimizer_settings', {}).update(repair_settings)
+        if method == 'cobyla':
+            experiment['optimizer_settings']['constraint_handling'] = 'problem-owned repair before CFD; native bounds'
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
     session = None
@@ -517,7 +529,13 @@ def _run_suite(args):
             initial_design_length=len(_initial(problem))))
         if isinstance(problem, CFDProblem):
             entries[-1]['command_timeout_s'] = problem.runtime.timeout_s
-        if method in ('bo', 'turbo'):
+        if method == 'random':
+            entries[-1]['optimizer_settings'] = random_settings(problem)
+        repair_settings = evaluation_repair_settings(problem, method)
+        if repair_settings:
+            entries[-1]['optimizer_settings'] = repair_settings
+            entries[-1]['optimizer_revision'] = optimizer_revision(method, problem)
+        if method in ('random', 'bo', 'turbo') or repair_settings:
             entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
                 maximum_cfd_attempts=sum(p.name!='P004' for p in problems)*args.budget,

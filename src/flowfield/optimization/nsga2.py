@@ -3,7 +3,7 @@
 All named raw objectives are minimized (maximization objectives must be negated
 by the problem). No scalarization is used for selection. Operators follow the
 standard rank/crowding NSGA-II scheme; see https://pymoo.org/algorithms/moo/nsga2.html.
-Uses a private random.Random stream and no optional dependencies.
+Uses a private random.Random stream; optional problem repair may require NumPy/SciPy.
 """
 
 from dataclasses import dataclass
@@ -143,6 +143,8 @@ class NSGAIISampler(Sampler):
         self.lower = list(problem.lower_bounds)
         self.span = [hi-lo for lo, hi in zip(problem.lower_bounds, problem.upper_bounds)]
         self.initial = problem.validate_design(initial)
+        from .repair import evaluation_repair
+        self.evaluation_repair = evaluation_repair(problem, self.initial)
         self.size = population
         self.rng = random.Random(seed)
         self.space = ObjectiveSpace()
@@ -211,6 +213,8 @@ class NSGAIISampler(Sampler):
             while len(designs) < self.size:
                 designs.extend(self._children(parent(), parent()))
             designs = designs[:self.size]
+        if self.evaluation_repair is not None:
+            designs, self.batch_proposal_metadata = self.evaluation_repair.prepare_batch(designs)
         self.pending = [list(x) for x in designs]
         return designs
 

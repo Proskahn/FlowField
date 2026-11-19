@@ -20,7 +20,9 @@ def dependencies():
 
 
 class _NeedEvaluation(Exception):
-    def __init__(self,x):self.x=x
+    def __init__(self,x,metadata=None):
+        self.x=x
+        self.metadata=metadata
 
 
 class _ObjectiveConverged(Exception):
@@ -38,6 +40,9 @@ class COBYLASampler(Sampler):
         self.stop_reason=None
         self.lower=list(problem.lower_bounds)
         self.scale=[hi-lo for lo,hi in zip(self.lower,problem.upper_bounds)]
+        from .repair import evaluation_repair
+        self.evaluation_repair=evaluation_repair(problem,self.initial)
+        self.proposal_metadata=None
 
     def _normalized(self,x):return [(v-lo)/d for v,lo,d in zip(x,self.lower,self.scale)]
     def _physical(self,x):return [lo+v*d for v,lo,d in zip(x,self.lower,self.scale)]
@@ -66,8 +71,14 @@ class COBYLASampler(Sampler):
             if any(v<0 or v>1 for v in z):
                 return 1e12+1e6*sum(max(-v,0)+max(v-1,0) for v in z)
             x=self._physical(z)
+            metadata=None
+            if self.evaluation_repair is not None:
+                # SciPy searches f(repair(z)); cache by the actual CFD design,
+                # so proposals that repair to the same point reuse its result.
+                designs,info=self.evaluation_repair.prepare_batch([x])
+                x,metadata=designs[0],info[0]
             known=next((r for old,r in self.observations if max(abs(a-b) for a,b in zip(x,old))<1e-12),None)
-            if known is None:raise _NeedEvaluation(x)
+            if known is None:raise _NeedEvaluation(x,metadata)
             evaluations+=1
             value=float(known.get('unpenalized_objective',known['objective']))
             if not math.isfinite(value):raise ValueError('COBYLA requires finite objective values')
@@ -88,6 +99,7 @@ class COBYLASampler(Sampler):
             self.stop_reason=str(result.message)
         except _NeedEvaluation as request:
             self.pending=request.x
+            self.proposal_metadata=request.metadata
             return [list(request.x)]
         except _ObjectiveConverged:
             self.stop_reason='Paper relative objective change < 1e-5'

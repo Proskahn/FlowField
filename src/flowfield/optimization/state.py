@@ -196,13 +196,20 @@ def validate_experiment(saved, current):
         for key in ('optimizer', 'optimizer_revision'):
             if saved.get(key) != current.get(key):
                 raise ResumeError(f'Cannot resume with changed {key}')
-    if current.get('optimizer') in ('bo', 'turbo', 'cobyla', 'lqcmaes'):
+    repair = current.get('optimizer_settings', {}).get('candidate_repair')
+    if current.get('optimizer') in ('random', 'bo', 'turbo', 'cobyla', 'lqcmaes') or repair is not None:
         if saved.get('optimizer_settings') != current.get('optimizer_settings'):
             raise ResumeError('Cannot resume with changed optimizer_settings')
         dependencies = ('numpy', 'scipy') if current.get('optimizer') == 'cobyla' else ('numpy', 'scipy', 'scikit-learn')
         if current.get('optimizer') == 'lqcmaes':
             # Pycma uses SciPy's Kendall tau when installed, its own fallback otherwise.
             dependencies = ('cma', 'numpy', 'scipy')
+        if current.get('optimizer') == 'random':
+            dependencies = ('python', 'numpy', 'scipy') if current['optimizer_settings']['candidate_repair'] is not None else ('python',)
+        if current.get('optimizer') == 'cmaes':
+            dependencies = ('cma', 'numpy', 'scipy')
+        if current.get('optimizer') == 'nsga2':
+            dependencies = ('python', 'numpy', 'scipy')
     else:
         dependencies = ('cma', 'numpy') if current['population'] is not None and current.get('optimizer') != 'nsga2' else ()
     for key in dependencies:

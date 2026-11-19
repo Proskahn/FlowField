@@ -30,10 +30,12 @@ class FlowFieldProblem(ABC):
     for Pareto optimizers such as NSGA-II.
 
     Problems may provide candidate_repair metadata and a repair_candidates(rows,
-    anchor=...) hook for cheap geometric constraints. BO and TuRBO apply this
-    before acquisition scoring. The hook consumes physical coordinates and
-    preserves feasible rows and anchor-to-input bounds; evaluate_raw stays pure
-    with respect to the supplied design (it must not silently repair it).
+    anchor=...) hook for cheap geometric constraints. Random, BO and TuRBO use
+    this hook before evaluation/selection. Setting repair_before_evaluation=True
+    also enables it in CMA-ES, lq-CMA-ES, NSGA-II and COBYLA (currently P003).
+    The hook consumes physical coordinates and preserves feasible rows and
+    anchor-to-input bounds. CMA/lq/COBYLA search f(repair(x)); NSGA-II retains
+    repaired population coordinates. evaluate_raw must not silently repair x.
     """
     name: str
     dimension: int

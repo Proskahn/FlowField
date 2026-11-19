@@ -9,6 +9,7 @@ from .design import decode as decode_field,preset,volume_gradient
 
 class P003Problem(CFDProblem):
     config_type = TopologyConfig
+    repair_before_evaluation = True
 
     @property
     def case_definition(self):

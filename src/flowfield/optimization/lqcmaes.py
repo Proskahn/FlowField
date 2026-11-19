@@ -129,6 +129,12 @@ pycma's distribution update and never become logged observations or incumbents.
         self.proposal_metadata = dict(source='pycma_lq_true_evaluation',
             population_size=self.population_size,
             true_evaluation_in_generation=len(self._observations)+1)
+        if self.evaluation_repair is not None:
+            designs, metadata = self.evaluation_repair.prepare_batch([self.pending])
+            self.pending = designs[0]
+            self.proposal_metadata.update(metadata[0])
+        # _next remains the search coordinate. The LQ model and CMA update
+        # both describe f(repair(x)); reported observations use repaired x.
         self._refresh()
         return [list(self.pending)]
 
