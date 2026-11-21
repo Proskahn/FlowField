@@ -1,0 +1,153 @@
+{
+  "problem": "P010",
+  "title": "Enhanced performance of PEMFC through novel flow field design and optimization",
+  "authors": "Ya Xie et al.",
+  "doi": "10.1016/j.ijheatmasstransfer.2025.127792",
+  "source_file": "1-s2.0-S0017931025011275-main.pdf",
+  "source_sha256": "2a217df00142f0461df3fda2881ef5c4414647b60c511743a5613aa9bc5c9af7",
+  "journal": "International Journal of Heat and Mass Transfer 255 (2026) 127792",
+  "scope": "Steady coupled 3D PEM fuel cell and four-factor net-power optimization; not an electrolyzer or transient bubble-resolved VOF model.",
+  "geometry": {
+    "active_area_mm": [
+      23,
+      23
+    ],
+    "channel_depth_mm": 1,
+    "bp_total_thickness_mm": 1.5,
+    "gdl_thickness_mm": 0.3,
+    "cl_thickness_mm": 0.0129,
+    "pem_thickness_mm": 0.108,
+    "channels": [
+      "serpentine",
+      "CDLIS",
+      "ESCFF-1",
+      "ESCFF-2",
+      "ESCFF-3",
+      "ESCFF-4"
+    ],
+    "baseline": "ESCFF-3",
+    "assumptions": [
+      "Full symmetric cell, uniform isotropic porous layers, no gravity, laminar flow.",
+      "BP thickness interpreted as 0.5 mm backing plus 1 mm channel region.",
+      "Reconstructed Table 2/Fig. 2 profiles; exact CAD and port details are not supplied.",
+      "ESCFF has 15 rows at 1.5 mm pitch, four mirrored paths, inferred central 1x1 mm through-backing inlet and two perimeter outlets.",
+      "Serpentine reconstruction has 11 passes; CDLIS has two mirrored 20-pass channels and a 1 mm central divider. Those comparison dimensions are estimates.",
+      "Orthogonal voxel meshes approximate inclined walls; sharp-wall geometry and mesh sensitivity must be assessed before ranking close designs."
+    ]
+  },
+  "physics": {
+    "governing": "Paper Eqs. 1-17 and Table 4",
+    "channels": "Steady laminar Navier-Stokes with pressure projection",
+    "porous_gas": "Darcy velocity with epsilon^2 resistance and (1-s)^3 gas relative permeability",
+    "species": "Conservative molar mixture transport; O2/H2 and vapor with N2 complement on cathode and H2/H2O binary closure on anode",
+    "liquid": "Hydrophobic Darcy/capillary transport in CL/GDL; carrier advection plus dispersion in channels",
+    "charge": "Coupled electronic/protonic charge conservation with signed Butler-Volmer sources",
+    "membrane": "Water diffusion, electro-osmotic drag and gas/membrane sorption",
+    "thermal": "Solid/fluid conduction, sensible enthalpy, kinetic/Joule heating, evaporation/condensation latent heat",
+    "objective": "minimize -(cell_voltage*current_cathode - dp_cathode*Q_cathode), W"
+  },
+  "discrepancies": [
+    "Table 3 says concentration exponent 1; printed Eqs. 9/10 use 3. Default follows the equations; exponent 1 is configurable.",
+    "Printed source signs/mass units and liquid-water notation are inconsistent. Implementation uses conservative signed-current/Faraday conventions.",
+    "The article does not supply a complete numerical parameter set or CAD; no exact quantitative replication is claimed.",
+    "Reference current Iref is not reported: 15000 A/m2 is a declared estimate used in Eq. 16/17, not fitted to a desired net power.",
+    "External BP surfaces are isothermal with conjugate internal conduction. For temperature optimization wall/feed temperature follows the operating-temperature design variable; literal constant 333.15 K internal channel walls would be a different thermal boundary interpretation.",
+    "Diffusion is expressed using mixture molar fractions at local ideal-gas concentration; cross-diffusion and Soret terms are not included.",
+    "Channel phase change and water dispersion, membrane sorption, capillary closure and kinetic constants are explicit supplementary closures.",
+    "No hidden tuning to published power, no surrogate fallback for failed CFD."
+  ],
+  "estimated_parameters": {
+    "reference_current_density": 15000.0,
+    "ionomer_fraction": 0.3,
+    "permeability_gdl": 1e-12,
+    "permeability_cl": 1e-13,
+    "electronic_conductivity_gdl": 1000.0,
+    "electronic_conductivity_cl": 1000.0,
+    "electronic_conductivity_bp": 20000.0,
+    "exchange_current_anode": 1000000000.0,
+    "exchange_current_cathode": 10000.0,
+    "kinetic_reference_temperature": 333.15,
+    "activation_energy_anode": 20000.0,
+    "activation_energy_cathode": 66000.0,
+    "transfer_coefficient": 0.5,
+    "oxygen_diffusivity": 2.5e-05,
+    "hydrogen_diffusivity": 8e-05,
+    "vapor_diffusivity_air": 2.8e-05,
+    "air_viscosity": 2e-05,
+    "hydrogen_viscosity": 9.6e-06,
+    "liquid_density": 983.2,
+    "liquid_viscosity": 0.000466,
+    "liquid_conductivity": 0.65,
+    "surface_tension": 0.0662,
+    "contact_angle_deg": 110.0,
+    "channel_liquid_dispersion": 1e-05,
+    "phase_change_rate": 100.0,
+    "sorption_rate": 10.0,
+    "membrane_dry_density": 2000.0,
+    "membrane_diffusivity": 2e-10,
+    "latent_heat": 2360000.0,
+    "thermal_conductivities_W_m_K": {
+      "BP": 100,
+      "GDL": 1.5,
+      "CL": 1,
+      "PEM": 0.2,
+      "air": 0.028,
+      "hydrogen": 0.19
+    },
+    "gas_molar_heat_capacity_J_mol_K": "29 + 5*y_water",
+    "liquid_heat_capacity_J_kg_K": 4180
+  },
+  "supplementary_framework": {
+    "reference": "Springer, Zawodzinski and Gottesfeld (1991), Polymer Electrolyte Fuel Cell Model, DOI 10.1149/1.2085971",
+    "link": "https://digital.library.unt.edu/ark:/67531/metadc1087107/",
+    "note": "Springer-type membrane hydration/conductivity/drag; individual effective constants remain declared estimates."
+  },
+  "optimization": {
+    "parameters": {
+      "temperature_K": [
+        333.15,
+        353.15
+      ],
+      "humidity_percent": [
+        80.0,
+        100.0
+      ],
+      "cathode_stoichiometry": [
+        1.0,
+        4.0
+      ],
+      "gdl_porosity": [
+        0.2,
+        0.8
+      ]
+    },
+    "baseline": {
+      "temperature_K": 333.15,
+      "humidity_percent": 90.0,
+      "cathode_stoichiometry": 2.2,
+      "gdl_porosity": 0.6
+    },
+    "voltage_V": 0.4,
+    "design": "27-row Box-Behnken, 25 unique points; quadratic coded response surface",
+    "method": "Enumerate all box faces of the quadratic; verify the selected candidate with a fresh coupled CFD case.",
+    "qualification_gate": "Baseline first; then every DOE case must qualify. Generic optimizers also require a qualified baseline."
+  },
+  "numerics": {
+    "mesh_cells": {
+      "coarse": 67712,
+      "medium": 209484,
+      "fine": 507840
+    },
+    "processes_per_case": 1,
+    "field_tolerance": 1e-05,
+    "balance_tolerance": 0.001,
+    "qualification": "Five consecutive final-voltage qualified iterations plus independent saved-field/source/constitutive checks. False-transient liquid storage is excluded from physical conservation checks.",
+    "not_established": [
+      "Mesh independence",
+      "agreement with the published CFD fields or experimental polarization curves",
+      "global mathematical stability"
+    ],
+    "liquid_pseudo_time": 5.0,
+    "voltage_ramp_iterations": 40
+  }
+}

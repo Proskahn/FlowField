@@ -1,0 +1,166 @@
+{
+  "status": "baseline_numerically_qualified",
+  "model_revision": "escff-pemfc-coupled-v1",
+  "paper_validated": false,
+  "optimization_executed": false,
+  "source": "paper-spec.json",
+  "unit_tests": {
+    "passed": 323,
+    "failed": 0,
+    "command": "MPLCONFIGDIR=/tmp/flowfield-p010-mpl .venv/bin/python -m unittest discover -s tests -q"
+  },
+  "mesh_checks": {
+    "coarse": {
+      "cells": 67712,
+      "passed": true,
+      "case_directory": "runs/p010-development-001/probe-008"
+    },
+    "medium": {
+      "cells": 209484,
+      "passed": true,
+      "case_directory": "runs/p010-development-001/mesh-medium"
+    },
+    "fine": {
+      "cells": 507840,
+      "passed": true,
+      "case_directory": "runs/p010-development-001/mesh-fine"
+    }
+  },
+  "reference_audit": {
+    "path": "reference-audit.json",
+    "source": "Published Table 6, not CFD",
+    "predicted_net_power_W": 3.1109729611417545,
+    "r_squared": 0.9942429024784848
+  },
+  "cfd_probes": [
+    "runs/p010-development-001/probe-008",
+    "runs/p010-development-001/probe-009"
+  ],
+  "qualification_requirements": [
+    "Normal solver completion",
+    "Five consecutive qualified iterations at target voltage",
+    "Independent final-field audit"
+  ],
+  "not_established": [
+    "Mesh independence",
+    "Independent repeatability study",
+    "Paper/experimental quantitative agreement",
+    "Qualification of the complete design box"
+  ],
+  "server_baseline_command": "bash scripts/p010_native.sh evaluate --case runs/p010-baseline-001 --timeout 14400",
+  "checker_command": "bash scripts/check_native.sh --problem P010 --output runs/check-p010-001",
+  "documentation": "README.md (local guide; repository intentionally ignores Markdown guides)",
+  "baseline": {
+    "case_directory": "/Users/zhuang/FlowField/runs/p010-development-001/probe-009",
+    "iterations": 275,
+    "cells": 67712,
+    "elapsed_s": 531.4266034578905,
+    "config": "baseline-config.json",
+    "result": "baseline-result.json",
+    "metrics": {
+      "net_power_W": 1.4986601637676762,
+      "current_cathode_A": 3.7533331273052988,
+      "current_anode_A": 3.753333127231435,
+      "pressure_drop_Pa": 373.75063424783497,
+      "inlet_flow_m3_s": 7.152060517095503e-06,
+      "pumping_power_W": 0.002673087154443343,
+      "mean_membrane_water": 7.6316753946824605,
+      "mean_cathode_liquid_saturation": 0.03748809418086835,
+      "max_temperature_K": 337.09895686844,
+      "cells": 67712,
+      "iteration": 275,
+      "checks": {
+        "anodeInlet_temperature_bc": 0.0,
+        "anodeInlet_velocity_bc": 3.0454885463874373e-14,
+        "anodeOutlet_temperature_bc": 0.0,
+        "cathodeInlet_temperature_bc": 0.0,
+        "cathodeInlet_velocity_bc": 6.209248492634581e-15,
+        "cathodeOutlet_temperature_bc": 0.0,
+        "anodeTerminal_temperature_bc": 0.0,
+        "anodeTerminal_wall_velocity": 0.0,
+        "anodeTerminal_potential_bc": 0.0,
+        "cathodeTerminal_temperature_bc": 0.0,
+        "cathodeTerminal_wall_velocity": 0.0,
+        "cathodeTerminal_potential_bc": 0.0,
+        "externalWalls_temperature_bc": 0.0,
+        "externalWalls_wall_velocity": 0.0,
+        "saved_gas_balance": 2.715640068434807e-10,
+        "saved_react_balance": 4.529928219147867e-06,
+        "saved_vapor_balance": 0.00011410199882704181,
+        "saved_liquid_balance": 3.0413860956037605e-05,
+        "saved_water_balance": 6.783181712906989e-05,
+        "saved_heat_balance": 6.455661729364555e-06,
+        "faraday_reactant": 1.1452091527963832e-15,
+        "total_molar_source": 1.1999964351465526e-15,
+        "total_water_source": 1.0538422661690401e-14,
+        "latent_heat_source": 1.1654220239564205e-14,
+        "current_continuity": 1.967946340285329e-11,
+        "anode_composition": 9.992007221626409e-15,
+        "react_constitutive_divergence": 6.254916114486369e-10,
+        "react_constitutive_face": 4.440724547527789e-13,
+        "vapor_constitutive_divergence": 1.5394349948622496e-08,
+        "vapor_constitutive_face": 5.532645942941628e-12,
+        "electronic_charge_balance": 5.757401514580832e-10,
+        "protonic_charge_balance": 4.542855037382655e-06,
+        "reaction_joule_heat": 6.239832408033329e-07,
+        "butler_volmer": 4.240537985031138e-06,
+        "membrane_transport": 8.098624519809217e-06,
+        "sorption_closure": 2.1702768199151172e-05,
+        "phase_change_closure": 5.180886248370558e-06,
+        "heat_transport": 4.543988514561922e-09,
+        "cathodeOutlet_pressure_bc": 3.2474023470286e-15,
+        "anodeOutlet_pressure_bc": 6.9388939039072e-18,
+        "anodeInlet_flow": 2.220446049250313e-16,
+        "cathodeInlet_flow": 4.6629367034256575e-15,
+        "net_power_W_history": 1.585334240635855e-14,
+        "current_cathode_A_history": 3.549558710517891e-16,
+        "current_anode_A_history": 1.7274519058193687e-14,
+        "pressure_drop_Pa_history": 1.3535934965817972e-14,
+        "inlet_flow_m3_s_history": 4.737280649287827e-16,
+        "pumping_power_W_history": 1.6061730706781557e-14
+      },
+      "audit_scope": "Saved local balances, charge, kinetics, species diffusion/advection, membrane transport, source identities, heat production and objective; momentum and liquid constitutive convergence also require solver histories. No mesh independence or paper validation."
+    },
+    "final_diagnostics": {
+      "iteration": 275.0,
+      "voltage_V": 0.4,
+      "current_anode_A": 3.7533331272315,
+      "current_cathode_A": 3.7533331273053,
+      "net_power_W": 1.4986601637677,
+      "pumping_power_W": 0.0026730871544433,
+      "pressure_drop_Pa": 373.75063424784,
+      "inlet_flow_m3_s": 7.1520605170955e-06,
+      "field_change": 8.3667837406652e-06,
+      "gas_balance": 2.6896501343461e-10,
+      "species_balance": 0.00011410199903828,
+      "liquid_balance": 3.0413860713947e-05,
+      "membrane_balance": 6.7831817125888e-05,
+      "charge_residual": 2.6781916475237e-11,
+      "momentum_residual": 2.5445052679272e-08,
+      "energy_balance": 6.4556616606901e-06,
+      "min_T": 333.15005670039,
+      "max_T": 337.09895686844,
+      "min_s": 0.0,
+      "max_s": 0.069325824632654,
+      "min_lambda": 0.0,
+      "max_lambda": 15.482347751733,
+      "min_yr": 0.049898873969966,
+      "min_yw": 0.11472104045744,
+      "max_species_sum": 1.0
+    },
+    "maximum_independent_check": 0.00011410199882704181
+  },
+  "quantitative_comparison": {
+    "computed_net_power_W": 1.4986601637676762,
+    "published_net_power_W": 2.996,
+    "relative_difference_percent": -49.977965161292516,
+    "verdict": "Not a quantitatively validated replication. Missing closure constants, reconstructed geometry and equation/table ambiguities remain unresolved; no fitting to published power was performed."
+  },
+  "stopped_probe": {
+    "case_directory": "runs/p010-development-001/probe-008",
+    "reason": "Stopped deliberately after faster numerical setting qualified. Liquid pseudo-time 0.1 was too slow; this probe is unqualified."
+  },
+  "defaults": "Same physical parameters and numerical tolerances as the qualified baseline; default iteration cap 3000 and write interval 100 versus tested cap 700 and interval 50.",
+  "checker_report": "verification_logs/report.html",
+  "checker_status": "passed"
+}

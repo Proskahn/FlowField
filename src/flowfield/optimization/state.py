@@ -5,6 +5,7 @@ The original observation stream remains append-only, including on recovery.
 """
 
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import fcntl
 import json
 import math
@@ -182,7 +183,27 @@ def load_history(output, budget, penalty):
     return history, pending
 
 
-def validate_experiment(saved, current):
+def validate_budget_extension(previous, target):
+    if type(target) is not int or target < 1:
+        raise ResumeError('Extended budget must be a positive integer total')
+    if target < previous:
+        raise ResumeError(f'Cannot decrease the saved budget from {previous} to {target}')
+
+
+def extend_budget_metadata(saved, target):
+    """Return an audited increase; an identical target is an idempotent retry."""
+    previous = saved['budget']
+    validate_budget_extension(previous, target)
+    result = dict(saved)
+    if target != previous:
+        result.update(budget=target, original_budget=saved.get('original_budget', previous),
+            budget_extensions=[*saved.get('budget_extensions', []), dict(
+                previous_budget=previous, budget=target,
+                timestamp_utc=datetime.now(timezone.utc).isoformat())])
+    return result
+
+
+def validate_experiment(saved, current, *, allow_budget_extension=False):
     # Dataclass configurations can contain tuples; JSON stores those as lists.
     current = json.loads(json.dumps(current,allow_nan=False))
     keys = ('algorithm', 'problem', 'problem_name', 'dimension', 'budget', 'seed',
@@ -190,6 +211,9 @@ def validate_experiment(saved, current):
             'lower_bounds', 'upper_bounds', 'failure_penalty', 'ioh_enabled', 'config',
             'max_seconds_soft', 'optimization_mode', 'objective_source')
     for key in keys:
+        if key == 'budget' and allow_budget_extension:
+            validate_budget_extension(saved[key], current[key])
+            continue
         if saved.get(key) != current.get(key):
             raise ResumeError(f'Cannot resume with changed {key}')
     if saved.get('schema_version', 0) >= 3:
@@ -269,12 +293,25 @@ def restore_options(args, supplied):
             if args.p004_dataset is None and args.p004_model is None:
                 raise ResumeError('Legacy P004 resume requires the original --p004-dataset or --p004-model')
             options.update(p004_dataset=args.p004_dataset,p004_model=args.p004_model)
-    saved_entries = json.loads((output/'plan.json').read_text())['problems']
+    # run-options.json is the atomic commit point for a suite budget increase.
+    # A crash may leave plan.json or an individual experiment at the old budget;
+    # the recorded authorization lets a plain --resume finish the update.
+    saved_plan = json.loads((output/'plan.json').read_text())
+    recorded_budget = options.get('budget', saved_plan.get('budget_per_problem'))
+    if recorded_budget is None and args.extend_budget is not None:
+        raise ResumeError('Cannot extend a run with no recorded original budget')
+    if recorded_budget is not None:
+        options['budget'] = recorded_budget
+    args._saved_budget = options.get('budget', args.budget)
+    args._budget_metadata = dict(budget=args._saved_budget, **{key: options[key] for key in
+                               ('original_budget', 'budget_extensions') if key in options})
+    args._allow_budget_extension = bool(options.get('budget_extensions'))
+    saved_entries = saved_plan['problems']
     saved_ids = [entry['problem'] for entry in saved_entries]
     if options.get('problems') == ['all']:
         options['problems'] = saved_ids
     for key,value in options.items():
-        if key in ('output','resume','dry_run'):
+        if key in ('output','resume','dry_run','extend_budget','original_budget','budget_extensions'):
             continue
         flag = '--'+key.replace('_','-')
         old = getattr(args,key)
@@ -285,8 +322,13 @@ def restore_options(args, supplied):
         if flag in supplied and comparable != value:
             # --problems all represents the same suite when all IDs were saved.
             if not (key=='problems' and old==['all'] and value==saved_ids):
-                raise ResumeError(f'{flag} differs from the saved experiment; resume keeps the original budget/settings')
+                raise ResumeError(f'{flag} differs from the saved experiment; use --extend-budget to increase '
+                                  'the budget, and keep the other experiment settings unchanged')
         setattr(args,key,Path(value) if key in ('p004_dataset','p004_model','p005_config','config') and value is not None else value)
+    if args.extend_budget is not None:
+        validate_budget_extension(args._saved_budget, args.extend_budget)
+        args.budget = args.extend_budget
+        args._allow_budget_extension = True
     args.command_timeouts = {entry['problem']: entry['command_timeout_s'] for entry in saved_entries
                              if 'command_timeout_s' in entry}
     return args

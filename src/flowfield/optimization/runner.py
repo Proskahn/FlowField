@@ -21,7 +21,8 @@ from ..problem import CFDProblem
 from .registry import create_sampler, list_optimizers, resolve_optimizer, optimizer_label, optimizer_definition, optimizer_revision
 from ..runtime import DEFAULT_IMAGE, Runtime, SimulationError
 from .state import (ResumeError, append_json, check_legacy_pid, load_history,
-    next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment)
+    next_session, pristine_initialization, restore_options, run_lock, save_json, validate_experiment,
+    extend_budget_metadata, validate_budget_extension)
 from .nsga2 import ParetoArchive
 from .bo import bo_settings
 from .turbo import turbo_settings
@@ -168,14 +169,19 @@ def _verify_history(problem, x0, method, population, sigma, seed, history, **opt
         proposals.close()
 
 
-def optimize(problem, *, output, resume=False, **options):
-    """Run or resume a fixed-budget experiment under an exclusive process lock."""
+def optimize(problem, *, output, resume=False, extend_budget=None, **options):
+    """Resume journals without new CFD for replay; extend_budget is a new total."""
     if not isinstance(problem, AbstractFlowFieldProblem):
         raise TypeError('optimize requires a AbstractFlowFieldProblem')
     if 'optimizer' in options:
         if 'method' in options:
             raise ValueError('Specify optimizer or method, not both')
         options['method'] = options.pop('optimizer')
+    if extend_budget is not None:
+        if not resume:
+            raise ValueError('extend_budget requires resume=True')
+        validate_budget_extension(1, extend_budget)
+        options['budget'] = extend_budget
     _validate_options(options.get('budget',20),options.get('seed',42),options.get('population',4),
                       options.get('sigma',.1),options.get('failure_penalty'),options.get('max_seconds'))
     _method(problem,options.get('method','auto'))
@@ -192,41 +198,20 @@ def optimize(problem, *, output, resume=False, **options):
     if not resume:
         output.mkdir(parents=True,exist_ok=False)
     with run_lock(output/'.optimizer.lock'):
-        return _optimize(problem,output=output,resume=resume and (output/'experiment.json').exists(),**options)
+        return _optimize(problem,output=output,resume=resume and (output/'experiment.json').exists(),
+                         allow_budget_extension=extend_budget is not None,**options)
 
 
-def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=4,
-              sigma=.1, with_ioh=True, failure_penalty=None, max_seconds=None,
-              initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
-              turbo_initial_points=5, turbo_candidates=512):
-    method = _method(problem,method)
-    x0 = _initial(problem) if initial is None else list(initial)
-    problem.decode(x0)
-    if problem.name == 'P004' and getattr(problem,'dataset',None) is None and getattr(problem,'model',None) is None:
-        raise ValueError('P004 current evaluation requires --p004-dataset or --p004-model')
-    if method in ('cmaes', 'lqcmaes'):
-        try:
-            import cma
-            import numpy
-        except ImportError as exc:
-            raise RuntimeError('Install CMA-ES with: python -m pip install -e ".[optim]"') from exc
-    if method in ('bo', 'turbo'):
-        from .bo import dependencies
-        dependencies()
-    if method == 'cobyla':
-        from .cobyla import dependencies
-        dependencies()
-    if with_ioh:
-        from ..benchmarking.ioh import _ioh
-        _ioh()
-    wrapped = _FailurePolicy(problem,failure_penalty)
-    archive = ParetoArchive() if optimizer_definition(method).multi_objective else None
+def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_ioh,
+                failure_penalty, max_seconds, bo_initial_points, bo_candidates,
+                turbo_initial_points, turbo_candidates):
+    """Build the same manifest for read-only validation and actual execution."""
     diagonal = method in ('cmaes', 'lqcmaes') and problem.dimension > 100
     algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
         optimizer_revision=optimizer_revision(method, problem), problem=problem.name,
-        problem_name=wrapped.ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
+        problem_name=_FailurePolicy(problem, failure_penalty).ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
         initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla') else None,
         sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo', 'cobyla') else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
@@ -235,7 +220,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         config=config.to_dict() if config is not None else None,
         budget_includes_baseline_and_failed_attempts=True, automatic_retries=False,
         recovery='deterministic_journal_replay', soft_time_limit_scope='per_invocation')
-    if archive is not None:
+    if optimizer_definition(method).multi_objective:
         experiment.update(optimization_mode='multi_objective',
                           objective_source='named raw objectives, all minimized; scalar fallback if empty',
                           ioh_trace='scalar diagnostic only; Pareto results in pareto.json')
@@ -266,25 +251,65 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         experiment.setdefault('optimizer_settings', {}).update(repair_settings)
         if method == 'cobyla':
             experiment['optimizer_settings']['constraint_handling'] = 'problem-owned repair before CFD; native bounds'
+    return experiment
+
+
+def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=4,
+              sigma=.1, with_ioh=True, failure_penalty=None, max_seconds=None,
+              initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
+              turbo_initial_points=5, turbo_candidates=512, allow_budget_extension=False):
+    method = _method(problem,method)
+    x0 = _initial(problem) if initial is None else list(initial)
+    problem.decode(x0)
+    if problem.name == 'P004' and getattr(problem,'dataset',None) is None and getattr(problem,'model',None) is None:
+        raise ValueError('P004 current evaluation requires --p004-dataset or --p004-model')
+    if method in ('cmaes', 'lqcmaes'):
+        try:
+            import cma
+            import numpy
+        except ImportError as exc:
+            raise RuntimeError('Install CMA-ES with: python -m pip install -e ".[optim]"') from exc
+    if method in ('bo', 'turbo'):
+        from .bo import dependencies
+        dependencies()
+    if method == 'cobyla':
+        from .cobyla import dependencies
+        dependencies()
+    if with_ioh:
+        from ..benchmarking.ioh import _ioh
+        _ioh()
+    wrapped = _FailurePolicy(problem,failure_penalty)
+    archive = ParetoArchive() if optimizer_definition(method).multi_objective else None
+    experiment = _experiment(problem, x0, method, budget=budget, seed=seed, population=population,
+        sigma=sigma, with_ioh=with_ioh, failure_penalty=failure_penalty, max_seconds=max_seconds,
+        bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+        turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+    algorithm = experiment['algorithm']
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
     session = None
     if resume:
         saved = json.loads((output/'experiment.json').read_text())
-        validate_experiment(saved,experiment)
-        history, pending = load_history(output,budget,failure_penalty)
+        validate_experiment(saved,experiment,allow_budget_extension=allow_budget_extension)
+        history, pending = load_history(output,saved['budget'],failure_penalty)
         _verify_history(problem,x0,method,population,sigma,seed,history,
                         budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
                         turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
         if (output/'summary.json').exists():
             previous = json.loads((output/'summary.json').read_text())
         session = next_session(output)
+        # A backup must not look like another run to recursive plot discovery.
+        shutil.copyfile(output/'experiment.json',session/'previous-experiment.json')
         for name in ('summary.json','best.json','best-feasible.json','checkpoint.json','pareto.json'):
             if (output/name).exists():
                 shutil.copyfile(output/name,session/name)
         _save(session/'session.json',dict(replayed_evaluations=len(history),
             recovered_evaluations=[r['evaluation'] for r in pending],versions=_versions(),
+            previous_budget=saved['budget'], budget=budget,
             strategy='replay_without_CFD', io_trace='full_history_plus_new_evaluations'))
+        experiment = extend_budget_metadata(saved, budget)
+        if budget != saved['budget']:
+            _save(output/'experiment.json',experiment)
         if pending:
             with (output/'recoveries.jsonl').open('a') as stream:
                 for row in pending:
@@ -301,6 +326,9 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         resumed=resume,replayed_evaluations=len(history),new_attempts=0,
         recovered_interruptions=sum(bool(r.get('recovered')) for r in history),
         ioh_directory=str(ioh_output) if with_ioh else None)
+    if experiment.get('budget_extensions'):
+        summary.update(original_budget=experiment['original_budget'],
+                       budget_extensions=experiment['budget_extensions'])
     started = time.monotonic()
     pending_index = None
 
@@ -315,7 +343,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         _save(output/'summary.json',summary)
         _save(output/'checkpoint.json',dict(schema_version=1,recovery='deterministic_journal_replay',
             attempts=summary['attempts'],pending_evaluation=pending_index,
-            original_budget=budget,experiment='experiment.json',events='events.jsonl',
+            original_budget=experiment.get('original_budget',budget),budget=budget,
+            experiment='experiment.json',events='events.jsonl',
             evaluations='evaluations.jsonl',recoveries='recoveries.jsonl'))
 
     def remember(record):
@@ -416,7 +445,7 @@ def _command_timeout(identifier, args):
         return args.timeout
     # A resumed run keeps the effective limits recorded in its plan.
     saved = getattr(args, 'command_timeouts', {})
-    return saved.get(identifier, P006_TIMEOUT_S if identifier == 'P006' else 1800)
+    return saved.get(identifier, P006_TIMEOUT_S if identifier in ('P006','P010') else 1800)
 
 
 def _make_problem(identifier, args):
@@ -447,7 +476,10 @@ def _make_problem(identifier, args):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Run selected FlowField problems with a registered optimizer')
     parser.add_argument('--problem', '--problems', dest='problems', nargs='+', choices=list_problems()+('all',), default=['P000'])
-    parser.add_argument('--budget', type=int, default=20, help='Maximum attempts PER problem, including baseline/failures')
+    budgets = parser.add_mutually_exclusive_group()
+    budgets.add_argument('--budget', type=int, default=20, help='Maximum attempts PER problem, including baseline/failures')
+    budgets.add_argument('--extend-budget', type=int, metavar='TOTAL',
+                        help='With --resume, increase the total budget while reusing all saved evaluations')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--population', type=int, default=4, help='Population size; NSGA-II includes the baseline in its initial population')
     parser.add_argument('--sigma', type=float, default=.1, help='CMA-ES initial step size in normalized coordinates')
@@ -469,7 +501,7 @@ def main(argv=None):
     parser.add_argument('--backend', choices=('auto','native','docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=None,
-                        help='Seconds per mesh/build/solver command (default: P006 14400; other problems 1800)')
+                        help='Seconds per mesh/build/solver command (default: P006/P010 14400; other problems 1800)')
     parser.add_argument('--ioh', action='store_true')
     parser.add_argument('--failure-penalty', type=float, help='Explicit finite penalty for SimulationError; otherwise stop that problem')
     parser.add_argument('--max-seconds-per-problem', type=float, help='Soft cap; finish an in-flight evaluation before stopping')
@@ -477,20 +509,56 @@ def main(argv=None):
     group.add_argument('--p004-dataset', type=Path)
     group.add_argument('--p004-model', type=Path)
     parser.add_argument('--dry-run', action='store_true', help='Print design/algorithm/budget plan without CFD or creating output')
-    parser.add_argument('--resume',action='store_true',help='Continue an existing run from its JSON journals; keep the original total budget')
+    parser.add_argument('--resume',action='store_true',help='Continue an existing run from its JSON journals; use --extend-budget to increase its total')
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(argv)
     supplied = {word.split('=')[0] for word in argv if word.startswith('--')}
     if '--problem' in supplied: supplied.add('--problems')
     if '--optimizer' in supplied: supplied.add('--method')
     try:
+        if args.extend_budget is not None and not args.resume:
+            raise ValueError('--extend-budget requires --resume')
         if args.resume:
-            args = restore_options(args, supplied)
-            if not args.dry_run:
-                check_legacy_pid(args.output.resolve())
+            if args.dry_run:
+                return _run_suite(restore_options(args, supplied))
+            if not args.output.is_dir():
+                raise ResumeError(f'Missing run directory: {args.output}')
+            check_legacy_pid(args.output.resolve())
+            # Read settings and commit any increase while holding the same lock
+            # as the original CLI run. Another process cannot change the budget.
+            with run_lock(args.output/'.suite.lock'):
+                args = restore_options(args, supplied)
+                args._suite_locked = True
+                return _run_suite(args)
         return _run_suite(args)
     except (OSError, ValueError, TypeError, RuntimeError, ImportError) as exc:
         parser.exit(1,f'flowfield-optimize: {exc}\n')
+
+
+def _suite_history(problem, args, folder):
+    extending = getattr(args, '_allow_budget_extension', False)
+    # Reject an active API run before changing the suite budget. Dry runs never
+    # create or modify lock files; the execution path checks locks again later.
+    with (run_lock(folder/'.optimizer.lock') if extending and not args.dry_run else nullcontext()):
+        saved_experiment = json.loads((folder/'experiment.json').read_text())
+        if getattr(args,'_allow_budget_extension',False):
+            method = _method(problem,args.method)
+            sigma = args.p003_sigma if problem.name=='P003' else args.sigma
+            current = _experiment(problem, _initial(problem), method,
+                budget=args.budget, seed=args.seed, population=args.population,
+                sigma=sigma, with_ioh=args.ioh, failure_penalty=args.failure_penalty,
+                max_seconds=args.max_seconds_per_problem,
+                bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
+                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+            validate_experiment(saved_experiment,current,allow_budget_extension=True)
+        history, pending = load_history(folder,saved_experiment['budget'],args.failure_penalty)
+        if getattr(args,'_allow_budget_extension',False):
+            # Validate replay before committing the suite authorization,
+            # including in --dry-run. This never evaluates the problem.
+            _verify_history(problem,_initial(problem),method,args.population,sigma,args.seed,history,
+                budget=args.budget, bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
+                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+        return saved_experiment, history, pending
 
 
 def _run_suite(args):
@@ -545,22 +613,29 @@ def _run_suite(args):
         remaining = 0
         for problem in problems:
             folder = args.output/problem.name
+            terminal = False
             if (folder/'experiment.json').exists():
-                history, pending = load_history(folder,args.budget,args.failure_penalty)
+                saved_experiment, history, pending = _suite_history(problem,args,folder)
                 spent = len(history)
                 saved = json.loads((folder/'summary.json').read_text()) if (folder/'summary.json').exists() else {}
+                reason = saved.get('stop_reason')
                 if (saved.get('attempts') == spent and not pending and
-                    saved.get('stop_reason') in ('evaluation_budget','cma_termination','no_new_design_found','optimizer_termination') and
+                    reason in ('evaluation_budget','cma_termination','no_new_design_found','optimizer_termination') and
                     saved.get('status') in ('completed','completed_with_failures','failed')):
-                    finished[problem.name] = saved
+                    terminal = reason != 'evaluation_budget' or spent >= args.budget
+                    if terminal and saved.get('budget') == args.budget and saved_experiment['budget'] == args.budget:
+                        finished[problem.name] = saved
             elif folder.exists() and not pristine_initialization(folder):
                 raise ResumeError(f'Incomplete experiment initialization: {folder}; preserve it for inspection')
             else:
                 spent = 0
             entry = next(e for e in entries if e['problem']==problem.name)
-            entry.update(saved_attempts=spent,remaining_attempts=0 if problem.name in finished else args.budget-spent)
+            entry.update(saved_attempts=spent,remaining_attempts=0 if terminal else args.budget-spent)
             remaining += entry['remaining_attempts']
         plan.update(resume=True,remaining_attempts=remaining)
+        if getattr(args,'_allow_budget_extension',False):
+            plan.update(previous_budget_per_problem=args._saved_budget,
+                        original_budget_per_problem=args._budget_metadata.get('original_budget',args._saved_budget))
     if args.dry_run:
         print(json.dumps(plan,indent=2))
         return 0
@@ -593,18 +668,29 @@ def _run_suite(args):
         plan['runtime_preflight'] = runtime.resolve(commands)
     if not args.resume:
         args.output.mkdir(parents=True,exist_ok=False)
-    with run_lock(args.output/'.suite.lock'):
+    with (nullcontext() if getattr(args,'_suite_locked',False) else run_lock(args.output/'.suite.lock')):
         if args.resume:
             session = next_session(args.output)
-            if (args.output/'suite-summary.json').exists():
-                shutil.copyfile(args.output/'suite-summary.json',session/'suite-summary.json')
-            _save(session/'plan.json',plan)
+            for name in ('suite-summary.json','plan.json','run-options.json'):
+                if (args.output/name).exists():
+                    shutil.copyfile(args.output/name,session/name)
+            _save(session/'resume-plan.json',plan)
+            if getattr(args,'_allow_budget_extension',False):
+                metadata = extend_budget_metadata(args._budget_metadata,args.budget)
+                options = _saved_options(args) | metadata
+                # Commit authorization first. If a later write fails, ordinary
+                # --resume reads this target and finishes updating the manifests.
+                _save(args.output/'run-options.json',options)
+                _save(args.output/'plan.json',plan)
         else:
             _save(args.output/'plan.json',plan)
-            options = {k:str(v.resolve()) if isinstance(v,Path) else v for k,v in vars(args).items()
-                       if k not in ('output','resume','dry_run')}
-            _save(args.output/'run-options.json',options)
+            _save(args.output/'run-options.json',_saved_options(args))
         return _execute_suite(args,problems,entries,finished)
+
+
+def _saved_options(args):
+    return {k:str(v.resolve()) if isinstance(v,Path) else v for k,v in vars(args).items()
+            if not k.startswith('_') and k not in ('output','resume','dry_run','extend_budget','command_timeouts')}
 
 
 def _execute_suite(args,problems,entries,finished):
@@ -631,13 +717,18 @@ def _execute_suite(args,problems,entries,finished):
                 failure_penalty=args.failure_penalty,max_seconds=args.max_seconds_per_problem,progress=progress,
                 bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates,
                 turbo_initial_points=args.turbo_initial_points,turbo_candidates=args.turbo_candidates,
-                resume=args.resume and (args.output/problem.name).exists())
+                resume=args.resume and (args.output/problem.name).exists(),
+                extend_budget=args.budget if getattr(args,'_allow_budget_extension',False)
+                              and (args.output/problem.name).exists() else None)
         except ResumeError:
             raise
         except Exception as exc:
             path = args.output/problem.name/'summary.json'
             result = json.loads(path.read_text()) if path.exists() else dict(
                 problem=problem.name,status='failed',attempts=0,error=f'{type(exc).__name__}: {exc}')
+            # An extension can fail before replacing the previously completed
+            # summary. Do not report that old success as this invocation's result.
+            result.update(status='failed',stop_reason='error',error=f'{type(exc).__name__}: {exc}')
         except KeyboardInterrupt:
             suite['status']='interrupted'
             path = args.output/problem.name/'summary.json'
