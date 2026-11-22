@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 import re
 
-from .samplers import Sampler, RandomSampler, CMAESSampler
+from .samplers import Sampler
+from .random import RandomSampler
+from .cmaes import CMAESSampler
 from .nsga2 import NSGAIISampler
 from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler

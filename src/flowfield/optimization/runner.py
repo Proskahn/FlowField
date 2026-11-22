@@ -27,7 +27,7 @@ from .nsga2 import ParetoArchive
 from .bo import bo_settings
 from .turbo import turbo_settings
 from .lqcmaes import lq_settings
-from .samplers import random_settings
+from .random import random_settings
 from .repair import evaluation_repair_settings
 
 PROBLEMS = list_problems()

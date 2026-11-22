@@ -9,7 +9,7 @@ observations satisfy replay; neither this adapter nor replay executes CFD.
 from copy import deepcopy
 import math
 
-from .samplers import CMAESSampler
+from .cmaes import CMAESSampler
 
 
 def lq_settings():

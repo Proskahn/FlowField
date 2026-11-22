@@ -1,6 +1,8 @@
 """Optimizer interfaces, registration and durable experiment execution."""
 from .runner import optimize, main
-from .samplers import Sampler, RandomSampler, CMAESSampler
+from .samplers import Sampler
+from .random import RandomSampler
+from .cmaes import CMAESSampler
 from .nsga2 import NSGAIISampler
 from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler
