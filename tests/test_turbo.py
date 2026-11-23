@@ -233,7 +233,7 @@ class TuRBOTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'does not support integer'):
             resolve_optimizer(problem, 'turbo')
         problem.variable_type, problem.name = 'real', 'P000'
-        with patch('flowfield.optimization.runner._make_problem', return_value=problem), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        with patch('flowfield.optimization.cli._make_problem', return_value=problem), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--problem', 'P000', '--optimizer', 'turbo', '--budget', '4',
                 '--turbo-initial-points', '3', '--turbo-candidates', '16', '--output', str(self.root/'cli')]), 0)
             self.assertEqual(main(['--resume', '--output', str(self.root/'cli')]), 0)

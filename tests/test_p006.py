@@ -73,7 +73,7 @@ class P006Tests(unittest.TestCase):
                     output=io.StringIO()
                     # Updating the default must not change a saved experiment's
                     # limit. An explicit resume --timeout can change execution.
-                    with patch('flowfield.optimization.runner.P006_TIMEOUT_S',99999), \
+                    with patch('flowfield.optimization.cli.P006_TIMEOUT_S',99999), \
                          contextlib.redirect_stdout(output):
                         self.assertEqual(optimize_main(['--resume','--dry-run',
                             '--output',str(root),*override]),0)
@@ -180,7 +180,7 @@ class P006Tests(unittest.TestCase):
             errors=io.StringIO()
             with patch('flowfield.problems.level1_small_continuous.p006.runtime.distribution',
                        side_effect=PackageNotFoundError('cmeel-eigen')), \
-                 patch('flowfield.optimization.runner.Runtime.resolve') as resolve, \
+                 patch('flowfield.optimization.cli.Runtime.resolve') as resolve, \
                  contextlib.redirect_stderr(errors):
                 with self.assertRaises(SystemExit) as exc:
                     optimize_main(['--problem','P006','--optimizer','random','--budget','100',

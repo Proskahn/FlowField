@@ -1,68 +1,86 @@
-"""Explicit benchmark registry; research folders are not implicitly executable."""
+"""Lazy problem construction, independent of optimizers and CFD execution."""
 
+from dataclasses import dataclass
+from importlib import import_module
 import re
 
-from .problem import AbstractFlowFieldProblem
+from .catalog import BUILTINS, ProblemInfo
 from .config import load_config
-from .problems import P000Problem
-from .problems.level2_medium_parametric.p001 import P001Problem
-from .problems.level2_medium_parametric.p002 import P002Problem
-from .problems.level4_high_dimensional_topology.p003 import P003Problem
-
-from .problems.level3_discrete_combinatorial.p004 import P004Problem, P004HydraulicProblem
-
-from .problems.level1_small_continuous.p005 import P005Problem
-from .problems.level1_small_continuous.p006 import P006Problem
-from .problems.level4_high_dimensional_topology.p007 import P007Problem
-
-from .problems.level1_small_continuous.p008 import P008Problem
-from .problems.level1_small_continuous.p009 import P009Problem
-
-from .problems.level1_small_continuous.p010 import P010Problem
-
-_FACTORIES = {"P010": P010Problem, "P009": P009Problem, "P008": P008Problem, "P007": P007Problem, "P006": P006Problem, "P005": P005Problem, "P000": P000Problem, "P001": P001Problem, "P002": P002Problem, "P003": P003Problem, "P004": P004Problem, "P004-hydraulic": P004HydraulicProblem}
-
-_CONFIG_TYPES = {name: factory.config_type for name, factory in _FACTORIES.items()
-                 if hasattr(factory, 'config_type')}
+from .problem import FlowFieldProblem
 
 
-def list_problems() -> tuple[str, ...]:
-    return tuple(sorted(_FACTORIES))
+@dataclass(frozen=True)
+class _Registration:
+    factory: object
+    info: ProblemInfo
+    config_type: type | None = None
+
+    def resolve(self):
+        if isinstance(self.factory, str):
+            module, name = self.factory.split(":")
+            return getattr(import_module(module), name)
+        return self.factory
 
 
-def register_problem(identifier, factory, *, config_type=None):
-    """Register another factory without replacing an existing benchmark."""
-    if (not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]*', identifier)
+_FACTORIES = {info.identifier: _Registration(factory, info) for factory, info in BUILTINS}
+
+
+def _registration(identifier):
+    try:
+        return _FACTORIES[identifier]
+    except KeyError as exc:
+        raise ValueError(f"Unknown problem {identifier!r}; available: {', '.join(list_problems())}") from exc
+
+
+def list_problems(*, level=None, variable_type=None, evaluation_kind=None) -> tuple[str, ...]:
+    """Discover IDs without constructing problems or loading optional packages."""
+    if level is not None and (type(level) is not int or level not in range(1, 5)):
+        raise ValueError("level must be 1, 2, 3, or 4")
+    if variable_type not in (None, "real", "integer"):
+        raise ValueError("variable_type must be real or integer")
+    if evaluation_kind not in (None, "cfd", "data", "custom"):
+        raise ValueError("evaluation_kind must be cfd, data, or custom")
+    return tuple(sorted(name for name, entry in _FACTORIES.items()
+                        if (level is None or entry.info.level == level)
+                        and (variable_type is None or entry.info.variable_type == variable_type)
+                        and (evaluation_kind is None or entry.info.evaluation_kind == evaluation_kind)))
+
+
+def problem_info(identifier) -> ProblemInfo:
+    """Return static requirements and scope, without checking the local runtime."""
+    return _registration(identifier).info
+
+
+def register_problem(identifier, factory, *, config_type=None, info=None):
+    """Register an external problem; metadata is optional for existing callers."""
+    if (not isinstance(identifier, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", identifier)
             or not callable(factory)):
         raise ValueError("Provide a safe problem identifier and callable problem factory")
     if identifier in _FACTORIES:
         raise ValueError(f"Problem already registered: {identifier}")
-    _FACTORIES[identifier] = factory
-    config_type = config_type or getattr(factory, 'config_type', None)
-    if config_type is not None:
-        _CONFIG_TYPES[identifier] = config_type
-
-
-def create_problem(identifier="P000", **kwargs) -> AbstractFlowFieldProblem:
-    try:
-        factory = _FACTORIES[identifier]
-    except KeyError as exc:
-        raise ValueError(f"Unknown problem {identifier!r}; available: {', '.join(list_problems())}") from exc
-    if 'config' in kwargs and identifier in _CONFIG_TYPES:
-        kwargs['config'] = load_config(_CONFIG_TYPES[identifier], kwargs['config'])
-    problem = factory(**kwargs)
-    if not isinstance(problem, AbstractFlowFieldProblem):
-        raise TypeError(f"Factory for {identifier} must return a AbstractFlowFieldProblem")
-    return problem
+    if info is None:
+        info = ProblemInfo(identifier, identifier, variable_type=getattr(factory, "variable_type", "real"))
+    if not isinstance(info, ProblemInfo) or info.identifier != identifier:
+        raise ValueError("ProblemInfo.identifier must match the registered identifier")
+    _FACTORIES[identifier] = _Registration(factory, info, config_type)
 
 
 def problem_config_type(identifier):
-    """Configuration constructor, or None for a problem without a CFD config."""
-    if identifier not in _FACTORIES:
-        raise ValueError(f'Unknown problem {identifier!r}')
-    return _CONFIG_TYPES.get(identifier)
+    """Resolve only the selected implementation's validated configuration type."""
+    entry = _registration(identifier)
+    return entry.config_type or getattr(entry.resolve(), "config_type", None)
 
 
-# Kept for existing callers. Unlike ioh.get_problem this creates CFD resources
-# and configuration; IOH adapts this instance for logging rather than owning it.
+def create_problem(identifier="P000", **kwargs) -> FlowFieldProblem:
+    entry = _registration(identifier)
+    factory = entry.resolve()
+    config_type = entry.config_type or getattr(factory, "config_type", None)
+    if "config" in kwargs and config_type is not None:
+        kwargs["config"] = load_config(config_type, kwargs["config"])
+    problem = factory(**kwargs)
+    if not isinstance(problem, FlowFieldProblem):
+        raise TypeError(f"Factory for {identifier} must return a FlowFieldProblem")
+    return problem
+
+
 get_problem = create_problem

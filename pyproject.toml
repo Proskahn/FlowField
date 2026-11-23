@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "flowfield-benchmarks"
 version = "0.8.0"
 description = "Reproducible OpenFOAM flow-field optimization benchmarks"
+readme = "docs/benchmark-suite.md"
 requires-python = ">=3.10"
 dependencies = []
 
@@ -25,6 +26,7 @@ p008 = ["numpy>=1.24", "cmeel-eigen==3.4.1"]
 p007 = ["numpy>=1.24", "scipy>=1.10"]
 
 [project.scripts]
+flowfield-p000 = "flowfield.problems.p000.cli:main"
 flowfield-p010 = "flowfield.problems.level1_small_continuous.p010.cli:main"
 flowfield-p009 = "flowfield.problems.level1_small_continuous.p009.cli:main"
 flowfield-p008 = "flowfield.problems.level1_small_continuous.p008.cli:main"
@@ -32,7 +34,7 @@ flowfield-check = "flowfield.stability.cli:main"
 flowfield-p007 = "flowfield.problems.level4_high_dimensional_topology.p007.cli:main"
 flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
 flowfield-p006 = "flowfield.problems.level1_small_continuous.p006.cli:main"
-flowfield-optimize = "flowfield.optimization:main"
+flowfield-optimize = "flowfield.optimization.cli:main"
 flowfield-benchmark = "flowfield.benchmarking.runner:main"
 flowfield-plot = "flowfield.benchmarking.plotting:main"
 flowfield-p004 = "flowfield.problems.level3_discrete_combinatorial.p004.cli:main"

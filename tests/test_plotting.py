@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from flowfield.benchmarking import compare_runs, plot_benchmark, plot_convergence, plot_evaluations, plot_ert, plot_ecdf, plot_fixed_budget
+from flowfield.benchmarking import compare_runs, plot_benchmark, plot_convergence, plot_mean_convergence, plot_evaluations, plot_ert, plot_ecdf, plot_fixed_budget
 from flowfield.benchmarking.plotting import main
 
 
@@ -56,6 +56,105 @@ class PlottingTests(unittest.TestCase):
         self.assertEqual(list(ax.lines[1].get_ydata()), [12, 9, 8, 7])
         self.assertTrue(all(math.isnan(y) for y in ax.lines[2].get_ydata()))
         self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2, 3, 4])
+
+    def test_mean_convergence_averages_incumbents_and_uses_sample_deviation(self):
+        ax = plot_mean_convergence([self.a, self.b])
+        self.assertEqual(list(ax.lines[0].get_ydata()), [11, 9.5, 9, 5.5])
+        self.assertIn('2 seeds', ax.lines[0].get_label())
+        vertices = ax.collections[0].get_paths()[0].vertices
+        first_band = [y for x, y in vertices if x == 1]
+        self.assertAlmostEqual(min(first_band), 11-math.sqrt(2))
+        self.assertAlmostEqual(max(first_band), 11+math.sqrt(2))
+
+    def test_mean_convergence_keeps_all_seeds_and_stops_at_shortest_run(self):
+        first = self.make_run('Short', 1, [(10, True, True)] * 4)
+        second = self.make_run('Short', 2, [(12, True, True), (8, True, True)])
+        ax = plot_mean_convergence([first, second])
+        self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2])
+        self.assertEqual(list(ax.lines[0].get_ydata()), [11, 9])
+
+    def test_mean_convergence_does_not_drop_seeds_without_feasible_results(self):
+        first = self.make_run('Gaps', 1, [(-100, False, False), (8, True, True),
+                                         (6, True, True), (4, True, True)])
+        second = self.make_run('Gaps', 2, [(-100, False, False), (-50, True, False),
+                                          (10, True, True), (9, True, True)])
+        ax = plot_mean_convergence([first, second])
+        values = list(ax.lines[0].get_ydata())
+        self.assertTrue(all(math.isnan(value) for value in values[:2]))
+        self.assertEqual(values[2:], [8, 6.5])
+        never = self.make_run('B', 2, [(10, True, True)] * 4)
+        ax = plot_mean_convergence([self.c, never])
+        self.assertTrue(all(math.isnan(value) for value in ax.lines[0].get_ydata()))
+        self.assertIn('no shared feasible result', ax.lines[0].get_label())
+
+    def test_mean_convergence_cli_five_seeds_is_read_only(self):
+        for seed in (3, 4, 5):
+            self.make_run('A', seed, [(8+2*seed, True, True)] * 4)
+        before = {p: p.read_bytes() for p in self.runs.rglob('*') if p.is_file()}
+        output = self.root/'mean.png'
+        with patch('flowfield.runtime.Runtime.resolve', side_effect=AssertionError('No CFD')):
+            ax = plot_mean_convergence(self.a.parent)
+            self.assertEqual(list(ax.lines[0].get_ydata()), [14, 13.4, 13.2, 11.8])
+            self.assertIn('5 seeds', ax.lines[0].get_label())
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(main([str(self.a.parent), '--kind', 'mean-convergence',
+                                       '--output', str(output)]), 0)
+        self.assertTrue(output.read_bytes().startswith(b'\x89PNG'))
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
+
+    def test_mean_convergence_requires_repeats_completed_runs_and_matching_objective(self):
+        with self.assertRaisesRegex(ValueError, 'at least two seeds'):
+            plot_mean_convergence(self.a)
+        with self.assertRaisesRegex(ValueError, 'Duplicate seeds'):
+            plot_mean_convergence([self.a, self.a])
+        path = self.b/'summary.json'
+        data = json.loads(path.read_text())
+        path.write_text(json.dumps(data | {'status': 'running'}))
+        with self.assertRaisesRegex(ValueError, 'Incomplete run'):
+            plot_mean_convergence([self.a, self.b])
+        path.write_text(json.dumps(data))
+        path = self.b/'experiment.json'
+        data = json.loads(path.read_text())
+        path.write_text(json.dumps(data | {'problem_name': 'DifferentPhysicalObjective'}))
+        with self.assertRaisesRegex(ValueError, 'problem_name'):
+            plot_mean_convergence([self.a, self.b])
+
+    def test_mean_convergence_five_seeds_with_100_and_200_evaluation_budgets(self):
+        folders = []
+        for algorithm, budget in (('TuRBO', 100), ('BO', 200)):
+            for seed in range(42, 47):
+                folder = self.make_run(algorithm, seed,
+                                       [(300+seed-i, True, True) for i in range(budget)])
+                path = folder/'experiment.json'
+                path.write_text(json.dumps(json.loads(path.read_text()) | {'budget': budget}))
+                folders.append(folder)
+        before = {p: p.read_bytes() for folder in folders for p in folder.iterdir()}
+        with patch('flowfield.runtime.Runtime.resolve', side_effect=AssertionError('No CFD')):
+            ax = plot_mean_convergence(folders)
+            self.assertEqual(list(ax.lines[0].get_xdata()), list(range(1, 101)))
+            self.assertEqual(list(ax.lines[1].get_xdata()), list(range(1, 201)))
+            self.assertEqual(list(ax.lines[0].get_ydata()), list(range(344, 244, -1)))
+            self.assertIn('5 seeds', ax.lines[0].get_label())
+            self.assertIn('budget 100', ax.lines[0].get_label())
+            self.assertIn('budget 200', ax.lines[1].get_label())
+            self.assertGreater(ax.get_xlim()[1], 200)
+            self.assertEqual(max(ax.collections[0].get_paths()[0].vertices[:, 0]), 100)
+            output = self.root/'unequal-mean.png'
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(main([str(folder) for folder in folders] +
+                                      ['--kind', 'mean-convergence', '--output', str(output)]), 0)
+        self.assertTrue(output.read_bytes().startswith(b'\x89PNG'))
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
+
+    def test_mean_convergence_mixed_budgets_within_optimizer_keeps_all_seeds(self):
+        longer = self.make_run('A', 3, [(12-i, True, True) for i in range(8)])
+        path = longer/'experiment.json'
+        path.write_text(json.dumps(json.loads(path.read_text()) | {'budget': 8}))
+        ax = plot_mean_convergence([self.a, longer])
+        self.assertEqual(list(ax.lines[0].get_xdata()), [1, 2, 3, 4])
+        self.assertEqual(list(ax.lines[0].get_ydata()), [11, 10.5, 10, 6.5])
+        self.assertIn('2 seeds', ax.lines[0].get_label())
+        self.assertIn('budget 4, 8', ax.lines[0].get_label())
 
     def test_individual_evaluations_keep_variation_and_exclude_failed_cfd(self):
         ax = plot_evaluations(self.a)
@@ -220,7 +319,7 @@ class PlottingTests(unittest.TestCase):
 class OptionalPlottingTests(unittest.TestCase):
     def test_public_import_does_not_load_matplotlib(self):
         subprocess.run([sys.executable, '-c',
-            'import sys; from flowfield.benchmarking import plot_benchmark; '
+            'import sys; from flowfield.benchmarking import plot_benchmark, plot_mean_convergence; '
             'assert "matplotlib" not in sys.modules'], check=True, capture_output=True)
 
 

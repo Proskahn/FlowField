@@ -185,7 +185,7 @@ class BOTests(unittest.TestCase):
         self.assertFalse((self.root/'plan').exists())
         problem = Quadratic()
         problem.name = 'P000'
-        with patch('flowfield.optimization.runner._make_problem', return_value=problem), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        with patch('flowfield.optimization.cli._make_problem', return_value=problem), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--problem', 'P000', '--optimizer', 'bo', '--budget', '4',
                 '--bo-initial-points', '3', '--bo-candidates', '32', '--output', str(self.root/'cli')]), 0)
             self.assertEqual(main(['--resume', '--output', str(self.root/'cli')]), 0)

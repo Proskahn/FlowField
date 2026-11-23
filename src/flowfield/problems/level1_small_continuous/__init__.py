@@ -1,11 +1,23 @@
-"""Level I: small-scale continuous optimization, normally 2–5 variables."""
+"""level1_small_continuous: lazy compatibility exports for problem implementations."""
+from flowfield._lazy import resolve_export
 
-from .p005 import P005Problem, DualLayerConfig
+_EXPORTS = {'P005Problem': 'flowfield.problems.level1_small_continuous.p005:P005Problem',
+ 'P006Problem': 'flowfield.problems.level1_small_continuous.p006:P006Problem',
+ 'P008Problem': 'flowfield.problems.level1_small_continuous.p008:P008Problem',
+ 'P009Problem': 'flowfield.problems.level1_small_continuous.p009:P009Problem',
+ 'P010Problem': 'flowfield.problems.level1_small_continuous.p010:P010Problem',
+ 'DualLayerConfig': 'flowfield.problems.level1_small_continuous.p005:DualLayerConfig',
+ 'ManifoldConfig': 'flowfield.problems.level1_small_continuous.p006:ManifoldConfig',
+ 'AEMConfig': 'flowfield.problems.level1_small_continuous.p008:AEMConfig',
+ 'ChenConfig': 'flowfield.problems.level1_small_continuous.p009:ChenConfig',
+ 'PEMFCConfig': 'flowfield.problems.level1_small_continuous.p010:PEMFCConfig'}
 
-__all__ = ["P005Problem", "DualLayerConfig"]
+__all__ = [] + list(_EXPORTS)
 
-from .p008 import P008Problem, AEMConfig
-__all__ += ["P008Problem", "AEMConfig"]
 
-from .p009 import P009Problem, ChenConfig
-__all__ += ["P009Problem", "ChenConfig"]
+def __getattr__(name):
+    return resolve_export(name, _EXPORTS, globals())
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))

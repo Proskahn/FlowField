@@ -174,14 +174,14 @@ class LQCMAESTests(unittest.TestCase):
             self.skipTest('optional IOH unavailable')
         folder = self.root/'cli'
         before = CountingProblem(interrupt=10); before.name = 'P000'
-        with patch('flowfield.optimization.runner._make_problem', return_value=before), \
+        with patch('flowfield.optimization.cli._make_problem', return_value=before), \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--problem','P000','--optimizer','lqcmaes','--population','8',
                 '--budget','24','--seed','0','--failure-penalty','1000000','--ioh',
                 '--output',str(folder)]), 130)
         old_ioh = {p:p.read_bytes() for p in (folder/'P000/ioh').rglob('*') if p.is_file()}
         after = CountingProblem(); after.name = 'P000'
-        with patch('flowfield.optimization.runner._make_problem', return_value=after), \
+        with patch('flowfield.optimization.cli._make_problem', return_value=after), \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--resume','--output',str(folder)]), 1)
         self.assertEqual(len(before.calls)+len(after.calls), 24)

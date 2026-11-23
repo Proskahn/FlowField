@@ -1,5 +1,16 @@
-"""Level IV: distributed topology fields; each model records its validation status."""
-from .p003 import P003Problem, TopologyConfig
-from .p007 import P007Problem
+"""level4_high_dimensional_topology: lazy compatibility exports for problem implementations."""
+from flowfield._lazy import resolve_export
 
-__all__ = ["P003Problem", "TopologyConfig", "P007Problem"]
+_EXPORTS = {'P003Problem': 'flowfield.problems.level4_high_dimensional_topology.p003:P003Problem',
+ 'P007Problem': 'flowfield.problems.level4_high_dimensional_topology.p007:P007Problem',
+ 'TopologyConfig': 'flowfield.problems.level4_high_dimensional_topology.p003:TopologyConfig'}
+
+__all__ = [] + list(_EXPORTS)
+
+
+def __getattr__(name):
+    return resolve_export(name, _EXPORTS, globals())
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))

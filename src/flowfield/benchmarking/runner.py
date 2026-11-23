@@ -6,10 +6,10 @@ from pathlib import Path
 
 from ..evaluation import write_json
 from ..optimization import optimize, list_optimizers
-from ..optimization.registry import resolve_optimizer
 from ..optimization.state import save_json
 from ..registry import create_problem, list_problems, problem_config_type
 from ..runtime import Runtime, DEFAULT_IMAGE
+from .planning import plan_benchmark
 
 
 def run_benchmark(*, problems, optimizers, seeds, budget, output,
@@ -22,32 +22,14 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
     so the entire output directory can be moved for analysis.
     """
     problems, optimizers, seeds = list(problems), list(optimizers), list(seeds)
-    for name, values in (('problems', problems), ('optimizers', optimizers), ('seeds', seeds)):
-        if not values or len(set(values)) != len(values):
-            raise ValueError(f'{name} must be a nonempty sequence without duplicates')
-    if any(type(seed) is not int or not 0 <= seed < 2**32 for seed in seeds):
-        raise ValueError('Seeds must be integers in [0, 2**32)')
-    if type(budget) is not int or budget < 1:
-        raise ValueError('budget must be a positive integer')
-    if set(problems) - set(list_problems()) or set(optimizers) - set(list_optimizers()):
-        raise ValueError('Select registered problem and optimizer IDs')
     problem_options = problem_options or {}
     optimizer_options = optimizer_options or {}
-    for options in optimizer_options.values():
-        if set(options) - {'population', 'sigma', 'failure_penalty', 'max_seconds', 'bo_initial_points', 'bo_candidates',
-                           'turbo_initial_points', 'turbo_candidates'}:
-            raise ValueError('Optimizer options may only set population, sigma, failure_penalty, max_seconds, '
-                             'bo_initial_points, bo_candidates, turbo_initial_points, turbo_candidates')
-    # Validate problem construction and algorithm compatibility before creating output.
-    for identifier in problems:
-        problem = create_problem(identifier, **problem_options.get(identifier, {}))
-        for optimizer in optimizers:
-            resolve_optimizer(problem, optimizer)
+    plan = plan_benchmark(problems=problems, optimizers=optimizers, seeds=seeds, budget=budget,
+                          problem_options=problem_options, optimizer_options=optimizer_options,
+                          with_ioh=with_ioh)
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
-    manifest = dict(schema_version=1, status='running', problems=problems,
-                    optimizers=optimizers, seeds=seeds, budget=budget, ioh_enabled=with_ioh,
-                    runs=[], objective_direction='minimize')
+    manifest = dict(plan, status='running', runs=[])
     write_json(output / 'benchmark.json', manifest)
     try:
         for identifier in problems:
@@ -91,10 +73,14 @@ def main(argv=None):
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=1800)
     parser.add_argument('--no-ioh', action='store_true', help='Keep JSON traces without IOH export')
+    parser.add_argument('--dry-run', action='store_true', help='Validate and print the experiment plan without CFD or files')
+    data = parser.add_mutually_exclusive_group()
+    data.add_argument('--dataset', type=Path, help='Dataset for a single data-backed problem')
+    data.add_argument('--model', type=Path, help='Trained surrogate for a single data-backed problem')
     args = parser.parse_args(argv)
     try:
-        if args.config and len(args.problems) != 1:
-            raise ValueError('--config requires one problem; use problem_options in Python for multiple configs')
+        if (args.config or args.dataset or args.model) and len(args.problems) != 1:
+            raise ValueError('--config/--dataset/--model require one problem; use problem_options in Python for multiple configs')
         options = {}
         for name in args.problems:
             options[name] = {}
@@ -102,8 +88,14 @@ def main(argv=None):
                 options[name]['runtime'] = Runtime(args.backend, args.image, args.timeout)
             if args.config:
                 options[name]['config'] = args.config
-        result = run_benchmark(problems=args.problems, optimizers=args.optimizers, seeds=args.seeds,
-            budget=args.budget, output=args.output, problem_options=options, with_ioh=not args.no_ioh)
+            if args.dataset:
+                options[name]['dataset'] = args.dataset
+            if args.model:
+                options[name]['model'] = args.model
+        arguments = dict(problems=args.problems, optimizers=args.optimizers, seeds=args.seeds,
+                         budget=args.budget, problem_options=options, with_ioh=not args.no_ioh)
+        result = (plan_benchmark(**arguments) if args.dry_run
+                  else run_benchmark(**arguments, output=args.output))
     except (OSError, ValueError, TypeError, RuntimeError) as exc:
         parser.exit(1, f'flowfield-benchmark: {exc}\n')
     print(json.dumps(result, indent=2))

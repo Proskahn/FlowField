@@ -13,5 +13,6 @@
 # AI-generated local guides and reports; keep them on disk, outside version control.
 /README.md
 /docs/**/*.md
+!/docs/benchmark-suite.md
 /benchmarks/P*/*.md
 /src/flowfield/problems/**/README.md

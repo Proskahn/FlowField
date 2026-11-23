@@ -131,7 +131,7 @@ class P005Tests(unittest.TestCase):
 
     def test_general_search_routes_p005_to_its_physical_config(self):
         from flowfield.cli import main as flowfield_main
-        with patch('flowfield.optimization.runner._execute_suite',return_value=0) as run, \
+        with patch('flowfield.optimization.cli._execute_suite',return_value=0) as run, \
              patch('flowfield.runtime.Runtime.resolve',return_value={'backend':'native'}):
             flowfield_main(['search','--problem','P005','--mesh','medium','--optimizer','random',
                             '--budget','1','--output',str(self.root/'search'),'--backend','native'])

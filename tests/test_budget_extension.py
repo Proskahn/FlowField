@@ -51,7 +51,7 @@ class BudgetExtensionTests(unittest.TestCase):
     def cli(self, folder, problem, *args):
         problem.name = 'P000'
         output, error = io.StringIO(), io.StringIO()
-        with patch('flowfield.optimization.runner._make_problem', return_value=problem), \
+        with patch('flowfield.optimization.cli._make_problem', return_value=problem), \
              contextlib.redirect_stdout(output), contextlib.redirect_stderr(error):
             code = main(['--output', str(folder), *args])
         return code, output.getvalue(), error.getvalue()
@@ -184,7 +184,7 @@ class BudgetExtensionTests(unittest.TestCase):
                 raise OSError(errno.EDQUOT,'simulated quota failure')
             save_json(path,value)
         after = CountingProblem()
-        with patch('flowfield.optimization.runner._save',side_effect=quota), self.assertRaises(SystemExit):
+        with patch('flowfield.optimization.cli._save',side_effect=quota), self.assertRaises(SystemExit):
             self.cli(folder,after,'--resume','--extend-budget','13')
         self.assertEqual(after.calls, [])
         self.assertEqual(self.read(folder/'run-options.json')['budget'],13)
@@ -260,7 +260,7 @@ class BudgetExtensionTests(unittest.TestCase):
             problems = {name: CountingProblem() for name in ('P000','P002')}
             for name, problem in problems.items():
                 problem.name = name
-            with patch('flowfield.optimization.runner._make_problem',side_effect=lambda name,args:problems[name]), \
+            with patch('flowfield.optimization.cli._make_problem',side_effect=lambda name,args:problems[name]), \
                  contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 code = main(['--output',str(folder),*args])
             return code, problems

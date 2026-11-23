@@ -1,10 +1,17 @@
-"""Level II: medium-dimensional parametric optimization, normally 6–20 variables.
+"""level2_medium_parametric: lazy compatibility exports for problem implementations."""
+from flowfield._lazy import resolve_export
 
-P001 is an executable, provisional geometry reconstruction; paper validation
-remains outstanding and is explicitly recorded in every evaluation.
-"""
+_EXPORTS = {'P001Problem': 'flowfield.problems.level2_medium_parametric.p001:P001Problem',
+ 'P002Problem': 'flowfield.problems.level2_medium_parametric.p002:P002Problem',
+ 'PPFCConfig': 'flowfield.problems.level2_medium_parametric.p001:PPFCConfig',
+ 'PEMConfig': 'flowfield.problems.level2_medium_parametric.p002:PEMConfig'}
 
-from .p001 import P001Problem, PPFCConfig
-from .p002 import P002Problem, PEMConfig
+__all__ = [] + list(_EXPORTS)
 
-__all__ = ["P001Problem", "PPFCConfig", "P002Problem", "PEMConfig"]
+
+def __getattr__(name):
+    return resolve_export(name, _EXPORTS, globals())
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))

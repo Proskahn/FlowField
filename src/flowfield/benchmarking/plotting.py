@@ -9,7 +9,9 @@ Fixed-budget and target-based comparisons require matching budgets and policies.
 
 import argparse
 from collections import Counter
+import math
 from pathlib import Path
+from statistics import fmean, stdev
 import textwrap
 
 from .analysis import compare_runs
@@ -73,6 +75,41 @@ def _convergence(report, ax):
                     alpha=.8 if len(runs) == 1 else .55, marker='.' if run['attempts'] == 1 else None,
                     label=label if number == 0 else None)
     _style(ax, 'Convergence · individual runs', 'Evaluation attempts', 'Best feasible objective ↓')
+    ax.set_xlim(.5, report['budget'] + .5)
+    ax.legend(fontsize='small')
+
+
+def _mean_convergence(report, ax):
+    for index, (algorithm, group) in enumerate(report['algorithms'].items()):
+        runs = group['runs']
+        if len(runs) < 2:
+            raise ValueError(f'Mean convergence requires at least two seeds for {algorithm}')
+        # zip stops at the shortest run: the seed cohort never shrinks, and no
+        # values are extrapolated after an optimizer has stopped evaluating.
+        means, deviations = [], []
+        for values in zip(*(run['best_so_far'] for run in runs)):
+            if any(value is None for value in values):
+                # A successful-seeds-only mean would hide missing incumbents.
+                mean = deviation = float('nan')
+            else:
+                mean, deviation = fmean(values), stdev(values)
+            means.append(mean)
+            deviations.append(deviation)
+        xs = range(1, len(means) + 1)
+        color = f'C{index % 10}'
+        label = f'{algorithm} ({len(runs)} seeds)'
+        if len(report['budgets']) > 1:
+            label += '; budget ' + ', '.join(str(b) for b in sorted({r['budget'] for r in runs}))
+        if not any(math.isfinite(value) for value in means):
+            label += '; no shared feasible result'
+        ax.step(xs, means, where='post', color=color,
+                linestyle=('-', '--', '-.', ':')[index % 4],
+                marker='.' if len(means) == 1 else None, label=label)
+        ax.fill_between(xs, [m-s for m, s in zip(means, deviations)],
+                        [m+s for m, s in zip(means, deviations)],
+                        step='post', color=color, alpha=.18, linewidth=0)
+    _style(ax, 'Mean convergence · shaded ±1 sample standard deviation',
+           'Evaluation attempts', 'Mean best feasible objective ↓')
     ax.set_xlim(.5, report['budget'] + .5)
     ax.legend(fontsize='small')
 
@@ -186,6 +223,19 @@ def plot_convergence(directories, *, ax=None, output=None):
                  allow_different_failure_policies=True)
 
 
+def plot_mean_convergence(directories, *, ax=None, output=None):
+    """Mean best-so-far across seeds, shaded by ±1 sample standard deviation.
+
+    Requires completed runs with matching objective and failure policy, and at
+    least two seeds per optimizer. Different budgets are labeled in the legend.
+    Each mean stops at that optimizer's shortest run, without extrapolation or
+    dropping shorter seeds. A point is missing until every seed has a feasible incumbent;
+    failed seeds are never silently dropped. The band describes seed variation,
+    not a confidence interval. Return an Axes without changing saved runs.
+    """
+    return _plot(directories, _mean_convergence, ax=ax, output=output, allow_unequal_budgets=True)
+
+
 def plot_evaluations(directories, *, ax=None, output=None):
     """Plot each valid candidate's scalar objective, including constraint penalties.
 
@@ -247,7 +297,7 @@ def plot_benchmark(directories, *, targets=(), output=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Plot saved FlowField runs; no CFD is executed')
     parser.add_argument('runs', nargs='+', type=Path, help='Run directories or parents containing runs of one problem')
-    parser.add_argument('--kind', choices=('all', 'convergence', 'evaluations', 'fixed-budget', 'ert', 'ecdf'), default='all')
+    parser.add_argument('--kind', choices=('all', 'convergence', 'mean-convergence', 'evaluations', 'fixed-budget', 'ert', 'ecdf'), default='all')
     parser.add_argument('--targets', type=float, nargs='+', default=[])
     parser.add_argument('--output', type=Path, required=True, help='PNG, SVG or PDF file')
     args = parser.parse_args(argv)
@@ -259,6 +309,7 @@ def main(argv=None):
             function(args.runs, targets=args.targets, output=args.output)
         else:
             function = {'convergence': plot_convergence, 'evaluations': plot_evaluations,
+                        'mean-convergence': plot_mean_convergence,
                         'fixed-budget': plot_fixed_budget}[args.kind]
             function(args.runs, output=args.output)
     except (OSError, ValueError, TypeError, RuntimeError) as exc:

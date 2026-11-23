@@ -36,6 +36,11 @@ class P004Problem(AbstractFlowFieldProblem):
     def sample_design(self,rng):
         ids=sorted(self.dataset.labels) if self.dataset else range(len(catalog()))
         return path_from_id(ids[rng.randrange(len(ids))])
+    def validate_optimization(self):
+        if self.dataset is None and self.model is None:
+            raise MissingPaperDataError('P004 current-density evaluation requires an explicit dataset or trained model; author labels are not bundled')
+    def preflight(self):
+        self.validate_optimization()
     def evaluate_raw(self,x):
         self.last_result=None;geometry=self.decode(x);identifier=geometry['library_id']
         if self.dataset:
@@ -56,6 +61,10 @@ class P004Problem(AbstractFlowFieldProblem):
 class P004HydraulicProblem(P004Problem, CFDProblem):
     """Auxiliary pressure-drop benchmark; never substitutes for fuel-cell current."""
     config_type = HydraulicConfig
+
+    def validate_optimization(self):
+        # This separate hydraulic benchmark does not consume current labels.
+        pass
 
     @property
     def case_definition(self):
