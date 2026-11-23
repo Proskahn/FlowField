@@ -2,13 +2,14 @@
 
 Matplotlib is optional and loaded only when creating a figure. Functions accept
 one run directory, a parent directory containing runs, or a list of either.
-Runs must share objective/configuration and dimension. Convergence permits
-different budgets and optimizer failure policies, labeled in the legend.
+Runs must share objective/configuration and dimension. Evaluation and convergence
+plots permit different budgets and optimizer failure policies, labeled in the legend.
 Fixed-budget and target-based comparisons require matching budgets and policies.
 """
 
 import argparse
 from collections import Counter
+import json
 import math
 from pathlib import Path
 from statistics import fmean, stdev
@@ -17,8 +18,7 @@ import textwrap
 from .analysis import compare_runs
 
 
-def _comparison(directories, targets=(), *, allow_unequal_budgets=False,
-                allow_different_failure_policies=False):
+def _run_directories(directories):
     if isinstance(directories, (str, Path)):
         directories = [directories]
     runs = []
@@ -31,7 +31,13 @@ def _comparison(directories, targets=(), *, allow_unequal_budgets=False,
         if not manifests:
             raise ValueError(f'No experiment.json files found in {directory}')
         runs.extend(path.parent for path in manifests)
-    return compare_runs(runs, targets=targets, allow_unequal_budgets=allow_unequal_budgets,
+    return runs
+
+
+def _comparison(directories, targets=(), *, allow_unequal_budgets=False,
+                allow_different_failure_policies=False):
+    return compare_runs(_run_directories(directories), targets=targets,
+                        allow_unequal_budgets=allow_unequal_budgets,
                         allow_different_failure_policies=allow_different_failure_policies)
 
 
@@ -114,28 +120,36 @@ def _mean_convergence(report, ax):
     ax.legend(fontsize='small')
 
 
-def _evaluations(report, ax):
-    for index, (algorithm, group) in enumerate(report['algorithms'].items()):
-        color = f'C{index % 10}'
+def _evaluations(report, ax, *, objective=None):
+    series = 0
+    for algorithm, group in report['algorithms'].items():
         for run in group['runs']:
+            color = f'C{series % 10}'
             rows = run['evaluations']
-            values = [float('nan') if r['objective'] is None else r['objective'] for r in rows]
+            values = [r['objective'] if objective is None else r['objectives'].get(objective)
+                      for r in rows]
             failed = sum(r['objective'] is None for r in rows)
             label = f'{algorithm}; seed {run["seed"]}'
             if len(report['budgets']) > 1:
                 label += f'; budget {run["budget"]}'
             if failed:
                 label += f'; {failed} failed CFD (omitted)'
-            ax.plot(range(1, run['attempts']+1), values, color=color, alpha=.7,
-                    linestyle=('-', '--', '-.', ':')[index % 4], label=label)
+            missing = sum(value is None and row['objective'] is not None
+                          for value, row in zip(values, rows))
+            if missing:
+                label += f'; {missing} missing values (gaps)'
+            ax.plot(range(1, run['attempts']+1),
+                    [float('nan') if value is None else value for value in values], color=color, alpha=.7,
+                    linestyle=('-', '--', '-.', ':')[(series // 10) % 4], label=label)
             for feasible, marker in ((True, 'o'), (False, 'x')):
-                points = [(i, r['objective']) for i, r in enumerate(rows, 1)
-                          if r['objective'] is not None and r['feasible'] == feasible]
+                points = [(i, value) for i, (value, row) in enumerate(zip(values, rows), 1)
+                          if value is not None and row['feasible'] == feasible]
                 if points:
                     xs, ys = zip(*points)
                     ax.scatter(xs, ys, marker=marker, color=color, s=28, zorder=3)
+            series += 1
     _style(ax, 'Individual evaluations · circles: feasible; crosses: infeasible',
-           'Evaluation attempts', 'Scalar objective ↓')
+           'Evaluation attempts', 'Scalar objective ↓' if objective is None else f'{objective} ↓')
     ax.set_xlim(.5, report['budget']+.5)
     ax.legend(fontsize='small')
 
@@ -247,6 +261,153 @@ def plot_evaluations(directories, *, ax=None, output=None):
                  allow_different_failure_policies=True)
 
 
+def plot_objectives(directories, *, output=None):
+    """Return a Figure with the scalar and each named raw objective over attempts.
+
+    Each panel has its own y scale and one trace per run, using saved candidate
+    values, not best-so-far values. The first panel shows the scalar (including
+    constraint penalties); subsequent panels show result['objectives'] in sorted
+    name order and their original units/signs. Scalar-only journals still work.
+    Iterations are evaluation attempts, including the baseline and failures,
+    rather than optimizer generations. Failed or missing values remain gaps;
+    circles mark feasible candidates and crosses mark constraint violations.
+    Completed runs must share objective/configuration and dimension. Different
+    budgets and failure policies are allowed and labeled as in plot_evaluations.
+    """
+    report = _comparison(directories, allow_unequal_budgets=True,
+                         allow_different_failure_policies=True)
+    names = set()
+    for algorithm, group in report['algorithms'].items():
+        for run in group['runs']:
+            for index, row in enumerate(run['evaluations'], 1):
+                objectives = row['objectives']
+                context = f'{algorithm}; seed {run["seed"]}; evaluation {index}'
+                if not isinstance(objectives, dict) or any(
+                        not isinstance(name, str) or not name for name in objectives):
+                    raise ValueError(f'Raw objectives must be a dictionary of named numbers: {context}')
+                if any(isinstance(value, bool) or not isinstance(value, (int, float))
+                       or not math.isfinite(value) for value in objectives.values()):
+                    raise ValueError(f'Raw objectives must be finite numbers: {context}')
+                names.update(objectives)
+    objectives = [None, *sorted(names)]
+    figure = _figure((9, 3.5 * len(objectives)))
+    from matplotlib.ticker import MaxNLocator
+    axes = figure.subplots(len(objectives), 1, sharex=True, squeeze=False).flat
+    for objective, ax in zip(objectives, axes):
+        _evaluations(report, ax, objective=objective)
+        ax.set_title('Scalar objective' if objective is None else f'Raw objective · {objective}')
+        ax.label_outer()
+    figure.axes[-1].xaxis.set_major_locator(MaxNLocator(integer=True))
+    title = textwrap.fill(f'{report["problem_name"]} · objective history', width=105)
+    figure.suptitle(title + '\nCircles: feasible; crosses: infeasible; gaps: failed or missing values',
+                   fontsize=11)
+    _save(figure, output)
+    return figure
+
+
+def _pareto_archives(directories):
+    if isinstance(directories, (str, Path)):
+        directories = [directories]
+    directories = [Path(d).parent if Path(d).is_file() and Path(d).name == 'pareto.json'
+                   else Path(d) for d in directories]
+    runs, seeds = [], set()
+    identity = names = reference = None
+    for folder in _run_directories(directories):
+        path = folder / 'pareto.json'
+        if not path.is_file():
+            raise ValueError(f'No pareto.json found in {folder}; use a saved NSGA-II run')
+        experiment = json.loads((folder / 'experiment.json').read_text())
+        archive = json.loads(path.read_text())
+        current = (experiment['problem_name'], experiment['dimension'], experiment.get('failure_penalty'))
+        if identity is not None and current != identity:
+            raise ValueError('Pareto comparisons require the same objective/configuration, dimension and failure policy. '
+                             f'Mismatch between {reference} and {folder}')
+        identity, reference = current, folder
+        if not isinstance(archive, dict) or archive.get('objective_direction') != 'minimize':
+            raise ValueError(f'Pareto archive must declare objective_direction="minimize": {path}')
+        current_names = archive.get('objective_names')
+        if (not isinstance(current_names, list) or len(current_names) < 2
+                or any(not isinstance(name, str) or not name for name in current_names)
+                or len(set(current_names)) != len(current_names)):
+            raise ValueError(f'Pareto plotting requires at least two distinct named objectives: {path}')
+        current_names = tuple(sorted(current_names))
+        if names is not None and current_names != names:
+            raise ValueError(f'Pareto archives have different objective names: {path}')
+        names = current_names
+        solutions = archive.get('solutions')
+        if not isinstance(solutions, list):
+            raise ValueError(f'Pareto archive solutions must be a list: {path}')
+        points = []
+        for record in solutions:
+            if not isinstance(record, dict) or record.get('valid') is not True or record.get('feasible') is not True:
+                raise ValueError(f'Pareto archive contains an invalid or infeasible solution: {path}')
+            result = record.get('result')
+            values = result.get('objectives') if isinstance(result, dict) else None
+            if not isinstance(values, dict) or set(values) != set(names):
+                raise ValueError(f'Pareto solution objective names do not match the archive: {path}')
+            if any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(value) for value in values.values()):
+                raise ValueError(f'Pareto objectives must be finite numbers: {path}')
+            points.append(tuple(values[name] for name in names))
+        key = (experiment['algorithm'], experiment['seed'])
+        if key in seeds:
+            raise ValueError(f'Duplicate seeds for {key[0]}; do not plot a resumed archive as a new run')
+        seeds.add(key)
+        runs.append(dict(algorithm=key[0], seed=key[1], budget=experiment['budget'], points=points))
+    if not runs:
+        raise ValueError('Provide at least one saved NSGA-II run')
+    return identity[0], names, runs
+
+
+def plot_pareto(directories, *, objectives=None, ax=None, output=None):
+    """Plot saved NSGA-II Pareto archives; return an Axes without running CFD.
+
+    Accept run directories, parents containing runs, or pareto.json paths with
+    adjacent experiment.json manifests. Saved snapshots of interrupted runs are
+    supported: this shows the archive, not a claim that optimization completed.
+    Each archive contains all observed feasible nondominated designs, including
+    partial generations. Scalar diagnostics are never used as coordinates.
+
+    Two objectives are selected automatically in alphabetical order. For larger
+    vectors, pass objectives=(x_name, y_name) to project the full Pareto set;
+    dominance is not recomputed in that projection. Two-objective points are
+    connected in x order as a visual guide, while projections use markers only.
+    All objectives are minimized, retaining their saved signs and units. Runs
+    must share objective/configuration (including failure policy) and dimension;
+    different budgets are labeled. Empty archives with known axes are shown.
+    """
+    problem_name, names, runs = _pareto_archives(directories)
+    if objectives is None:
+        if len(names) != 2:
+            raise ValueError('Select two objective names with objectives=(x, y) or --objectives X Y. '
+                             f'Available: {", ".join(names)}')
+        objectives = names
+    if (not isinstance(objectives, (list, tuple)) or len(objectives) != 2
+            or any(name not in names for name in objectives) or objectives[0] == objectives[1]):
+        raise ValueError(f'Choose two distinct objective names from: {", ".join(names)}')
+    x_index, y_index = (names.index(name) for name in objectives)
+    if ax is None:
+        ax = _figure((8, 5.5)).subplots()
+    for index, run in enumerate(runs):
+        points = sorted((point[x_index], point[y_index]) for point in run['points'])
+        label = f'{run["algorithm"]}; seed {run["seed"]}; budget {run["budget"]}'
+        label += (f'; {len(points)} {"design" if len(points) == 1 else "designs"}'
+                  if points else '; no feasible Pareto points')
+        ax.plot([point[0] for point in points], [point[1] for point in points],
+                marker=('o', 's', '^', 'D')[(index // 10) % 4], color=f'C{index % 10}',
+                linestyle='-' if len(names) == 2 else 'None', label=label, alpha=.85)
+    title = 'Saved Pareto front' if len(names) == 2 else f'Saved Pareto front · projection from {len(names)} objectives'
+    _style(ax, title + '\n' + textwrap.fill(problem_name, width=80),
+           f'{objectives[0]} ↓', f'{objectives[1]} ↓')
+    ax.title.set_fontsize(11)
+    if not any(run['points'] for run in runs):
+        ax.text(.5, .5, 'No feasible Pareto points in the saved archives',
+                ha='center', va='center', transform=ax.transAxes)
+    ax.legend(fontsize='small')
+    _save(ax.figure, output)
+    return ax
+
+
 def plot_fixed_budget(directories, *, ax=None, output=None):
     """Final-incumbent distribution and feasibility counts; return an Axes.
 
@@ -297,18 +458,25 @@ def plot_benchmark(directories, *, targets=(), output=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Plot saved FlowField runs; no CFD is executed')
     parser.add_argument('runs', nargs='+', type=Path, help='Run directories or parents containing runs of one problem')
-    parser.add_argument('--kind', choices=('all', 'convergence', 'mean-convergence', 'evaluations', 'fixed-budget', 'ert', 'ecdf'), default='all')
+    parser.add_argument('--kind', choices=('all', 'convergence', 'mean-convergence', 'evaluations', 'objectives', 'pareto', 'fixed-budget', 'ert', 'ecdf'), default='all')
+    parser.add_argument('--objectives', nargs=2, metavar=('X', 'Y'),
+                        help='Raw objective names for the Pareto x and y axes')
     parser.add_argument('--targets', type=float, nargs='+', default=[])
     parser.add_argument('--output', type=Path, required=True, help='PNG, SVG or PDF file')
     args = parser.parse_args(argv)
+    if args.objectives is not None and args.kind != 'pareto':
+        parser.error('--objectives is only supported with --kind pareto')
     try:
         if args.kind == 'all':
             plot_benchmark(args.runs, targets=args.targets, output=args.output)
         elif args.kind in ('ert', 'ecdf'):
             function = plot_ert if args.kind == 'ert' else plot_ecdf
             function(args.runs, targets=args.targets, output=args.output)
+        elif args.kind == 'pareto':
+            plot_pareto(args.runs, objectives=args.objectives, output=args.output)
         else:
             function = {'convergence': plot_convergence, 'evaluations': plot_evaluations,
+                        'objectives': plot_objectives,
                         'mean-convergence': plot_mean_convergence,
                         'fixed-budget': plot_fixed_budget}[args.kind]
             function(args.runs, output=args.output)

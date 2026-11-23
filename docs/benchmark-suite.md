@@ -43,6 +43,13 @@ geometry = problem.decode(x)            # Pure, no files or solver
 
 A configuration mapping or JSON file can be supplied to both `create_problem`
 and `describe_problem`. For P003/P007 it also controls the design-field dimension.
+Each problem's `config.py` groups fields by geometry, physical parameters,
+initial conditions, boundary conditions, mesh/discretization, solver controls,
+objectives/constraints, and diagnostics/output. Topology problems also separate
+filtering and projection settings. Comments identify conditions defined in case
+generators or reference data. These are source sections; configuration JSON
+remains flat. Construct configuration objects with keyword arguments, since
+dataclass field order follows these sections.
 Fixed-dimensional problems retain their physical parameterization. Continuous
 built-ins retain their existing [0,1] bounds, and integer paths retain their
 integrality and graph constraints. MECHBench's [-5,5] coordinates are a convention,
@@ -120,6 +127,76 @@ optimizer revision, dependency versions and recovery semantics. Analysis and
 plotting consume saved traces; they do not call the problem again. Comparisons
 remain restricted to matching objective identities and dimensions unless an
 existing explicit analysis override is used.
+
+## Plot objective histories
+
+Plot the scalar score and every named raw objective against evaluation attempts:
+
+```bash
+python -m pip install -e '.[plot]'
+flowfield plot runs/my-run --kind objectives --output runs/plots/objectives.png
+```
+
+```python
+from flowfield.benchmarking import plot_objectives
+
+figure = plot_objectives('runs/my-run', output='runs/plots/objectives.pdf')
+```
+
+The returned Matplotlib Figure has a scalar panel followed by one panel per raw
+objective in alphabetical order, each with its own y scale. This supports scalar
+and multi-objective optimizers, including scalarized problems whose raw
+components have different units. Raw values retain their saved names, signs and
+units; the scalar includes any constraint penalties. Journals without named
+objectives produce just the scalar panel.
+
+An iteration here is one evaluation attempt, including the baseline and failed
+attempts, rather than an optimizer generation. Curves show candidate values,
+not best-so-far values. Circles mark feasible candidates, crosses mark constraint
+violations, and failed or missing values leave gaps. A missing component never
+falls back to the scalar score. Lines stop at the last actual attempt.
+
+Pass one run directory, a parent directory, or a list of directories to compare
+completed runs of the same problem/configuration and dimension. Different
+budgets and optimizer failure policies are labeled in the legends. PNG, SVG and
+PDF are supported. Plotting only reads saved journals; it never reruns CFD.
+
+## Plot an NSGA-II Pareto front
+
+Use the saved `pareto.json` archive to plot all observed feasible nondominated
+designs, including designs from a partial final generation:
+
+```bash
+flowfield plot runs/p002-nsga2-42 --kind pareto --output runs/plots/pareto.png
+```
+
+```python
+from flowfield.benchmarking import plot_pareto
+
+ax = plot_pareto('runs/p002-nsga2-42',
+                 objectives=('pressure_sum_Pa', 'voltage_V'),
+                 output='runs/plots/pareto.pdf')
+```
+
+The function returns a Matplotlib Axes and accepts an existing `ax=`. Pass run
+directories, parents containing NSGA-II runs, or `pareto.json` files with their
+adjacent `experiment.json` manifests. Multiple runs get separate series; their
+objective/configuration, dimension and failure policy must match. Different
+budgets are allowed and labeled. PNG, SVG and PDF output are supported.
+
+Two raw objectives are selected automatically in alphabetical order. Override
+the axes with `objectives=(x_name, y_name)` or `--objectives X Y`. For more than
+two objectives, an explicit pair is required: the plot projects the full Pareto
+set without recomputing dominance on just those two axes. Two-objective points
+are connected in x order as a visual guide; higher-dimensional projections use
+markers only. All objectives retain their saved signs and units and are
+minimized. Scalar diagnostic scores are not used as coordinates.
+
+The plot reads the archive directly without replaying journals or rerunning CFD.
+It also supports snapshots from interrupted runs and labels the result as a
+saved front, not a completed optimization. An empty archive with known objective
+names is shown explicitly; an archive without at least two known objectives
+cannot define a two-dimensional plot.
 
 ## Responsibility boundaries
 

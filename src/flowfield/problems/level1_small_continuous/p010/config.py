@@ -13,18 +13,13 @@ FLOW_FIELDS=('ESCFF-1','ESCFF-2','ESCFF-3','ESCFF-4','serpentine','CDLIS')
 
 @dataclass(frozen=True)
 class PEMFCConfig:
-    mesh: str='coarse'
+    # Geometry
+    # Fixed dimensions are in decode() and geometry.py; operating design bounds
+    # are declared in PARAMETERS and BOUNDS above.
     flow_field: str='ESCFF-3'
-    iterations: int=3000
-    minimum_iterations: int=60
-    write_interval: int=100
-    processes: int=1
-    linear_solver: str='iterative'
-    cell_voltage: float=.4
+
+    # Physical parameters
     open_circuit_voltage: float=.972
-    outlet_pressure: float=101325.
-    anode_stoichiometry: float=1.1
-    reference_current_density: float=15000.  # Unreported Iref, A/m2. Never fitted to Pnet.
     cl_porosity: float=.4
     ionomer_fraction: float=.3
     permeability_gdl: float=1e-12
@@ -50,18 +45,42 @@ class PEMFCConfig:
     surface_tension: float=.0662
     contact_angle_deg: float=110.
     channel_liquid_dispersion: float=1e-5
-    liquid_pseudo_time: float=5.  # Numerical false-transient storage; absent at convergence.
     phase_change_rate: float=100.
     sorption_rate: float=10.
     membrane_dry_density: float=2000.
     membrane_equivalent_weight: float=1.1  # Table 1100 interpreted as g/mol -> kg/mol.
     membrane_diffusivity: float=2e-10
     latent_heat: float=2.36e6
+
+    # Initial conditions
+    # case.py initializes temperature/humidity from the design, charge from
+    # open_circuit_voltage, and fixed velocity, pressure and liquid saturation.
+
+    # Boundary conditions
+    # Temperature, humidity and cathode stoichiometry are design variables.
+    # reference_current_density sets the stoichiometric inlet-flow reference.
+    cell_voltage: float=.4
+    outlet_pressure: float=101325.
+    anode_stoichiometry: float=1.1
+    reference_current_density: float=15000.  # Unreported Iref, A/m2. Never fitted to Pnet.
+
+    # Mesh and discretization
+    mesh: str='coarse'
+
+    # Solver controls
+    linear_solver: str='iterative'
+    iterations: int=3000
+    minimum_iterations: int=60
+    processes: int=1
+    liquid_pseudo_time: float=5.  # Numerical false-transient storage; absent at convergence.
     velocity_relaxation: float=.5
     scalar_relaxation: float=.3
     field_tolerance: float=1e-5
-    balance_tolerance: float=1e-3
     voltage_ramp_iterations: int=40
+
+    # Diagnostics and output
+    write_interval: int=100
+    balance_tolerance: float=1e-3
 
     def __post_init__(self):
         if self.mesh not in ('coarse','medium','fine'):raise ValueError('Unknown mesh')

@@ -6,12 +6,28 @@ HYDRAULIC_REVISION='channel-only-laminar-v1'
 
 @dataclass(frozen=True)
 class HydraulicConfig:
-    mesh: str='coarse'
-    flow_rate_m3_s: float=1e-6
+    # Geometry
+    # The discrete path and fixed channel dimensions are decoded in geometry.py.
+
+    # Physical parameters
     density_kg_m3: float=1.
     viscosity_pa_s: float=2.07e-5
+
+    # Initial conditions
+    # case.py initializes velocity and pressure to zero.
+
+    # Boundary conditions
+    # Outlet pressure and no-slip walls are fixed in case.py.
+    flow_rate_m3_s: float=1e-6
+
+    # Mesh and discretization
+    mesh: str='coarse'
+
+    # Solver controls
     max_iterations: int=3000
     residual_tolerance: float=1e-8
+
+    # Diagnostics and output
     balance_tolerance: float=1e-6
     steady_tolerance: float=1e-5
 

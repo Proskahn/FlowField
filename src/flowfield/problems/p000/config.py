@@ -12,15 +12,30 @@ MESHES = {"coarse": (50, 8, 8), "medium": (100, 16, 16), "fine": (200, 32, 32)}
 
 @dataclass(frozen=True)
 class ChannelConfig:
+    # Geometry
     width_m: float = 0.001
     height_m: float = 0.001
     length_m: float = 0.05
-    flow_rate_m3_s: float = 1e-8
+
+    # Physical parameters
     density_kg_m3: float = 998.2
     kinematic_viscosity_m2_s: float = 1e-6
+
+    # Initial conditions
+    # case.py initializes velocity from mean_velocity_m_s and pressure to zero.
+
+    # Boundary conditions
+    # Outlet pressure and no-slip walls are fixed in case.py.
+    flow_rate_m3_s: float = 1e-8
+
+    # Mesh and discretization
     cells: tuple[int, int, int] = MESHES["coarse"]
+
+    # Solver controls
     max_iterations: int = 3000
     residual_tolerance: float = 1e-7
+
+    # Diagnostics and output
     mass_balance_tolerance: float = 1e-5
     reference_tolerance: float = 0.08
 

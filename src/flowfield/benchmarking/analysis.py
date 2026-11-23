@@ -78,6 +78,7 @@ def compare_runs(directories, *, targets=(), allow_unequal_budgets=False,
             seed=experiment['seed'], attempts=len(rows), budget=experiment['budget'],
             best_so_far=trace,
             evaluations=[dict(objective=r['objective'] if r['valid'] else None,
+                              objectives=r['result'].get('objectives', {}) if r['valid'] else {},
                               feasible=r['feasible']) for r in rows],
             best_feasible=min((r['objective'] for r in feasible), default=None),
             first_hits=[next((r['evaluation'] for r in feasible if r['objective'] <= t), None) for t in targets]))

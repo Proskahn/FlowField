@@ -10,14 +10,14 @@ BASELINE_X = (1/3, 5/7)  # HB=1 mm, HD=3 mm
 
 @dataclass(frozen=True)
 class DualLayerConfig:
-    mesh: str = "coarse"
-    oxygen_velocity_m_s: float = 5.0
-    water_velocity_m_s: float = .00174
+    # Geometry
     length_m: float = .020
     base_width_m: float = .001
     degassing_width_m: float = .0016
     gas_inlet_side_m: float = .0001  # Unreported: explicit reconstruction assumption
     gas_inlet_z_m: float = .001    # Unreported: explicit reconstruction assumption
+
+    # Physical parameters
     temperature_k: float = 273.15
     reference_pressure_pa: float = 101325.
     water_density_kg_m3: float = 999.84
@@ -26,17 +26,34 @@ class DualLayerConfig:
     oxygen_viscosity_pa_s: float = .00001919
     surface_tension_n_m: float = .0756
     gravity_m_s2: float = 9.8
+
+    # Initial conditions
+    # case.py starts with liquid-filled channels and zero velocity/pressure.
+
+    # Boundary conditions
+    oxygen_velocity_m_s: float = 5.0
+    water_velocity_m_s: float = .00174
     wall_water_contact_angle_deg: float = 70.
     electrode_water_contact_angle_deg: float = 30.
+
+    # Mesh and discretization
+    mesh: str = "coarse"
+
+    # Solver controls
     end_time_s: float = .2
     max_delta_t_s: float = .00001
     max_courant: float = .25
-    write_interval_s: float = .01
-    monitor_interval_s: float = .0001
+
+    # Objectives and constraints
+    # Bubble detection and detachment criteria define the censored time objective.
     gas_threshold: float = .5
     min_bubble_volume_m3: float = 1e-11
     detached_fraction: float = .5
     persistence_s: float = .0002
+
+    # Diagnostics and output
+    write_interval_s: float = .01
+    monitor_interval_s: float = .0001
     gas_balance_tolerance: float = .02
     continuity_tolerance: float = .001
     alpha_tolerance: float = 1e-6

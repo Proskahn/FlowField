@@ -11,31 +11,53 @@ WEIGHTS = ((.25, .75), (.4, .6), (.6, .4), (.8, .2), (1., 0.))
 
 @dataclass(frozen=True)
 class TopologyConfig:
+    # Geometry
+    # The dimensionless domain and port dimensions are fixed in design.py and mesh.py.
+
+    # Physical parameters
+    reynolds: float = 130.
+    prandtl: float = 6.78
+    # Not supplied by the paper. Explicit reconstruction choices, not fitted data.
+    darcy: float = 1e-4
+    heat_coefficient: float = 1.
+
+    # Initial conditions
+    # case.py initializes zero velocity/pressure and dimensionless temperature 0.5.
+
+    # Boundary conditions
+    # case.py fixes inlet temperature and outlet pressure; the solver adjusts
+    # inlet pressure to enforce this pumping-power target.
+    pumping_power: float = 1.
+
+    # Mesh and discretization
     mesh: str = 'coarse'
     design_nx: int = 16
     design_ny: int = 16
     mirror_y: bool = True
-    scheme: int = 4
-    reynolds: float = 130.
-    prandtl: float = 6.78
-    volume_limit: float = .635
+
+    # Topology parameterization
+    # The filter radius is an explicit reconstruction choice, not a fitted value.
     ramp_q: float = .01
     projection_beta: float = 8.
     projection_threshold: float = .5
-    pumping_power: float = 1.
-    # Not supplied by the paper. Explicit reconstruction choices, not fitted data.
-    darcy: float = 1e-4
-    heat_coefficient: float = 1.
     filter_radius: float = .15
+
+    # Solver controls
     iterations: int = 4000
-    write_interval: int = 200
-    diagnostic_interval: int = 10
     outer_tolerance: float = 1e-7
-    balance_tolerance: float = 1e-5
     velocity_relaxation: float = .6
     pressure_relaxation: float = .3
     power_relaxation: float = .2
+
+    # Objectives and constraints
+    scheme: int = 4
+    volume_limit: float = .635
     volume_penalty: float = 100.
+
+    # Diagnostics and output
+    write_interval: int = 200
+    diagnostic_interval: int = 10
+    balance_tolerance: float = 1e-5
 
     def __post_init__(self):
         for key in ('design_nx', 'design_ny', 'scheme', 'iterations', 'write_interval', 'diagnostic_interval'):

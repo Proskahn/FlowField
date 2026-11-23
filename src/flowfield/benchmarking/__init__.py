@@ -5,7 +5,7 @@ from .planning import plan_benchmark
 
 
 def __getattr__(name):
-    if name in ('plot_benchmark', 'plot_convergence', 'plot_mean_convergence', 'plot_evaluations', 'plot_fixed_budget', 'plot_ert', 'plot_ecdf'):
+    if name in ('plot_benchmark', 'plot_convergence', 'plot_mean_convergence', 'plot_evaluations', 'plot_objectives', 'plot_pareto', 'plot_fixed_budget', 'plot_ert', 'plot_ecdf'):
         from . import plotting
         return getattr(plotting, name)
     raise AttributeError(name)
@@ -16,4 +16,4 @@ def run_benchmark(**kwargs):
     return run(**kwargs)
 
 __all__ = ["make_ioh_problem", "analyzer_logger", "run_benchmark", "plan_benchmark", "compare_runs",
-           "plot_benchmark", "plot_convergence", "plot_mean_convergence", "plot_evaluations", "plot_fixed_budget", "plot_ert", "plot_ecdf"]
+           "plot_benchmark", "plot_convergence", "plot_mean_convergence", "plot_evaluations", "plot_objectives", "plot_pareto", "plot_fixed_budget", "plot_ert", "plot_ecdf"]

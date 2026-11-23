@@ -14,19 +14,11 @@ BASELINE_X = (0.375,)*3
 
 @dataclass(frozen=True)
 class ManifoldConfig:
-    mesh: str = 'coarse'
+    # Geometry
+    # Channel widths are decoded from the design in geometry() below.
     manifold_width_mm: float = 1.0
-    cell_voltage: float = 2.2
-    initial_voltage: float = 2.2  # Numerical initialization, capped at the requested voltage.
-    contact_tolerance: float = .05  # Paper Eq. 29 does not give delta.
-    iterations: int = 3000
-    write_interval: int = 250
-    processes: int = 2  # Verified fresh-start coarse baseline; serial can be selected explicitly.
-    inlet_flow_ml_min: float = 15.
-    inlet_temperature: float = 353.
-    inlet_liquid_saturation: float = .9
-    ambient_temperature: float = 298.15
-    external_heat_transfer: float = 20.
+
+    # Physical parameters
     liquid_density: float = 970.
     oxygen_density: float = 1.42
     hydrogen_density: float = .09
@@ -60,13 +52,38 @@ class ManifoldConfig:
     ionomer_fraction_cl: float = .3
     ionomer_density: float = 2000.
     ionomer_equivalent_weight: float = 1.1
-    membrane_water_boundary: float = 22.
     water_diffusivity_factor: float = 1.
+
+    # Initial conditions
+    # Field initialization is in geometry.py:case_files; warm starts are separate.
+    initial_voltage: float = 2.2  # Numerical initialization, capped at the requested voltage.
+
+    # Boundary conditions
+    cell_voltage: float = 2.2
+    inlet_flow_ml_min: float = 15.
+    inlet_temperature: float = 353.
+    inlet_liquid_saturation: float = .9
+    ambient_temperature: float = 298.15
+    external_heat_transfer: float = 20.
+    membrane_water_boundary: float = 22.
+
+    # Mesh and discretization
+    mesh: str = 'coarse'
+
+    # Solver controls
+    iterations: int = 3000
+    minimum_iterations: int = 60
+    processes: int = 2  # Verified fresh-start coarse baseline; serial can be selected explicitly.
     pseudo_dt: float = 1e-6  # Numerical phase storage; not a physical time step.
     phase_numerical_courant: float = .001
     field_tolerance: float = 1e-5
+
+    # Objectives and constraints
+    contact_tolerance: float = .05  # Paper Eq. 29 does not give delta.
+
+    # Diagnostics and output
+    write_interval: int = 250
     balance_tolerance: float = 1e-3
-    minimum_iterations: int = 60
 
     def __post_init__(self):
         if self.mesh not in ('coarse', 'medium', 'fine'):

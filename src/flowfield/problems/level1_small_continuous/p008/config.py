@@ -9,19 +9,11 @@ MODEL_REVISION='aem-mixture-darcy-thermal-v2'
 
 @dataclass(frozen=True)
 class AEMConfig:
-    mesh: str='coarse'
-    linear_solver: str='iterative'
+    # Geometry
+    # Channel layout and depth are decoded from the design in geometry() below.
+
+    # Physical parameters
     energy_form: str='lte_phase_advection'  # See model notes on printed Eq45.
-    iterations: int=2500
-    minimum_iterations: int=30
-    write_interval: int=100
-    processes: int=1
-    cell_voltage: float=2.2
-    inlet_flow_ml_min: float=50.
-    inlet_temperature: float=333.15
-    ambient_temperature: float=293.15
-    external_heat_transfer: float=50.
-    outlet_pressure: float=101325.
     koh_molarity: float=1.
     koh_conductivity_scale: float=1.  # Literal Eq32 in SI; 100 tests S/cm interpretation.
     membrane_water_content: float=18.
@@ -51,11 +43,38 @@ class AEMConfig:
     activation_energy_anode: float=76000.
     activation_energy_cathode: float=18000.
     kinetic_reference_temperature: float=298.15  # Unreported reference temperature.
+
+    # Initial conditions
+    # geometry.py:case_files initializes temperature from inlet_temperature,
+    # with fixed velocity, pressure, phase and charge starting fields.
+
+    # Boundary conditions
+    cell_voltage: float=2.2
+    inlet_flow_ml_min: float=50.
+    inlet_temperature: float=333.15
+    ambient_temperature: float=293.15
+    external_heat_transfer: float=50.
+    outlet_pressure: float=101325.
+
+    # Mesh and discretization
+    mesh: str='coarse'
+
+    # Solver controls
+    linear_solver: str='iterative'
+    iterations: int=2500
+    minimum_iterations: int=30
+    processes: int=1
     velocity_relaxation: float=.5
     thermal_relaxation: float=.3
     field_tolerance: float=1e-5
-    balance_tolerance: float=1e-3
+
+    # Objectives and constraints
+    # Frozen entropy-weight calibration for the scalar objective.
     ewm_calibration: dict | None=None
+
+    # Diagnostics and output
+    write_interval: int=100
+    balance_tolerance: float=1e-3
 
     def __post_init__(self):
         if self.linear_solver not in ('direct','iterative'):raise ValueError('Unknown linear solver')

@@ -22,17 +22,33 @@ class PPFCConfig:
     Mesh levels are local engineering choices, not the paper's Mesh-1..5.
     This configuration is deliberately separate from P000 ChannelConfig.
     """
-    mesh: str = "coarse"
-    inlet_velocity_m_s: float = 0.5
-    density_kg_m3: float = 1290.4769
-    dynamic_viscosity_pa_s: float = 0.0025491
-    turbulence_intensity: float = 0.05
+    # Geometry
+    # Design dimensions and bounds are declared in PARAMETERS and BOUNDS_MM above.
     port_width_m: float = 0.010
     port_length_m: float = 0.015
     sphere_cap_height_m: float = 0.003
+
+    # Physical parameters
+    density_kg_m3: float = 1290.4769
+    dynamic_viscosity_pa_s: float = 0.0025491
+
+    # Initial conditions
+    # Velocity, pressure and turbulence fields are initialized in case.py.
+
+    # Boundary conditions
+    # Turbulence intensity and length set the inlet k and epsilon values.
+    inlet_velocity_m_s: float = 0.5
+    turbulence_intensity: float = 0.05
     turbulence_length_m: float = 0.001
+
+    # Mesh and discretization
+    mesh: str = "coarse"
+
+    # Solver controls
     max_iterations: int = 2000
     residual_tolerance: float = 1e-6
+
+    # Diagnostics and output
     mass_balance_tolerance: float = 1e-4
     stability_tolerance: float = 1e-4
     stability_window: int = 20

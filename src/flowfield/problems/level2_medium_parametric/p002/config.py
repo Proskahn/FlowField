@@ -36,11 +36,34 @@ def reference():
 
 @dataclass(frozen=True)
 class PEMConfig:
-    mesh: str = 'coarse'
-    scalarization: str = 'total_power_w'
-    iterations: int = 1000
-    write_interval: int = 100
+    # Geometry
+    # Design bounds are declared above; fixed dimensions are in data/reference.json.
+
+    # Physical parameters
+    # Material and electrochemical defaults live in data/reference.json["model"].
+    # The same flat override mapping also accepts the boundary and solver keys below.
     model_overrides: dict = field(default_factory=dict)
+
+    # Initial conditions
+    # geometry.py:case_files initializes fields from the model and material regions.
+
+    # Boundary conditions
+    # Use model_overrides keys currentDensity, inletFlow_mL_min,
+    # inletTemperature and operatingPressure; defaults are in data/reference.json.
+
+    # Mesh and discretization
+    mesh: str = 'coarse'
+
+    # Solver controls
+    # model_overrides also accepts flowPseudoDt, outerTolerance, balanceTolerance,
+    # minimumIterations and maxChargeNewton; __post_init__ validates their limits.
+    iterations: int = 1000
+
+    # Objectives and constraints
+    scalarization: str = 'total_power_w'
+
+    # Diagnostics and output
+    write_interval: int = 100
 
     def __post_init__(self):
         if self.mesh not in ('coarse', 'medium', 'fine'):

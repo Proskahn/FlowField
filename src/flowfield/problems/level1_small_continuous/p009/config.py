@@ -12,20 +12,36 @@ PARAMETERS = ('angle_deg', 'flow_lpm', 'thickness_mm')
 
 @dataclass(frozen=True)
 class ChenConfig:
-    mesh: str = 'coarse'
+    # Geometry
     diameter_mm: float = 160.  # Section 3.8; the parameter study uses 100 mm.
     inlet_width_mm: float = 4.
     inlet_height_mm: float = 1.5
     manifold_width_mm: float = 1.  # Not dimensioned; declared reconstruction.
     port_length_mm: float = 4.    # Not dimensioned; declared reconstruction.
-    measurement_height_mm: float = 1.
+
+    # Physical parameters
     porosity: float = .8
     permeability_m2: float = 2.5e-9
     inertial_coefficient_m_inv: float = 0.  # C2 is not reported; Darcy limit.
     density_kg_m3: float = 1050.
     dynamic_viscosity_pa_s: float = .0012
+
+    # Initial conditions
+    # case.py initializes velocity and pressure to zero.
+
+    # Boundary conditions
+    # Inlet flow is a design variable (PARAMETERS/BOUNDS); physical_geometry()
+    # converts it to inlet speed. Outlet pressure and walls are fixed in case.py.
+
+    # Mesh and discretization
+    mesh: str = 'coarse'
+
+    # Solver controls
     max_iterations: int = 3000
     residual_tolerance: float = 1e-6
+
+    # Diagnostics and output
+    measurement_height_mm: float = 1.
     balance_tolerance: float = 1e-4
     steady_tolerance: float = 1e-3
     stability_window: int = 20

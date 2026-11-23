@@ -205,6 +205,32 @@ class NSGAIITests(unittest.TestCase):
         self.assertTrue(all(r['attempts'] == 6 for r in result['runs']))
         self.assertEqual(len(list((self.root/'matrix').rglob('pareto.json'))), 2)
 
+    @unittest.skipUnless(importlib.util.find_spec('matplotlib'), 'optional matplotlib unavailable')
+    def test_pareto_plot_matches_complete_and_interrupted_nsga2_archives(self):
+        from flowfield.benchmarking import plot_pareto
+        for interrupted in (False, True):
+            folder = self.root / str(interrupted)
+            def progress(name, index, budget, status):
+                if interrupted and index == 6:
+                    raise KeyboardInterrupt()
+            if interrupted:
+                with self.assertRaises(KeyboardInterrupt):
+                    self.run_problem(Tradeoff(failures=(2,)), str(interrupted), budget=13,
+                                     failure_penalty=1e6, progress=progress)
+            else:
+                self.run_problem(Tradeoff(failures=(2,)), str(interrupted), budget=13,
+                                 failure_penalty=1e6)
+            archive = json.loads((folder / 'pareto.json').read_text())
+            expected = sorted((row['result']['objectives']['left'], row['result']['objectives']['right'])
+                              for row in archive['solutions'])
+            self.assertTrue(expected)
+            before = {p: p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+            with patch.object(Tradeoff, 'evaluate_raw', side_effect=AssertionError('No reevaluation')):
+                ax = plot_pareto(folder)
+            actual = list(zip(ax.lines[0].get_xdata(), ax.lines[0].get_ydata()))
+            self.assertEqual(actual, expected)
+            self.assertEqual(before, {p: p.read_bytes() for p in before})
+
 
 class FlowFieldZDT1(FlowFieldProblem):
     def __init__(self):

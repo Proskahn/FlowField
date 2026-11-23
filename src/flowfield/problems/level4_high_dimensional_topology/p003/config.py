@@ -11,19 +11,14 @@ CONTINUATION = ((1.,10000.),(2.,1000.),(3.,100.),(5.,10.))
 
 @dataclass(frozen=True)
 class TopologyConfig:
-    design_nx: int = 32
-    design_ny: int = 64
-    mesh: str = 'coarse'
+    # Geometry
     length_m: float = .02236
     inlet_width_m: float = .0012
     outlet_width_m: float = .0012
     channel_depth_m: float = .001
     gdl_depth_m: float = .00038
-    filter_radius_m: float = .00035
-    projection_beta: float = 50.
-    stage: int = 1  # At 5 Pa, the paper skips stage 0.
-    inlet_pressure_pa: float = 5.
-    cell_voltage_v: float = .4
+
+    # Physical parameters
     open_circuit_voltage_v: float = 1.22
     ohmic_resistance_ohm_m2: float = 7e-5
     temperature_k: float = 343.15
@@ -34,17 +29,42 @@ class TopologyConfig:
     viscosity_pa_s: float = 2.07e-5
     gdl_porosity: float = .8
     gdl_permeability_m2: float = 1.38e-11
+
+    # Initial conditions
+    # case.py starts velocity/pressure at zero and species at their inlet fractions.
+
+    # Boundary conditions
+    # The outlet pressure, wall and symmetry conditions are fixed in case.py.
+    inlet_pressure_pa: float = 5.
+    cell_voltage_v: float = .4
     oxygen_inlet: float = .228
     water_inlet: float = .023
+
+    # Mesh and discretization
+    mesh: str = 'coarse'
+    design_nx: int = 32
+    design_ny: int = 64
+
+    # Topology parameterization
+    filter_radius_m: float = .00035
+    projection_beta: float = 50.
+    stage: int = 1  # At 5 Pa, the paper skips stage 0.
+
+    # Solver controls
+    iterations: int = 3000
+    outer_tolerance: float = 1e-7
+
+    # Objectives and constraints
     volume_limit: float = .5
     power_weight: float = 1.
     uniformity_weight: float = 0.
+    # The weight is weird. However, the original paper also use this weight.???
     power_scale_w: float = 1.
     current_std_scale_a_m2: float = 1.
     volume_penalty: float = 10.
-    iterations: int = 3000
+
+    # Diagnostics and output
     write_interval: int = 200
-    outer_tolerance: float = 1e-7
     balance_tolerance: float = 1e-5
 
     def __post_init__(self):
