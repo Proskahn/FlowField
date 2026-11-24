@@ -128,6 +128,101 @@ plotting consume saved traces; they do not call the problem again. Comparisons
 remain restricted to matching objective identities and dimensions unless an
 existing explicit analysis override is used.
 
+## P003 GCMMA with material continuation
+
+`flowfield-p003 gcmma` optimizes every raw topology node (2,145 variables on
+the default 65 × 33 grid). It uses the optional
+[mmapy 0.3.1 implementation of GCMMA](https://github.com/arjendeetman/GCMMA-MMA-Python)
+(GPL-3.0), including conservative inner iterations. The PDE objective gradient
+uses finite differences; the channel-volume constraint uses the exact derivative
+of the filter and projection. This is not an adjoint implementation.
+
+The default objective is negative power divided by initial power, with power
+weight 1 and current-uniformity weight 0. Initial normalization is calibrated
+once and frozen. Volume is an explicit inequality, not an objective penalty in
+GCMMA. Derivative probes can exceed the volume limit and are never repaired;
+accepted steps must satisfy it.
+
+At the default 5 Pa, the material continuation is `(p,q) = (2,1000), (3,100),
+(5,10)`, with 60 accepted iterations per stage and projection beta 50. The
+optimized design carries forward and the CFD is recomputed at every stage.
+These parameters penalize gray material through diffusivity and Brinkman drag;
+there is no additional arbitrary gray-pixel term in the objective. Below or at
+4 Pa, the default schedule also includes stage 0, `(1,10000)`.
+
+From the repository root, with native OpenCFD OpenFOAM v2312 already sourced:
+
+```bash
+.venv/bin/python -m pip install -e '.[gcmma,plot]'
+mkdir -p runs/p003
+output="runs/p003/gcmma-continuation-42"
+
+nohup env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+    .venv/bin/flowfield-p003 gcmma \
+    --output "$output" \
+    --backend native --timeout 14400 --workers 8 \
+    --stages 1 2 3 --iterations-per-stage 60 \
+    --fd-scheme forward --fd-step 0.0001 --move 0.01 \
+    --check-gradients --discard-probe-cases \
+    --max-evaluations 390000 \
+    > "${output}.log" 2>&1 < /dev/null &
+echo $! > "${output}.pid"
+```
+
+`--workers 8` runs up to eight independent serial CFD probes; set it to suit the
+server's available CPU and memory. The schedule needs **386,320 CFD evaluations**
+if every first trial is accepted, including calibration and directional checks.
+With all 15 inner trials used at every step it needs 388,840, before any explicit
+retries. The 390,000 cap leaves room for retries. Add `--dry-run` to inspect a
+command without creating files or running CFD. GCMMA starts from the uniform
+design deterministically; looping over seeds 42–46 repeats the same experiment.
+
+The first gradient in every stage is checked against three centered directional
+differences at two step sizes. Failed checks or CFD solves stop the run. Completed
+requests are saved individually, including partial gradients. Resume the same
+campaign after its process has stopped:
+
+```bash
+output="runs/p003/gcmma-continuation-42"
+nohup env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+    .venv/bin/flowfield-p003 gcmma --resume --output "$output" \
+    --backend native --timeout 14400 --workers 8 \
+    --retry-interrupted \
+    >> "${output}.log" 2>&1 < /dev/null &
+echo $! > "${output}.pid"
+```
+
+Saved settings are reused. `--retry-interrupted` counts each unfinished CFD
+request again; completed requests are reused. After correcting a runtime error,
+`--retry-failed` similarly retries failed requests and preserves the old failure
+record. `--extend-budget 1000` adds 1,000 to the existing total cap. Changing
+model settings, continuation, numerical dependencies or implementation requires
+a new campaign. TuRBO output cannot be resumed as GCMMA.
+
+`--discard-probe-cases` deletes only successful gradient/check CFD folders after
+saving their JSON results; it retains all baseline, trial and failed cases.
+Designs, metrics, configurations and attempt records remain available for
+replay and geometry plotting, including when a probe is the best feasible
+design. Omitting this flag keeps all cases (about 2 TB for the default schedule
+at the locally measured 6.2 MB per case); JSON records alone still require
+substantial storage. A deleted probe's flow fields require a new CFD evaluation
+to inspect. Each stage has its own `best-feasible.json`, `current.json`, and
+`accepted-iterations.json`. The latter records accepted outer iterations;
+generic black-box convergence journals are not produced. Stage objective
+values should not be compared as if they used the same material model.
+
+Plot the final stage's best saved geometry without CFD or ParaView:
+
+```bash
+.venv/bin/flowfield-plot "$output/stage-3" --kind geometry \
+    --output "$output/geometry.png" \
+    --pixels-output "$output/geometry-pixels.png"
+```
+
+The pixel image has 65 rows and 33 columns. `completed_schedule` means that all
+requested iterations ran, not that an optimality tolerance was met or the paper
+was reproduced. The forward physics remains provisionally validated.
+
 ## Plot objective histories
 
 Plot the scalar score and every named raw objective against evaluation attempts:

@@ -5,9 +5,11 @@ one run directory, a parent directory containing runs, or a list of either.
 Runs must share objective/configuration and dimension. Evaluation and convergence
 plots permit different budgets and optimizer failure policies, labeled in the legend.
 Fixed-budget and target-based comparisons require matching budgets and policies.
+Geometry plots read one P003 best-feasible record, including standalone JSON.
 """
 
 import argparse
+from bisect import bisect_right
 from collections import Counter
 import json
 import math
@@ -455,17 +457,150 @@ def plot_benchmark(directories, *, targets=(), output=None):
     return figure
 
 
+def _geometry_data(directories, field):
+    from ..problems.level4_high_dimensional_topology.p003.config import TopologyConfig, MODEL_REVISION
+    from ..problems.level4_high_dimensional_topology.p003.design import decode, grid
+
+    if isinstance(directories, (str, Path)):
+        directories = [directories]
+    paths = []
+    for directory in directories:
+        path = Path(directory)
+        if path.is_file():
+            paths.append(path)
+        elif (path / 'best-feasible.json').is_file():
+            paths.append(path / 'best-feasible.json')
+        else:
+            paths.extend(run / 'best-feasible.json' for run in _run_directories(path))
+    if len(paths) != 1:
+        raise ValueError('Geometry plotting requires exactly one run or saved best-feasible.json')
+    path = paths[0]
+    if not path.is_file():
+        raise ValueError(f'No saved best-feasible.json found in {path.parent}')
+    record = json.loads(path.read_text())
+    if (not isinstance(record, dict) or record.get('valid') is not True
+            or record.get('feasible') is not True):
+        raise ValueError(f'Geometry plotting requires a valid, feasible saved evaluation: {path}')
+    result = record.get('result')
+    if not isinstance(result, dict) or result.get('problem') != 'P003':
+        raise ValueError('Geometry plotting currently supports P003 topology results only')
+    if result.get('model_revision', MODEL_REVISION) != MODEL_REVISION:
+        raise ValueError('Unsupported P003 model revision for geometry reconstruction')
+    saved_config = result.get('config')
+    required = {'design_nx', 'design_ny', 'mesh', 'length_m', 'inlet_width_m',
+                'outlet_width_m', 'filter_radius_m', 'projection_beta'}
+    if not isinstance(saved_config, dict) or not required.issubset(saved_config):
+        raise ValueError('Saved P003 result is missing its geometry configuration')
+    config = TopologyConfig(**saved_config)
+    values = record.get('x')  # Evaluated coordinates, never proposal.proposed_x.
+    if (not isinstance(values, list) or len(values) != config.dimension
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or not 0 <= v <= 1 for v in values)):
+        raise ValueError(f'Saved P003 design must contain {config.dimension} finite values in [0, 1]')
+    rows, columns = config.design_ny + 1, config.design_nx + 1
+    if field == 'design':
+        pixels = [values[j*columns:(j+1)*columns] for j in range(rows)]
+    else:
+        # The CFD grid is port-fitted and is not the nodal design grid. Rebuild
+        # the actual piecewise-constant cell indicator, then sample the cell
+        # containing each uniform output pixel's center in physical coordinates.
+        indicator = decode(values, config)['indicator']
+        x_edges, y_edges = grid(config)
+        cell_columns = len(x_edges) - 1
+        ix = [bisect_right(x_edges, (i+.5)*config.width_m/columns)-1 for i in range(columns)]
+        iy = [bisect_right(y_edges, (j+.5)*config.length_m/rows)-1 for j in range(rows)]
+        pixels = [[indicator[j*cell_columns+i] for i in ix] for j in iy]
+    return pixels, config, record
+
+
+def plot_geometry(directories, *, field='indicator', threshold=None, ax=None,
+                  output=None, pixels_output=None):
+    """Plot one saved P003 best feasible topology without CFD or case files.
+
+    Accept a run, a parent containing exactly one run, or a standalone saved
+    best-feasible.json (including its result.config). Return a Matplotlib Axes;
+    ``ax.images[0].get_array()`` gives the displayed data with shape (65, 33)
+    for the default design grid: y rows, x columns, x fastest, y=0 at the bottom.
+    Custom design grid sizes follow the saved configuration.
+
+    ``indicator`` reconstructs the solver's radial filter and projection, then
+    samples its cell field at uniform pixel centers. It is a visualization of
+    the physical half-domain, not the native CFD mesh or a new simulation.
+    ``design`` shows the evaluated nodal coordinates without filtering/projection.
+    Values use a fixed [0, 1] grayscale (black rib, white channel for indicator).
+    Optional ``threshold`` binarizes the indicator with channel >= threshold;
+    this display-only mask has not been evaluated by CFD.
+
+    ``output`` saves an annotated PNG/SVG/PDF. ``pixels_output`` saves a PNG
+    with exactly one 8-bit grayscale pixel per array element and no axes or margins
+    (default: width 33, height 65). Both exports use the same orientation.
+    """
+    if field not in ('indicator', 'design'):
+        raise ValueError("Geometry field must be 'indicator' or 'design'")
+    if threshold is not None:
+        if (field != 'indicator' or isinstance(threshold, bool)
+                or not isinstance(threshold, (int, float)) or not math.isfinite(threshold)
+                or not 0 <= threshold <= 1):
+            raise ValueError('threshold requires the indicator field and a finite value in [0, 1]')
+    if pixels_output is not None:
+        pixels_output = Path(pixels_output)
+        if pixels_output.suffix.lower() != '.png':
+            raise ValueError('Pixel output must have a .png extension')
+        if output is not None and pixels_output.resolve() == Path(output).resolve():
+            raise ValueError('Annotated output and pixel output must use different paths')
+    pixels, config, record = _geometry_data(directories, field)
+    if threshold is not None:
+        pixels = [[float(value >= threshold) for value in row] for row in pixels]
+    if ax is None:
+        ax = _figure((5, 7)).subplots()
+    artist = ax.imshow(pixels, origin='lower', interpolation='nearest', cmap='gray',
+                       vmin=0, vmax=1, aspect='equal',
+                       extent=(0, config.width_m*1000, 0, config.length_m*1000))
+    label = 'Channel indicator' if field == 'indicator' else 'Raw nodal design'
+    if threshold is not None:
+        label = f'Channel indicator ≥ {threshold:g} (display only)'
+    evaluation = record.get('evaluation', '?')
+    ax.set(title=f'P003 · best feasible · evaluation {evaluation}\n'
+                 f'{label} · {len(pixels)} × {len(pixels[0])} pixels',
+           xlabel='x [mm]', ylabel='y [mm]')
+    ax.title.set_fontsize(11)
+    colorbar = ax.figure.colorbar(artist, ax=ax, fraction=.05, pad=.04)
+    if field == 'indicator':
+        ticks = [0, 1] if threshold is not None else [0, .5, 1]
+        labels = ['0 · rib', '1 · channel'] if threshold is not None else ['0 · rib', '0.5', '1 · channel']
+        colorbar.set_ticks(ticks, labels=labels)
+    else:
+        colorbar.set_label('Normalized design variable')
+    _save(ax.figure, output)
+    if pixels_output is not None:
+        from PIL import Image
+        pixels_output.parent.mkdir(parents=True, exist_ok=True)
+        # PNG rows start at the top. Quantize only once, without a colormap LUT.
+        raster = (artist.get_array()[::-1]*255).round().astype('uint8')
+        Image.fromarray(raster).save(pixels_output)
+    return ax
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Plot saved FlowField runs; no CFD is executed')
-    parser.add_argument('runs', nargs='+', type=Path, help='Run directories or parents containing runs of one problem')
-    parser.add_argument('--kind', choices=('all', 'convergence', 'mean-convergence', 'evaluations', 'objectives', 'pareto', 'fixed-budget', 'ert', 'ecdf'), default='all')
+    parser.add_argument('runs', nargs='+', type=Path,
+                        help='Run directories or parents; geometry also accepts a saved best-feasible.json')
+    parser.add_argument('--kind', choices=('all', 'convergence', 'mean-convergence', 'evaluations', 'objectives', 'pareto', 'geometry', 'fixed-budget', 'ert', 'ecdf'), default='all')
     parser.add_argument('--objectives', nargs=2, metavar=('X', 'Y'),
                         help='Raw objective names for the Pareto x and y axes')
     parser.add_argument('--targets', type=float, nargs='+', default=[])
+    parser.add_argument('--field', choices=('indicator', 'design'),
+                        help='Geometry field: reconstructed channel indicator (default) or raw nodal design')
+    parser.add_argument('--threshold', type=float,
+                        help='Geometry only: show a binary channel mask at this indicator threshold')
+    parser.add_argument('--pixels-output', type=Path,
+                        help='Geometry only: pixel-exact PNG without axes (default grid: 65 rows × 33 columns)')
     parser.add_argument('--output', type=Path, required=True, help='PNG, SVG or PDF file')
     args = parser.parse_args(argv)
     if args.objectives is not None and args.kind != 'pareto':
         parser.error('--objectives is only supported with --kind pareto')
+    if args.kind != 'geometry' and any(value is not None for value in (args.field, args.threshold, args.pixels_output)):
+        parser.error('--field, --threshold and --pixels-output are only supported with --kind geometry')
     try:
         if args.kind == 'all':
             plot_benchmark(args.runs, targets=args.targets, output=args.output)
@@ -474,6 +609,9 @@ def main(argv=None):
             function(args.runs, targets=args.targets, output=args.output)
         elif args.kind == 'pareto':
             plot_pareto(args.runs, objectives=args.objectives, output=args.output)
+        elif args.kind == 'geometry':
+            plot_geometry(args.runs, field=args.field or 'indicator', threshold=args.threshold,
+                          output=args.output, pixels_output=args.pixels_output)
         else:
             function = {'convergence': plot_convergence, 'evaluations': plot_evaluations,
                         'objectives': plot_objectives,
@@ -483,6 +621,8 @@ def main(argv=None):
     except (OSError, ValueError, TypeError, RuntimeError) as exc:
         parser.exit(1, f'flowfield-plot: {exc}\n')
     print(args.output.resolve())
+    if args.pixels_output is not None:
+        print(args.pixels_output.resolve())
     return 0
 
 

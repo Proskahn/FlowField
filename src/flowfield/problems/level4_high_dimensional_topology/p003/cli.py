@@ -59,8 +59,12 @@ def main(argv=None):
             p.add_argument('--output',type=Path,required=True);_runtime_arguments(p)
         if command in ('smoke','compare'):p.add_argument('--ioh',action='store_true')
     p=sub.add_parser('run');p.add_argument('case',type=Path);_runtime_arguments(p)
+    from .gcmma_cli import add_arguments, execute
+    p=sub.add_parser('gcmma',help='Full-grid finite-difference GCMMA with gray-material continuation')
+    add_arguments(p);_runtime_arguments(p)
     args=parser.parse_args(argv)
     try:
+        if args.command=='gcmma':return execute(args)
         if args.command=='run':result=run_case(args.case,Runtime(args.backend,args.image,args.timeout))
         else:
             values=json.loads(args.config.read_text()) if args.config else {}
@@ -87,7 +91,7 @@ def main(argv=None):
                         config_sha256=calibrated.fingerprint,calibration_cfd_calls=1)
                     write_json(args.output/'calibration.json',result)
                 else:result=P003Problem(args.output,config=config,runtime=runtime).evaluate_raw(x)
-    except (OSError,ValueError,TypeError,RuntimeError) as exc:parser.exit(1,f'flowfield-p003: {exc}\n')
+    except (OSError,ValueError,TypeError,RuntimeError,ImportError) as exc:parser.exit(1,f'flowfield-p003: {exc}\n')
     print(json.dumps(result,indent=2,allow_nan=False));return 0
 
 

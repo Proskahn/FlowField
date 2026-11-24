@@ -537,7 +537,7 @@ class PlottingTests(unittest.TestCase):
 class OptionalPlottingTests(unittest.TestCase):
     def test_public_import_does_not_load_matplotlib(self):
         subprocess.run([sys.executable, '-c',
-            'import sys; from flowfield.benchmarking import plot_benchmark, plot_mean_convergence, plot_objectives, plot_pareto; '
+            'import sys; from flowfield.benchmarking import plot_benchmark, plot_mean_convergence, plot_objectives, plot_pareto, plot_geometry; '
             'assert "matplotlib" not in sys.modules'], check=True, capture_output=True)
 
 
