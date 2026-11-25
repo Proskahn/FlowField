@@ -71,7 +71,7 @@ class ManifoldConfig:
     mesh: str = 'coarse'
 
     # Solver controls
-    iterations: int = 3000
+    iterations: int = 3500
     minimum_iterations: int = 60
     processes: int = 2  # Verified fresh-start coarse baseline; serial can be selected explicitly.
     pseudo_dt: float = 1e-6  # Numerical phase storage; not a physical time step.

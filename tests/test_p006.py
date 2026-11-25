@@ -401,7 +401,7 @@ class P006Tests(unittest.TestCase):
             status_path=source/'postProcessing/p006/status.json'
             status=json.loads(status_path.read_text());status['iteration']=p.config.iterations
             status_path.write_text(json.dumps(status))
-            self.assertIn('3000-iteration limit',iteration_limit_reason(source))
+            self.assertIn(f'{p.config.iterations}-iteration limit',iteration_limit_reason(source))
             (source/'log.flowfieldP006Foam').write_text('FOAM FATAL ERROR\nEnd\n')
             self.assertIsNone(iteration_limit_reason(source))
             (source/'log.flowfieldP006Foam').write_text('End\n')

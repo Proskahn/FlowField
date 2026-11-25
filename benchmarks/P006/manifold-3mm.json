@@ -3,7 +3,7 @@
   "manifold_width_mm": 3,
   "cell_voltage": 2.2,
   "contact_tolerance": 0.05,
-  "iterations": 3000,
+  "iterations": 3500,
   "write_interval": 250,
   "processes": 2,
   "inlet_flow_ml_min": 15.0,
