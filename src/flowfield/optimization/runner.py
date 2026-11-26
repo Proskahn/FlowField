@@ -1,6 +1,6 @@
 """Strict-budget optimization, raw observations, Pareto archives and resume."""
 
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 import importlib.metadata
 import json
 import math
@@ -22,6 +22,7 @@ from .turbo import turbo_settings
 from .lqcmaes import lq_settings
 from .random import random_settings
 from .repair import evaluation_repair_settings
+from .replay import verify
 
 _save = save_json
 
@@ -140,26 +141,14 @@ def _proposals(problem, x0, method, population, sigma, seed, state, *,
             state['partial_generation_evaluations'] = 0
 
 
-def _verify_history(problem, x0, method, population, sigma, seed, history, **options):
+def _verify_history(problem, x0, method, population, sigma, seed, history, *,
+                    saved=None, current=None, progress=None, **options):
     state = dict(complete_generations=0, partial_generation_evaluations=0)
     proposals = _proposals(problem, x0, method, population, sigma, seed, state, **options)
-    try:
-        request = next(proposals)
-        for index, row in enumerate(history):
-            x, phase, generation, proposal = request
-            if (row['x'] != x or row['phase'] != phase or row['generation'] != generation
-                    or row.get('proposal') != proposal):
-                raise ResumeError(f'Cannot reproduce saved proposal {index+1}; '
-                                  'check original code, dependencies and seed. No new CFD was started.')
-            if index+1 < len(history):
-                request = proposals.send(row['result'])
-    except StopIteration as exc:
-        raise ResumeError('Saved history extends past optimizer termination') from exc
-    finally:
-        proposals.close()
+    return verify(proposals,state,history,problem.name,saved=saved,current=current,progress=progress)
 
 
-def optimize(problem, *, output, resume=False, extend_budget=None, **options):
+def optimize(problem, *, output, resume=False, extend_budget=None, _verified_replay=None, **options):
     """Resume journals without new CFD for replay; extend_budget is a new total."""
     if not isinstance(problem, AbstractFlowFieldProblem):
         raise TypeError('optimize requires a AbstractFlowFieldProblem')
@@ -187,9 +176,10 @@ def optimize(problem, *, output, resume=False, extend_budget=None, **options):
     problem.preflight()
     if not resume:
         output.mkdir(parents=True,exist_ok=False)
-    with run_lock(output/'.optimizer.lock'):
+    with run_lock(output/'.optimizer.lock'), ExitStack() as resources:
         return _optimize(problem,output=output,resume=resume and (output/'experiment.json').exists(),
-                         allow_budget_extension=extend_budget is not None,**options)
+                         allow_budget_extension=extend_budget is not None,
+                         _verified_replay=_verified_replay,_resources=resources,**options)
 
 
 def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_ioh,
@@ -247,7 +237,8 @@ def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_io
 def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=4,
               sigma=.1, with_ioh=True, failure_penalty=None, max_seconds=None,
               initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
-              turbo_initial_points=5, turbo_candidates=512, allow_budget_extension=False):
+              turbo_initial_points=5, turbo_candidates=512, allow_budget_extension=False,
+              _verified_replay=None, _resources=None, replay_progress=None):
     method = _method(problem,method)
     x0 = _initial(problem) if initial is None else list(initial)
     problem.decode(x0)
@@ -282,9 +273,14 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         saved = json.loads((output/'experiment.json').read_text())
         validate_experiment(saved,experiment,allow_budget_extension=allow_budget_extension)
         history, pending = load_history(output,saved['budget'],failure_penalty)
-        _verify_history(problem,x0,method,population,sigma,seed,history,
-                        budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
-                        turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+        if _verified_replay is None:
+            _verified_replay = _verify_history(problem,x0,method,population,sigma,seed,history,
+                saved=saved,current=experiment,progress=replay_progress,
+                budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+                turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+        else:
+            _verified_replay.validate(saved,experiment,history)
+        _resources.callback(_verified_replay.close)
         if (output/'summary.json').exists():
             previous = json.loads((output/'summary.json').read_text())
         session = next_session(output)
@@ -353,20 +349,28 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             summary.update(best_feasible_objective=value,best_feasible_design=x,best_feasible_case_directory=case)
             _save(output/'best-feasible.json',record)
 
-    proposals = _proposals(problem,x0,method,population,sigma,seed,summary,
-                           budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
-                           turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+    if _verified_replay is not None:
+        proposals, proposal_state = _verified_replay.proposals, _verified_replay.state
+    else:
+        proposals = _proposals(problem,x0,method,population,sigma,seed,summary,
+                               budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+                               turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+        proposal_state = summary
     context = analyzer_logger(objective,ioh_output,algorithm_name=algorithm,
         algorithm_info=f'seed={seed}; budget={budget}; resumed={resume}; replay is not new CFD') if with_ioh else nullcontext()
     try:
         with context, (output/'evaluations.jsonl').open('a') as records, (output/'events.jsonl').open('a') as events:
-            request = next(proposals)
+            request = None if history else next(proposals)
             while summary['attempts'] < budget:
                 replaying = summary['attempts'] < len(history)
                 if not replaying and max_seconds is not None and time.monotonic()-started >= max_seconds:
                     summary['stop_reason'] = 'soft_wall_time_limit'
                     break
-                x, phase, generation, proposal = request
+                if replaying:
+                    cached = history[summary['attempts']]
+                    x, phase, generation, proposal = (cached['x'],cached['phase'],cached['generation'],cached.get('proposal'))
+                else:
+                    x, phase, generation, proposal = request
                 proposal_fields = dict(proposal=proposal) if proposal is not None else {}
                 x = [int(v) if wrapped.variable_type == 'integer' else float(v) for v in x]
                 summary['attempts'] += 1
@@ -405,10 +409,19 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
                 remember(record)
                 if progress:
                     progress(problem.name,index,budget,'replayed' if replaying else 'ok' if record['valid'] else 'failed/penalized')
+                if replaying and index < len(history):
+                    # IOH/archive reconstruction uses already verified records;
+                    # it must not ask the optimizer to generate them a second time.
+                    continue
+                summary.update(proposal_state)
+                if progress and index < budget:
+                    progress(problem.name,index+1,budget,'proposing')
                 try:
                     request = proposals.send(record['result'])
                 except StopIteration:
+                    summary.update(proposal_state)
                     break
+                summary.update(proposal_state)
                 snapshot()
             if summary['attempts'] < len(history):
                 raise ResumeError('Optimizer terminated before all saved history was consumed')

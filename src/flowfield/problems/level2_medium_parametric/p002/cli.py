@@ -77,9 +77,26 @@ def main(argv=None):
     p = sub.add_parser('run')
     p.add_argument('case', type=Path)
     _runtime_arguments(p)
+    from .gcmma_cli import add_arguments, execute
+    p = sub.add_parser('gcmma',help='GCMMA with a checked, fully coupled discrete adjoint')
+    add_arguments(p)
+    _runtime_arguments(p)
+    p = sub.add_parser('adjoint',help='Compute adjoint gradients from a verified saved P002 case')
+    p.add_argument('case',type=Path)
+    p.add_argument('--output',type=Path,help='New JSON output file (default print only)')
+    p.add_argument('--max-unknowns',type=int,default=150000)
     args = parser.parse_args(argv)
     try:
-        if args.command == 'run':
+        if args.command == 'gcmma':
+            return execute(args)
+        if args.command == 'adjoint':
+            from .adjoint import AdjointOptions, gradient
+            if args.output and args.output.exists():
+                raise FileExistsError(f'Output already exists: {args.output}')
+            result = gradient(args.case,options=AdjointOptions(max_unknowns=args.max_unknowns))
+            if args.output:
+                write_json(args.output,result)
+        elif args.command == 'run':
             result = run_case(args.case, Runtime(args.backend, args.image, args.timeout))
         else:
             values = json.loads(args.config.read_text()) if args.config else {}
@@ -98,7 +115,7 @@ def main(argv=None):
                     result = smoke(args.output, config, runtime, args.ioh, compare=args.command == 'compare')
                 else:
                     result = P002Problem(args.output, config=config, runtime=runtime).evaluate_raw(args.x)
-    except (OSError, ValueError, TypeError, RuntimeError) as exc:
+    except (OSError, ValueError, TypeError, RuntimeError, ImportError) as exc:
         parser.exit(1, f'flowfield-p002: {exc}\n')
     print(json.dumps(result, indent=2, allow_nan=False))
     return 0
