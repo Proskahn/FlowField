@@ -1,7 +1,7 @@
 """CLI construction and multi-problem orchestration, separate from run execution."""
 
 import argparse
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 import json
 from pathlib import Path
 import shutil
@@ -127,27 +127,56 @@ def _suite_history(problem, args, folder):
     # create or modify lock files; the execution path checks locks again later.
     with (run_lock(folder/'.optimizer.lock') if extending and not args.dry_run else nullcontext()):
         saved_experiment = json.loads((folder/'experiment.json').read_text())
-        if getattr(args,'_allow_budget_extension',False):
-            method = _method(problem,args.method)
-            sigma = args.p003_sigma if problem.name=='P003' else args.sigma
-            current = _experiment(problem, _initial(problem), method,
-                budget=args.budget, seed=args.seed, population=args.population,
-                sigma=sigma, with_ioh=args.ioh, failure_penalty=args.failure_penalty,
-                max_seconds=args.max_seconds_per_problem,
-                bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
-                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
-            validate_experiment(saved_experiment,current,allow_budget_extension=True)
+        current = _experiment(problem, _initial(problem), _method(problem,args.method),
+            budget=args.budget, seed=args.seed, population=args.population,
+            sigma=args.p003_sigma if problem.name=='P003' else args.sigma,
+            with_ioh=args.ioh, failure_penalty=args.failure_penalty,
+            max_seconds=args.max_seconds_per_problem,
+            bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
+            turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+        validate_experiment(saved_experiment,current,allow_budget_extension=extending)
         history, pending = load_history(folder,saved_experiment['budget'],args.failure_penalty)
-        if getattr(args,'_allow_budget_extension',False):
-            # Validate replay before committing the suite authorization,
-            # including in --dry-run. This never evaluates the problem.
-            _verify_history(problem,_initial(problem),method,args.population,sigma,args.seed,history,
-                budget=args.budget, bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
-                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+        args._replay_inputs[problem.name] = (saved_experiment, current, history)
         return saved_experiment, history, pending
 
 
 def _run_suite(args):
+    with ExitStack() as resources:
+        args._replay_resources = resources
+        args._replay_inputs, args._verified_replays = {}, {}
+        return _run_suite_impl(args)
+
+
+def _replay_progress(name, index, total, stage):
+    if stage == 'verification_started':
+        message = f'rebuilding optimizer from {total} saved evaluations; no CFD is rerun'
+    elif stage == 'verification_finished':
+        message = 'history verified; retaining optimizer state for continuation'
+    else:
+        message = f'{stage} saved proposal {index}/{total}'
+    print(f'{name}: {message}',file=sys.stderr,flush=True)
+
+
+def _prepare_suite_replays(args, active):
+    for problem in active:
+        if problem.name not in args._replay_inputs:
+            continue
+        folder = args.output/problem.name
+        saved, current, history = args._replay_inputs[problem.name]
+        with (nullcontext() if args.dry_run else run_lock(folder/'.optimizer.lock')):
+            if (json.loads((folder/'experiment.json').read_text()) != saved
+                    or load_history(folder,saved['budget'],args.failure_penalty)[0] != history):
+                raise ResumeError('Run changed during resume preparation; resume again. No new CFD was started.')
+            replay = _verify_history(problem,_initial(problem),_method(problem,args.method),
+                args.population,args.p003_sigma if problem.name=='P003' else args.sigma,args.seed,history,
+                saved=saved,current=current,progress=_replay_progress,
+                budget=args.budget, bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
+                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+            args._replay_resources.callback(replay.close)
+            args._verified_replays[problem.name] = replay
+
+
+def _run_suite_impl(args):
     _validate_options(args.budget,args.seed,args.population,args.sigma,args.failure_penalty,args.max_seconds_per_problem)
     _validate_options(args.budget,args.seed,args.population,args.p003_sigma,args.failure_penalty,args.max_seconds_per_problem)
     bo_settings(args.bo_initial_points,args.bo_candidates)
@@ -222,12 +251,13 @@ def _run_suite(args):
         if getattr(args,'_allow_budget_extension',False):
             plan.update(previous_budget_per_problem=args._saved_budget,
                         original_budget_per_problem=args._budget_metadata.get('original_budget',args._saved_budget))
+    active = [p for p in problems if p.name not in finished]
     if args.dry_run:
+        _prepare_suite_replays(args,active)
         print(json.dumps(plan,indent=2))
         return 0
     if not problems:
         raise ValueError('No runnable problems selected; review the required datasets and calibration inputs')
-    active = [p for p in problems if p.name not in finished]
     # Construct adapters before any CFD budget is spent.
     for problem in active:
         if hasattr(problem,'validate_optimization'):problem.validate_optimization()
@@ -252,6 +282,9 @@ def _run_suite(args):
         runtime = Runtime(args.backend, args.image, max(p.runtime.timeout_s for p in cfd))
         commands = {command for p in cfd for command in p.case_definition.commands}
         plan['runtime_preflight'] = runtime.resolve(commands)
+    # Fail fast on unavailable runtimes/dependencies, then verify once. The
+    # still-live samplers are passed to execution rather than reconstructed.
+    _prepare_suite_replays(args,active)
     if not args.resume:
         args.output.mkdir(parents=True,exist_ok=False)
     with (nullcontext() if getattr(args,'_suite_locked',False) else run_lock(args.output/'.suite.lock')):
@@ -305,7 +338,9 @@ def _execute_suite(args,problems,entries,finished):
                 turbo_initial_points=args.turbo_initial_points,turbo_candidates=args.turbo_candidates,
                 resume=args.resume and (args.output/problem.name).exists(),
                 extend_budget=args.budget if getattr(args,'_allow_budget_extension',False)
-                              and (args.output/problem.name).exists() else None)
+                              and (args.output/problem.name).exists() else None,
+                _verified_replay=args._verified_replays.get(problem.name),
+                replay_progress=_replay_progress)
         except ResumeError:
             raise
         except Exception as exc:

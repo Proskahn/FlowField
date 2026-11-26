@@ -141,3 +141,19 @@ class GCMMA:
             self.upper = (self.upper+self.x)/2
         self._solve()
         return False
+
+    def reject_trial(self):
+        """Shrink a pending move after a domain/CFD failure, without fake data.
+
+        No conservative approximation is updated with a fabricated penalty.
+        The same inner-iteration limit bounds unsuccessful trial proposals.
+        """
+        if not self.pending:
+            raise RuntimeError('No pending GCMMA trial')
+        self.inner += 1
+        if self.inner >= self.options.max_inner:
+            raise RuntimeError('GCMMA inner iterations exhausted after rejected trials')
+        self.lower = (self.lower+self.x)/2
+        self.upper = (self.upper+self.x)/2
+        self._solve()
+        return self.trial.copy().ravel()

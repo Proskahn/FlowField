@@ -128,6 +128,73 @@ plotting consume saved traces; they do not call the problem again. Comparisons
 remain restricted to matching objective identities and dimensions unless an
 existing explicit analysis override is used.
 
+## P002 GCMMA with coupled discrete adjoints
+
+`flowfield-p002 gcmma` minimizes the same scalar objective used by P002 CMA-ES,
+BO and TuRBO. With the default current and flow rate it is
+`1.21 * voltage_V + 2.5e-7 * pressure_sum_Pa` in watts. It uses the existing
+GCMMA conservative subproblem solver and a separate, checked linearization of
+the original OpenFOAM primal solver. No alternative physical model is used.
+
+```sh
+.venv/bin/python -m pip install -e '.[gcmma]'
+flowfield-p002 gcmma --output runs/p002/gcmma/paper-start \
+  --initial paper --iterations 30 --max-evaluations 100 --backend docker
+
+# Plan without creating output or invoking Docker.
+flowfield-p002 gcmma --output runs/p002/gcmma/paper-start --dry-run
+
+# Increase an exhausted CFD budget, preserving sources/configuration/options.
+flowfield-p002 gcmma --output runs/p002/gcmma/paper-start \
+  --resume --max-evaluations 150 --backend docker
+
+# Inspect both objective gradients at an existing, verified serial case.
+flowfield-p002 adjoint runs/path/to/P002-case --output runs/adjoint.json
+```
+
+The state includes velocity, pressure, face mass flux, gas concentration,
+temperature, electronic and ionic potentials, and catalyst current. Sparse
+automatic differentiation forms the complete coupled residual Jacobian. Two
+transpose solves give the individual objective gradients; their weighted sum
+drives GCMMA. Only mesh-coordinate derivatives use finite differences, with no
+perturbed CFD solves and with connectivity/material checks at two step sizes.
+The discrete-adjoint identity is described in the
+[pyadjoint gradient documentation](https://pyadjoint.readthedocs.io/en/latest/documentation/maths/3-gradients.html).
+
+Eight independent CFD probes check both objective gradients at the first
+iterate by default. They are validation calls, count against the CFD budget,
+and are never substituted for the adjoint gradient. `--no-check-gradients`
+explicitly skips these probes. Every initial evaluation, trial and failure
+counts; adjoint time is recorded separately. Compare optimizers using wall
+time as well as CFD counts. A completed iteration schedule or a small step is
+not a global-optimum certificate.
+
+The generated mesh is only piecewise differentiable. The 1 mm baseline is a
+connectivity transition, so the default start is the paper Table 5 geometry;
+`--x` accepts any smooth, in-bounds seven-variable initial design. Derivative
+evaluation rejects topology changes. Trial points with invalid meshes or CFD
+failures cause smaller GCMMA moves without fabricated penalty gradients.
+Successful CFD probes and trials contribute to `best.json`; accepted GCMMA
+iterates are recorded separately in `current.json`.
+
+This implementation supports the pinned serial P002 discretization and checks
+source/input hashes, saved-field conservation, the coupled primal residual,
+and transpose-solve accuracy. It defaults to a 150,000-unknown resource guard
+(coarse mesh); larger meshes require an explicit `--max-unknowns` override and
+substantial memory. The tested 111,180-unknown coarse case used roughly 186
+million LU entries, so several GB of free memory are needed. PyMETIS ordering
+is included in the `gcmma` optional dependencies. The original P002 convergence
+controls remain unchanged; a tighter outer tolerance alone can hit the linear
+solvers' numerical noise floor.
+
+`gcmma-run.json`, `evaluations.jsonl`, `attempts/`, `adjoints/`, and
+`gradient-check.json` retain the experiment and validation evidence. Resume
+replays completed evaluations and adjoints under identical sources, settings
+and dependency versions. An interrupted CFD request without a saved result
+stops replay for inspection; it is not silently re-executed. P002 remains a
+provisional paper reconstruction: these gradient checks validate derivatives
+of the implemented solver, not agreement of its physics with the paper.
+
 ## P003 GCMMA with material continuation
 
 `flowfield-p003 gcmma` optimizes every raw topology node (2,145 variables on
