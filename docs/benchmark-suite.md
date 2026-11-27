@@ -194,15 +194,51 @@ After syncing the updated source, from the repository root:
 
 Preparation requires a completed source with reconstructed fields and a new
 destination. It copies the exact geometry/configuration, changing only the
-iteration budget, and preserves verified momentum/heat activation without
+iteration budget unless `--processes` explicitly overrides the rank count,
+and preserves verified momentum/heat activation without
 inheriting qualification. It does not alter the source or run CFD. A 200-step
 budget error is an expected possible diagnostic outcome; run `report` after
 that error too. The report counts which components exceed the limit and dominate
 the recent final-stage samples. It identifies a blocker, not its cause or a
 convergence certificate. Old histories lack these columns and require a newly
 generated case. The [diagnostic verification record](../benchmarks/P006/field-diagnostics-verification.json)
-records a local two-rank coupled check; the Rivium plateau still requires its own
-diagnostic continuation.
+records a local two-rank coupled check.
+
+The subsequent Rivium diagnostic identified liquid velocity as the largest
+change in all 100 final samples (`3.50e-4` to `3.59e-4`), with pressure also above
+the `1e-4` limit (`1.21e-4` to `1.36e-4`). Temperature, saturation, gas velocity,
+hydration and the reported balance checks passed their limits. This identifies
+the blocking fields, not the cause of their plateau. Do not infer that small
+momentum residuals alone establish convergence of the coupled block iteration.
+
+Use a serial comparison to test sensitivity to the MPI decomposition and flow
+linear solve. Prepare it from the **same source as the parallel diagnostic**,
+not from its newer final fields, so the starting state and budget match:
+
+```bash
+.venv/bin/python scripts/diagnose_p006.py prepare \
+  runs/p006/bo42-continuation-001/continuation \
+  runs/p006/field-diagnostics-serial-001 --iterations 200 --processes 1
+
+.venv/bin/flowfield-p006 run --case runs/p006/field-diagnostics-serial-001 \
+  --backend native --timeout 3600
+
+.venv/bin/python scripts/diagnose_p006.py report \
+  runs/p006/field-diagnostics-serial-001 --last 100
+```
+
+The serial flow projection factors the whole network directly; MPI uses local
+factorizations in a distributed iterative solve. Changing rank count also
+changes acceleration reductions, so a better serial result would demonstrate
+numerical sensitivity, not by itself prove an MPI implementation bug. This
+does not change the default two-rank optimization configuration or establish
+serial cold-start robustness. `report` now includes Anderson norm, step-limit
+and empty-history statistics in the same final-stage window. Rerun it on the
+existing parallel case to obtain those statistics without another CFD solve.
+The [serial comparison record](../benchmarks/P006/serial-diagnostic-verification.json)
+documents a local pair with identical initial-field hashes and settings apart
+from process count; both passed in 64 steps. The stalled native fields were not
+available locally, so this verifies the workflow rather than a fix for Rivium.
 
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse

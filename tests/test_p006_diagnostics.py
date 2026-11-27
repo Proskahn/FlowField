@@ -41,6 +41,17 @@ class DiagnosticTests(unittest.TestCase):
             self.assertTrue(new['initial_state']['coupling']['thermal_active'])
             self.assertFalse((case/'result.json').exists())
             CaseEvaluator(p.case_definition)._load_case(case)
+            output=io.StringIO()
+            with contextlib.redirect_stdout(output):
+                diagnostics.main(['prepare',str(source),str(root/'serial'),'--iterations','200','--processes','1'])
+            self.assertEqual(json.loads(output.getvalue())['processes'],1)
+            serial=json.loads((root/'serial/case.json').read_text())
+            self.assertEqual(serial['config'],dict(manifest['config'],iterations=200,processes=1))
+            self.assertEqual(serial['initial_state']['source_field_sha256'],new['initial_state']['source_field_sha256'])
+            self.assertEqual(serial['design_geometry'],new['design_geometry'])
+            self.assertTrue(serial['initial_state']['coupling']['thermal_active'])
+            self.assertFalse(serial['initial_state']['qualification_inherited'])
+            CaseEvaluator(p.case_definition)._load_case(root/'serial')
             self.assertEqual(original,{str(f.relative_to(source)):f.read_bytes() for f in source.rglob('*') if f.is_file()})
             with self.assertRaisesRegex(ValueError,'outside the source'):
                 diagnostics.prepare(source,source/'nested')
@@ -98,6 +109,28 @@ class DiagnosticTests(unittest.TestCase):
             path.write_text('iteration,field_change\n1,0.1\n')
             with self.assertRaisesRegex(ValueError,'updated solver'):diagnostics.summarize(root)
             with self.assertRaisesRegex(ValueError,'positive'):diagnostics.summarize(root,last=0)
+
+    def test_acceleration_uses_outer_steps_and_the_same_final_stage_window(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.history_case(root)
+            (root/'log.flowfieldP006Foam').write_text(
+                'Iteration = 1\nAnderson block residual 100: norm=1e3; history=0; step=0.01\n'
+                'Iteration = 5\nAnderson block residual 200: norm=0.01; history=40; step=1\n'
+                'Iteration = 6\nAnderson block residual 201: norm=0.02; history=0; step=0.2\n'
+                'Iteration = 7\nAnderson block residual 202: norm=0.015; history=1; step=1\n'
+                'Iteration = 8\nAnderson block residual 203: norm=0.01; history=2; step=0.5\n')
+            report=diagnostics.summarize(root);a=report['acceleration']
+            self.assertEqual(report['processes'],2)
+            self.assertEqual(a['samples'],4)
+            self.assertEqual((a['first_norm'],a['last_norm']),(.01,.01))
+            self.assertEqual(a['minimum_step'],.2)
+            self.assertEqual(a['limited_steps'],2)
+            self.assertEqual(a['empty_history_samples'],1)
+            self.assertEqual(a['maximum_history'],40)
+            self.assertEqual(diagnostics.summarize(root,last=2)['acceleration']['samples'],2)
+            (root/'log.flowfieldP006Foam').write_text(
+                'Iteration = 8\nAnderson block residual 1: norm=nan; history=1; step=1\n')
+            with self.assertRaisesRegex(ValueError,'Invalid Anderson'):diagnostics.summarize(root)
 
     def test_live_partial_csv_row_is_not_treated_as_a_complete_sample(self):
         with tempfile.TemporaryDirectory() as tmp:

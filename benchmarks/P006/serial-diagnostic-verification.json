@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T15:35:46.961035+00:00",
+  "status": "local_serial_comparison_passed",
+  "python_p006_tests_passed": 55,
+  "target_machine_failure_reproduced": false,
+  "optimizer_defaults_changed": false,
+  "same_initial_field_hashes": true,
+  "configuration_differs_only_in_processes": true,
+  "same_solver_sources": true,
+  "objective_difference_K": 4.3493346280065737e-07,
+  "cases": [
+    {
+      "case_directory": "runs/p006-field-diagnostics-001/coupled-continuation",
+      "processes": 2,
+      "qualified": true,
+      "iterations": 64.0,
+      "objective": 0.7981292458811032,
+      "field_change": 9.16744926913e-05,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.807129312187219e-12,
+        "saved_pressure_force_consistency": 9.002810549079049e-11,
+        "charge_balance": 1.5852192911310225e-13,
+        "oxygen_faraday": 4.1164321257229564e-15,
+        "hydrogen_faraday": 9.789949446827443e-14,
+        "heat_power_identity": 2.429016939351946e-13,
+        "membrane_water_balance": 7.170920818688829e-16,
+        "saved_local_L_balance": 0.00014528536313013633,
+        "saved_global_L_balance": 2.8476915889987504e-07,
+        "saved_local_G_balance": 5.729039079815017e-05,
+        "saved_global_G_balance": 1.6687964696359975e-07
+      },
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "acceleration": {
+        "samples": 63,
+        "first_norm": 0.00264411063213,
+        "last_norm": 0.00150147034885,
+        "minimum_step": 1.0,
+        "limited_steps": 0,
+        "maximum_history": 40,
+        "empty_history_samples": 1,
+        "note": "Empty history can mean startup or a reset; a small step can limit progress. These indicators do not establish the cause."
+      }
+    },
+    {
+      "case_directory": "runs/p006-serial-diagnostic-001/coupled-continuation",
+      "processes": 1,
+      "qualified": true,
+      "iterations": 64.0,
+      "objective": 0.798129680814566,
+      "field_change": 8.89645114227e-05,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.5389619371225143e-12,
+        "saved_pressure_force_consistency": 8.59079118881086e-11,
+        "charge_balance": 6.199860728684784e-14,
+        "oxygen_faraday": 3.7584815086223475e-15,
+        "hydrogen_faraday": 5.279771643065352e-14,
+        "heat_power_identity": 4.532780901270379e-14,
+        "membrane_water_balance": 5.515420604653379e-16,
+        "saved_local_L_balance": 0.00014588780054307178,
+        "saved_global_L_balance": 1.8972981841112165e-07,
+        "saved_local_G_balance": 5.752795985768888e-05,
+        "saved_global_G_balance": 1.1118708435736727e-07
+      },
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "acceleration": {
+        "samples": 63,
+        "first_norm": 0.00264411111874,
+        "last_norm": 0.00146961359893,
+        "minimum_step": 1.0,
+        "limited_steps": 0,
+        "maximum_history": 40,
+        "empty_history_samples": 1,
+        "note": "Empty history can mean startup or a reset; a small step can limit progress. These indicators do not establish the cause."
+      }
+    }
+  ],
+  "reported_native_parallel_window": {
+    "samples": 100,
+    "liquid_velocity_dominant_samples": 100,
+    "liquid_velocity_above_limit_samples": 100,
+    "pressure_above_limit_samples": 100,
+    "last_liquid_velocity_change": 0.000349741130533,
+    "last_pressure_change": 0.000120912503474,
+    "field_limit": 0.0001
+  },
+  "limitations": [
+    "The local source is a previously qualified baseline, not the unavailable native stalled fields.",
+    "A serial-versus-parallel difference would indicate numerical sensitivity, not prove an MPI bug.",
+    "Warm-start qualification does not establish serial cold-start robustness."
+  ]
+}
