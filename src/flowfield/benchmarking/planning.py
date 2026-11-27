@@ -2,11 +2,13 @@
 
 from ..problem import CFDProblem
 from ..registry import create_problem, list_problems, problem_info
+from ..optimization.mobo import MOBO_METHODS, mobo_settings
 
 
 _OPTIMIZER_OPTIONS = {
     'population', 'sigma', 'failure_penalty', 'max_seconds',
     'bo_initial_points', 'bo_candidates', 'turbo_initial_points', 'turbo_candidates',
+    'mobo_mc_samples', 'mobo_reference_point',
 }
 
 
@@ -44,13 +46,16 @@ def plan_benchmark(*, problems, optimizers, seeds, budget, problem_options=None,
         raise ValueError('problem_options contains unselected problem IDs')
     if set(optimizer_options) - set(optimizers):
         raise ValueError('optimizer_options contains unselected optimizer IDs')
-    for options in optimizer_options.values():
+    for optimizer, options in optimizer_options.items():
         if set(options) - _OPTIMIZER_OPTIONS:
             raise ValueError('Optimizer options may only set ' + ', '.join(sorted(_OPTIMIZER_OPTIONS)))
         _validate_options(budget, seeds[0], options.get('population', 4), options.get('sigma', .1),
                           options.get('failure_penalty'), options.get('max_seconds'))
         bo_settings(options.get('bo_initial_points', 5), options.get('bo_candidates', 2048))
         turbo_settings(1, options.get('turbo_initial_points', 5), options.get('turbo_candidates', 512))
+        if optimizer in MOBO_METHODS:
+            mobo_settings(optimizer,options.get('bo_initial_points',5),options.get('bo_candidates',2048),
+                          options.get('mobo_mc_samples',128),options.get('mobo_reference_point'))
     instances = []
     for identifier in problems:
         problem = create_problem(identifier, **problem_options.get(identifier, {}))

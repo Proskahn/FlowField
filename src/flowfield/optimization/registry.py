@@ -12,6 +12,7 @@ from .turbo import TuRBOSampler
 from .cobyla import COBYLASampler
 from .lqcmaes import LQCMAESSampler
 from .repair import evaluation_repair_settings
+from .mobo import QLogNEHVISampler, QLogNParEGOSampler
 
 
 @dataclass(frozen=True)
@@ -97,6 +98,10 @@ register_optimizer('random', RandomSampler, label='RandomSearch', variable_types
 register_optimizer('cmaes', CMAESSampler, label='CMA-ES')
 register_optimizer('lqcmaes', LQCMAESSampler, label='lq-CMA-ES', revision='1-pycma-population-replay')
 register_optimizer('nsga2', NSGAIISampler, label='NSGA-II', multi_objective=True)
+register_optimizer('qlognehvi', QLogNEHVISampler, label='BoTorch qLogNEHVI',
+                   revision='1-botorch-pool-q1', multi_objective=True)
+register_optimizer('qlognparego', QLogNParEGOSampler, label='BoTorch qLogNParEGO',
+                   revision='1-botorch-pool-q1', multi_objective=True)
 register_optimizer('bo', BayesianOptimizationSampler, label='Vanilla BO', revision='2')
 register_optimizer('turbo', TuRBOSampler, label='TuRBO-1', revision='2')
 register_optimizer('cobyla', COBYLASampler, label='COBYLA', revision='1-scipy-replay-paper-stop')

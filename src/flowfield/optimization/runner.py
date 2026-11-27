@@ -22,6 +22,7 @@ from .turbo import turbo_settings
 from .lqcmaes import lq_settings
 from .random import random_settings
 from .repair import evaluation_repair_settings
+from .mobo import MOBO_METHODS, mobo_settings
 from .replay import verify
 
 _save = save_json
@@ -29,7 +30,8 @@ _save = save_json
 
 def _versions():
     result = {'python': platform.python_version()}
-    for name in ('cma', 'numpy', 'scipy', 'scikit-learn', 'ioh', 'gmsh'):
+    for name in ('cma', 'numpy', 'scipy', 'scikit-learn', 'ioh', 'gmsh',
+                 'torch', 'botorch', 'gpytorch', 'linear-operator'):
         try:
             result[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
@@ -95,11 +97,15 @@ class _FailurePolicy(AbstractFlowFieldProblem):
 
 def _proposals(problem, x0, method, population, sigma, seed, state, *,
                budget=None, bo_initial_points=5, bo_candidates=2048,
-               turbo_initial_points=5, turbo_candidates=512):
+               turbo_initial_points=5, turbo_candidates=512,
+               mobo_mc_samples=128, mobo_reference_point=None):
     """Bridge serial, budgeted evaluations to batch ask/tell algorithms."""
     extra = dict(bo_initial_points=bo_initial_points, bo_candidates=bo_candidates) if method == 'bo' else {}
     if method == 'turbo':
         extra = dict(turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+    if method in MOBO_METHODS:
+        extra = dict(bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
+                     mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point)
     sampler = create_sampler(method, problem, seed=seed, initial=x0,
                              population=population, sigma=sigma, **extra)
     baseline = yield list(x0), 'baseline', 0, None
@@ -163,9 +169,12 @@ def optimize(problem, *, output, resume=False, extend_budget=None, _verified_rep
         options['budget'] = extend_budget
     _validate_options(options.get('budget',20),options.get('seed',42),options.get('population',4),
                       options.get('sigma',.1),options.get('failure_penalty'),options.get('max_seconds'))
-    _method(problem,options.get('method','auto'))
+    method = _method(problem,options.get('method','auto'))
     bo_settings(options.get('bo_initial_points',5), options.get('bo_candidates',2048))
     turbo_settings(problem.dimension, options.get('turbo_initial_points',5), options.get('turbo_candidates',512))
+    if method in MOBO_METHODS:
+        mobo_settings(method,options.get('bo_initial_points',5),options.get('bo_candidates',2048),
+                      options.get('mobo_mc_samples',128),options.get('mobo_reference_point'))
     output = Path(output).resolve()
     if resume:
         if not output.is_dir() or (not (output/'experiment.json').is_file() and not pristine_initialization(output)):
@@ -184,7 +193,7 @@ def optimize(problem, *, output, resume=False, extend_budget=None, _verified_rep
 
 def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_ioh,
                 failure_penalty, max_seconds, bo_initial_points, bo_candidates,
-                turbo_initial_points, turbo_candidates):
+                turbo_initial_points, turbo_candidates, mobo_mc_samples=128, mobo_reference_point=None):
     """Build the same manifest for read-only validation and actual execution."""
     diagonal = method in ('cmaes', 'lqcmaes') and problem.dimension > 100
     algorithm = optimizer_label(method, problem)
@@ -192,8 +201,8 @@ def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_io
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
         optimizer_revision=optimizer_revision(method, problem), problem=problem.name,
         problem_name=_FailurePolicy(problem, failure_penalty).ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
-        initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla') else None,
-        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo', 'cobyla') else None, diagonal_covariance=diagonal,
+        initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla', *MOBO_METHODS) else None,
+        sigma_normalized=sigma if method not in ('random', 'nsga2', 'bo', 'turbo', 'cobyla', *MOBO_METHODS) else None, diagonal_covariance=diagonal,
         lower_bounds=problem.lower_bounds, upper_bounds=problem.upper_bounds,
         objective_direction='minimize', failure_penalty=failure_penalty, ioh_enabled=with_ioh,
         max_seconds_soft=max_seconds, versions=_versions(),
@@ -218,13 +227,17 @@ def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_io
         experiment['optimizer_settings'] = lq_settings()
     if method == 'turbo':
         experiment['optimizer_settings'] = turbo_settings(problem.dimension, turbo_initial_points, turbo_candidates)
+    if method in MOBO_METHODS:
+        experiment['optimizer_settings'] = mobo_settings(method,bo_initial_points,bo_candidates,
+                                                         mobo_mc_samples,mobo_reference_point)
+        experiment['objective_source'] = 'at least two named raw objectives, all minimized; no scalar fallback'
     if method == 'cobyla':
         experiment['optimizer_settings'] = dict(rhobeg_normalized=.1, trust_region_tolerance=1e-5,
             constraint_tolerance=1e-8, relative_objective_tolerance=1e-5,
             constraint_handling='native geometric inequalities and bounds',
             objective_source='unpenalized_objective when provided, otherwise objective',
             proposal_recovery='SciPy replay; previously evaluated CFD values are reused')
-    if method in ('bo', 'turbo'):
+    if method in ('bo', 'turbo', *MOBO_METHODS):
         experiment['optimizer_settings']['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     repair_settings = evaluation_repair_settings(problem, method)
     if repair_settings:
@@ -238,7 +251,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
               sigma=.1, with_ioh=True, failure_penalty=None, max_seconds=None,
               initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
               turbo_initial_points=5, turbo_candidates=512, allow_budget_extension=False,
-              _verified_replay=None, _resources=None, replay_progress=None):
+              _verified_replay=None, _resources=None, replay_progress=None,
+              mobo_mc_samples=128, mobo_reference_point=None):
     method = _method(problem,method)
     x0 = _initial(problem) if initial is None else list(initial)
     problem.decode(x0)
@@ -253,6 +267,9 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     if method in ('bo', 'turbo'):
         from .bo import dependencies
         dependencies()
+    if method in MOBO_METHODS:
+        from .mobo import dependencies
+        dependencies()
     if method == 'cobyla':
         from .cobyla import dependencies
         dependencies()
@@ -264,7 +281,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     experiment = _experiment(problem, x0, method, budget=budget, seed=seed, population=population,
         sigma=sigma, with_ioh=with_ioh, failure_penalty=failure_penalty, max_seconds=max_seconds,
         bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
-        turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+        turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates,
+        mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point)
     algorithm = experiment['algorithm']
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
@@ -277,7 +295,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
             _verified_replay = _verify_history(problem,x0,method,population,sigma,seed,history,
                 saved=saved,current=experiment,progress=replay_progress,
                 budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
-                turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+                turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates,
+                mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point)
         else:
             _verified_replay.validate(saved,experiment,history)
         _resources.callback(_verified_replay.close)
@@ -354,7 +373,8 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     else:
         proposals = _proposals(problem,x0,method,population,sigma,seed,summary,
                                budget=budget, bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
-                               turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates)
+                               turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates,
+                               mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point)
         proposal_state = summary
     context = analyzer_logger(objective,ioh_output,algorithm_name=algorithm,
         algorithm_info=f'seed={seed}; budget={budget}; resumed={resume}; replay is not new CFD') if with_ioh else nullcontext()

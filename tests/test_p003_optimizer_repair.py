@@ -11,6 +11,7 @@ import unittest
 from flowfield import P003Problem, TopologyConfig
 from flowfield.optimization import create_sampler, list_optimizers, main, optimize
 from flowfield.optimization.registry import optimizer_definition, optimizer_revision
+from flowfield.optimization.mobo import MOBO_METHODS
 from flowfield.optimization.state import ResumeError, load_history
 from flowfield.runtime import SimulationError
 from test_optimization import CountingProblem
@@ -18,6 +19,7 @@ from test_optimization import CountingProblem
 
 NEW_ADAPTERS = ('cmaes', 'lqcmaes', 'nsga2', 'cobyla')
 AVAILABLE = all(importlib.util.find_spec(name) for name in ('numpy', 'scipy', 'cma', 'sklearn'))
+MOBO_AVAILABLE = all(importlib.util.find_spec(name) for name in ('torch', 'botorch', 'gpytorch'))
 
 
 class RepairProblem(P003Problem):
@@ -37,7 +39,8 @@ class RepairProblem(P003Problem):
             raise SimulationError('Synthetic evaluation failure')
         loss = sum((v-.01)**2 for v in x)
         return dict(status='ok', objective=loss, unpenalized_objective=loss,
-                    objectives={'loss': loss}, constraints={'channel_volume': volume-self.config.volume_limit})
+                    objectives={'loss': loss,'other_loss':sum((v-.02)**2 for v in x)},
+                    constraints={'channel_volume': volume-self.config.volume_limit})
 
 
 @unittest.skipUnless(AVAILABLE, 'optional optimizer dependencies unavailable')
@@ -69,6 +72,7 @@ class P003OptimizerRepairTests(unittest.TestCase):
 
     def test_all_registered_optimizers_use_feasible_designs_and_correct_row_metadata(self):
         for method in list_optimizers():
+            if method in MOBO_METHODS and not MOBO_AVAILABLE:continue
             with self.subTest(method=method):
                 problem = RepairProblem()
                 summary = self.run_problem(method, problem)
@@ -223,6 +227,7 @@ class P003OptimizerRepairTests(unittest.TestCase):
 
     def test_bad_baseline_is_rejected_before_cfd_for_every_optimizer(self):
         for method in list_optimizers():
+            if method in MOBO_METHODS and not MOBO_AVAILABLE:continue
             problem = RepairProblem()
             with self.assertRaisesRegex(ValueError, 'Initial design violates'):
                 self.run_problem(method, problem, initial=[1.]*problem.dimension)

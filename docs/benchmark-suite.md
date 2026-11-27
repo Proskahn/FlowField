@@ -555,6 +555,99 @@ The pixel image has 65 rows and 33 columns. `completed_schedule` means that all
 requested iterations ran, not that an optimality tolerance was met or the paper
 was reproduced. The forward physics remains provisionally validated.
 
+## BoTorch multi-objective Bayesian optimization
+
+Two optional optimizers use the named physical `objectives` and explicit
+`constraints`, independently of the scalar diagnostic `objective`:
+
+| Optimizer ID | BoTorch acquisition | Search criterion |
+| --- | --- | --- |
+| `qlognehvi` | `qLogNoisyExpectedHypervolumeImprovement` | Log noisy expected hypervolume improvement |
+| `qlognparego` | `qLogNParEGO` | Log noisy expected improvement of a new random augmented Chebyshev scalarization |
+
+Install the optional dependency and run either method directly:
+
+```bash
+.venv/bin/python -m pip install -e '.[mobo,p003,plot]'
+.venv/bin/flowfield-optimize --problem P003 --dimension 500 \
+    --optimizer qlognehvi --seed 42 --budget 100 \
+    --backend native --timeout 14400 \
+    --output runs/p003/mobo/qlognehvi-d500-42
+```
+
+Replace `qlognehvi` with `qlognparego` and choose a fresh output directory for
+the second method. The existing `--dimension` option selects the design grid
+and medium CFD mesh. No configuration file or scalar objective weights are
+needed. Both power and current-density uniformity remain active objectives.
+
+The benchmark runner also accepts both methods across seeds:
+
+```bash
+.venv/bin/flowfield-benchmark --problem P003 --dimension 500 \
+    --optimizers qlognehvi qlognparego --seeds 42 43 44 45 46 \
+    --budget 100 --backend native --timeout 14400 --no-ioh \
+    --output runs/p003/mobo/d500-seeds42-46
+```
+
+Add `--dry-run` to either command to inspect settings without installing
+BoTorch, writing files or running CFD. Actual execution uses BoTorch 0.16.1
+with a CPU, double-precision `SingleTaskGP`, independent standardized outputs,
+the default dimension-scaled RBF priors and learned observation noise.
+All FlowField objectives are minimized: the adapter negates them for BoTorch's
+maximization convention. Named constraints retain their `g(x) <= 0` direction.
+At least two finite named objectives are required; there is no scalar fallback.
+
+Both adapters propose one evaluation at a time (`q=1`). They select the largest
+BoTorch acquisition value over a fresh uniform candidate pool. This is a finite
+candidate approximation, not BoTorch's continuous multistart acquisition
+optimizer. Problem-owned repair is applied before novelty checks and acquisition
+scoring, so the GP observes the coordinates actually evaluated. A constraint
+explicitly enforced by that repair (P003's channel volume) is checked on returned
+results and excluded from the GP; remaining constraints are modeled as separate
+outputs and used in the acquisition's feasibility weighting.
+
+`--bo-initial-points` controls initialization attempts including the baseline
+(default 5). `--bo-candidates` controls pool size (default 2048), and
+`--mobo-mc-samples` controls Sobol Monte Carlo samples (default 128; power of two,
+at least 16). Initial candidates use a seeded Latin hypercube. Failed attempts
+still count against the budget and are excluded from the GP and Pareto archive;
+their scalar failure penalties are never treated as physical measurements.
+If failures leave fewer than two valid observations, initialization continues
+within the original attempt budget. A numerical model/acquisition failure stops
+the run rather than silently switching algorithms.
+
+By default qLogNEHVI infers its acquisition reference point once, at its first
+model step, from feasible valid observations (or all valid observations if none
+are feasible). It freezes that point for the rest of the run. To set a common
+point explicitly, pass `--mobo-reference-point` as a JSON object whose keys
+exactly match the raw objective names and whose values use the original
+minimization signs and units. For example, the *acquisition* setting
+`'{"negative_power_domain_W":0,"current_std_A_m2":1000}'` specifies zero power
+and 1,000 A/m² standard deviation; it is not a validated benchmark scoring
+reference. qLogNParEGO draws a new seeded Dirichlet(1) scalarization vector at
+each model step and requires no hypervolume reference point. Its weights are
+independent of P003's scalar power/uniformity weights.
+
+Complete observations and acquisition metadata are journaled. The effective
+reference point and qLogNParEGO weights are recorded in proposal metadata;
+`pareto.json` contains all observed feasible nondominated designs. Resume and
+budget extension use the existing commands and reconstruct proposals without
+rerunning CFD. Resume verifies settings and the original Python, NumPy, SciPy,
+PyTorch, BoTorch, GPyTorch and linear-operator versions. Model/acquisition work
+uses one PyTorch CPU thread and restores the caller's thread count and CPU RNG.
+
+These adapters use the existing multi-objective/Pareto execution path. The
+separate `--regime` selector and common hypervolume benchmark scoring are not
+implemented here. Scalar `best_objective` and IOH traces remain diagnostics;
+do not use them to rank these algorithms' Pareto-front quality. Acquisition
+reference points inferred separately per run are not a common scoring reference.
+The adapters accept full P003 dimensions, but correctness tests at 500 and
+6,000 variables do not establish sample efficiency at those dimensions.
+
+The implementations use the upstream [BoTorch 0.16.1 acquisition APIs](https://botorch.readthedocs.io/en/v0.16.1/acquisition.html)
+for [qLogNEHVI](https://botorch.readthedocs.io/en/v0.16.1/_modules/botorch/acquisition/multi_objective/logei.html)
+and [qLogNParEGO](https://botorch.readthedocs.io/en/v0.16.1/_modules/botorch/acquisition/multi_objective/parego.html).
+
 ## Plot objective histories
 
 Plot the scalar score and every named raw objective against evaluation attempts:
@@ -588,7 +681,7 @@ completed runs of the same problem/configuration and dimension. Different
 budgets and optimizer failure policies are labeled in the legends. PNG, SVG and
 PDF are supported. Plotting only reads saved journals; it never reruns CFD.
 
-## Plot an NSGA-II Pareto front
+## Plot a multi-objective Pareto front
 
 Use the saved `pareto.json` archive to plot all observed feasible nondominated
 designs, including designs from a partial final generation:
@@ -606,7 +699,7 @@ ax = plot_pareto('runs/p002-nsga2-42',
 ```
 
 The function returns a Matplotlib Axes and accepts an existing `ax=`. Pass run
-directories, parents containing NSGA-II runs, or `pareto.json` files with their
+directories, parents containing NSGA-II or BoTorch multi-objective runs, or `pareto.json` files with their
 adjacent `experiment.json` manifests. Multiple runs get separate series; their
 objective/configuration, dimension and failure policy must match. Different
 budgets are allowed and labeled. PNG, SVG and PDF output are supported.

@@ -8,8 +8,10 @@ from .bo import BayesianOptimizationSampler
 from .turbo import TuRBOSampler
 from .cobyla import COBYLASampler
 from .lqcmaes import LQCMAESSampler
+from .mobo import QLogNEHVISampler, QLogNParEGOSampler
 from .registry import register_optimizer, list_optimizers, create_sampler
 
 __all__ = ["optimize", "main", "Sampler", "RandomSampler", "CMAESSampler", "NSGAIISampler",
            "BayesianOptimizationSampler", "TuRBOSampler", "COBYLASampler", "LQCMAESSampler",
+           "QLogNEHVISampler", "QLogNParEGOSampler",
            "register_optimizer", "list_optimizers", "create_sampler"]

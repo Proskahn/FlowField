@@ -19,6 +19,7 @@ from .bo import bo_settings
 from .turbo import turbo_settings
 from .random import random_settings
 from .repair import evaluation_repair_settings
+from .mobo import MOBO_METHODS, mobo_settings
 from .registry import create_sampler, list_optimizers, optimizer_label, optimizer_revision
 from .runner import optimize, _experiment, _initial, _method, _validate_options, _verify_history
 from .state import (ResumeError, check_legacy_pid, load_history, next_session,
@@ -79,6 +80,10 @@ def main(argv=None):
                         help='BO initialization attempts including the baseline (default 5)')
     parser.add_argument('--bo-candidates', type=int, default=2048,
                         help='BO random acquisition candidates per step (default 2048)')
+    parser.add_argument('--mobo-mc-samples', type=int, default=128,
+                        help='BoTorch acquisition samples; a power of two >= 16 (default 128)')
+    parser.add_argument('--mobo-reference-point', type=json.loads,
+                        help='qLogNEHVI fixed acquisition reference point: JSON mapping objective names to minimized values')
     parser.add_argument('--turbo-initial-points', type=int, default=5,
                         help='TuRBO initialization attempts per region, including the first baseline (default 5)')
     parser.add_argument('--turbo-candidates', type=int, default=512,
@@ -141,7 +146,8 @@ def _suite_history(problem, args, folder):
             with_ioh=args.ioh, failure_penalty=args.failure_penalty,
             max_seconds=args.max_seconds_per_problem,
             bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
-            turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+            turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates,
+            mobo_mc_samples=args.mobo_mc_samples, mobo_reference_point=args.mobo_reference_point)
         validate_experiment(saved_experiment,current,allow_budget_extension=extending)
         history, pending = load_history(folder,saved_experiment['budget'],args.failure_penalty)
         args._replay_inputs[problem.name] = (saved_experiment, current, history)
@@ -179,7 +185,8 @@ def _prepare_suite_replays(args, active):
                 args.population,args.p003_sigma if problem.name=='P003' else args.sigma,args.seed,history,
                 saved=saved,current=current,progress=_replay_progress,
                 budget=args.budget, bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
-                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+                turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates,
+                mobo_mc_samples=args.mobo_mc_samples, mobo_reference_point=args.mobo_reference_point)
             args._replay_resources.callback(replay.close)
             args._verified_replays[problem.name] = replay
 
@@ -216,6 +223,8 @@ def _run_suite_impl(args):
                 entries.append(dict(problem=identifier, status='skipped', reason=str(exc)))
                 continue
         method = _method(problem,args.method)
+        if args.mobo_reference_point is not None and method != 'qlognehvi':
+            raise ValueError('--mobo-reference-point is only used by qlognehvi')
         problems.append(problem)
         entries.append(dict(problem=identifier,status='ready',dimension=problem.dimension,
             algorithm=optimizer_label(method, problem),
@@ -230,11 +239,17 @@ def _run_suite_impl(args):
             entries[-1].update(fidelity=problem.config.fidelity,config_sha256=problem.config.fingerprint)
         if method == 'random':
             entries[-1]['optimizer_settings'] = random_settings(problem)
+        if method in MOBO_METHODS:
+            entries[-1].update(optimization_mode='multi_objective',
+                optimizer_settings=mobo_settings(method,args.bo_initial_points,args.bo_candidates,
+                                                   args.mobo_mc_samples,args.mobo_reference_point),
+                optimizer_revision=optimizer_revision(method,problem))
+            entries[-1]['optimizer_settings']['candidate_repair'] = getattr(problem,'candidate_repair',None)
         repair_settings = evaluation_repair_settings(problem, method)
         if repair_settings:
             entries[-1]['optimizer_settings'] = repair_settings
             entries[-1]['optimizer_revision'] = optimizer_revision(method, problem)
-        if method in ('random', 'bo', 'turbo') or repair_settings:
+        if method in ('random', 'bo', 'turbo', *MOBO_METHODS) or repair_settings:
             entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
     mesh_label = args.mesh or (problems[0].config.mesh if len(problems)==1 and problems[0].name in ('P003','P006') else 'coarse')
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
@@ -283,6 +298,9 @@ def _run_suite_impl(args):
                  if _method(problem,args.method) == 'bo' else {})
         if _method(problem,args.method) == 'turbo':
             extra = dict(turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates)
+        if _method(problem,args.method) in MOBO_METHODS:
+            extra = dict(bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates,
+                         mobo_mc_samples=args.mobo_mc_samples,mobo_reference_point=args.mobo_reference_point)
         create_sampler(args.method, problem, seed=args.seed, initial=_initial(problem),
                        population=args.population, sigma=args.p003_sigma if problem.name=='P003' else args.sigma, **extra)
     if any(_method(p,args.method) in ('cmaes','lqcmaes') for p in active):
@@ -353,6 +371,7 @@ def _execute_suite(args,problems,entries,finished):
                 failure_penalty=args.failure_penalty,max_seconds=args.max_seconds_per_problem,progress=progress,
                 bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates,
                 turbo_initial_points=args.turbo_initial_points,turbo_candidates=args.turbo_candidates,
+                mobo_mc_samples=args.mobo_mc_samples,mobo_reference_point=args.mobo_reference_point,
                 resume=args.resume and (args.output/problem.name).exists(),
                 extend_budget=args.budget if getattr(args,'_allow_budget_extension',False)
                               and (args.output/problem.name).exists() else None,

@@ -221,7 +221,7 @@ def validate_experiment(saved, current, *, allow_budget_extension=False):
             if saved.get(key) != current.get(key):
                 raise ResumeError(f'Cannot resume with changed {key}')
     repair = current.get('optimizer_settings', {}).get('candidate_repair')
-    if current.get('optimizer') in ('random', 'bo', 'turbo', 'cobyla', 'lqcmaes') or repair is not None:
+    if current.get('optimizer') in ('random', 'bo', 'turbo', 'cobyla', 'lqcmaes', 'qlognehvi', 'qlognparego') or repair is not None:
         if saved.get('optimizer_settings') != current.get('optimizer_settings'):
             raise ResumeError('Cannot resume with changed optimizer_settings')
         dependencies = ('numpy', 'scipy') if current.get('optimizer') == 'cobyla' else ('numpy', 'scipy', 'scikit-learn')
@@ -234,6 +234,8 @@ def validate_experiment(saved, current, *, allow_budget_extension=False):
             dependencies = ('cma', 'numpy', 'scipy')
         if current.get('optimizer') == 'nsga2':
             dependencies = ('python', 'numpy', 'scipy')
+        if current.get('optimizer') in ('qlognehvi', 'qlognparego'):
+            dependencies = ('python', 'numpy', 'scipy', 'torch', 'botorch', 'gpytorch', 'linear-operator')
     else:
         dependencies = ('cma', 'numpy') if current['population'] is not None and current.get('optimizer') != 'nsga2' else ()
     for key in dependencies:

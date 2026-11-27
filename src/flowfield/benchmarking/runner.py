@@ -7,6 +7,7 @@ from pathlib import Path
 from ..evaluation import write_json
 from ..optimization import optimize, list_optimizers
 from ..optimization.state import save_json
+from ..optimization.mobo import MOBO_METHODS
 from ..problems.level4_high_dimensional_topology.p003.scalability import add_dimension_argument, config_from_dimension
 from ..registry import create_problem, list_problems, problem_config_type
 from ..runtime import Runtime, DEFAULT_IMAGE
@@ -47,6 +48,9 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
                             output=folder, with_ioh=with_ioh, **optimizer_options.get(optimizer, {}))
                         entry.update(status=summary['status'], attempts=summary['attempts'],
                                      best_objective=summary['best_objective'])
+                        if summary.get('optimization_mode') == 'multi_objective':
+                            entry.update(optimization_mode='multi_objective',pareto_size=summary['pareto_size'],
+                                         pareto_file=str(relative/'pareto.json'),scalar_score_role='diagnostic only')
                     except (Exception, KeyboardInterrupt):
                         entry['status'] = 'failed'
                         raise
@@ -70,6 +74,11 @@ def main(argv=None):
     parser.add_argument('--budget', type=int, default=20)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--config', type=Path, help='JSON config for a single selected problem')
+    parser.add_argument('--bo-initial-points',type=int,default=5,help='BO/MOBO initialization attempts, including baseline')
+    parser.add_argument('--bo-candidates',type=int,default=2048,help='BO/MOBO acquisition candidate count')
+    parser.add_argument('--mobo-mc-samples',type=int,default=128,help='BoTorch acquisition samples (power of two >= 16)')
+    parser.add_argument('--mobo-reference-point',type=json.loads,
+                        help='qLogNEHVI acquisition reference: JSON mapping objective names to minimized values')
     add_dimension_argument(parser)
     parser.add_argument('--backend', choices=('auto', 'native', 'docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
@@ -81,6 +90,8 @@ def main(argv=None):
     data.add_argument('--model', type=Path, help='Trained surrogate for a single data-backed problem')
     args = parser.parse_args(argv)
     try:
+        if args.mobo_reference_point is not None and 'qlognehvi' not in args.optimizers:
+            raise ValueError('--mobo-reference-point requires selecting qlognehvi')
         if args.dimension is not None and 'P003' not in args.problems:
             raise ValueError('--dimension is supported by P003 only; include --problem P003')
         if args.dimension is not None and args.config is not None:
@@ -100,8 +111,16 @@ def main(argv=None):
                 options[name]['dataset'] = args.dataset
             if args.model:
                 options[name]['model'] = args.model
+        optimizer_options = {}
+        for method in args.optimizers:
+            if method in ('bo', *MOBO_METHODS):
+                optimizer_options[method] = dict(bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates)
+            if method in MOBO_METHODS:
+                optimizer_options[method].update(mobo_mc_samples=args.mobo_mc_samples,
+                    mobo_reference_point=args.mobo_reference_point if method == 'qlognehvi' else None)
         arguments = dict(problems=args.problems, optimizers=args.optimizers, seeds=args.seeds,
-                         budget=args.budget, problem_options=options, with_ioh=not args.no_ioh)
+                         budget=args.budget, problem_options=options, optimizer_options=optimizer_options,
+                         with_ioh=not args.no_ioh)
         result = (plan_benchmark(**arguments) if args.dry_run
                   else run_benchmark(**arguments, output=args.output))
     except (OSError, ValueError, TypeError, RuntimeError) as exc:

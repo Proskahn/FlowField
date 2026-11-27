@@ -317,7 +317,7 @@ def _pareto_archives(directories):
     for folder in _run_directories(directories):
         path = folder / 'pareto.json'
         if not path.is_file():
-            raise ValueError(f'No pareto.json found in {folder}; use a saved NSGA-II run')
+            raise ValueError(f'No pareto.json found in {folder}; use a saved multi-objective run')
         experiment = json.loads((folder / 'experiment.json').read_text())
         archive = json.loads(path.read_text())
         current = (experiment['problem_name'], experiment['dimension'], experiment.get('failure_penalty'))
