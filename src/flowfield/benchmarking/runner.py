@@ -51,6 +51,7 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
                                      best_objective=summary['best_objective'], regime=summary['regime'])
                         if summary.get('optimization_mode') == 'multi_objective':
                             entry.update(optimization_mode='multi_objective',pareto_size=summary['pareto_size'],
+                                         objective_names=summary['objective_names'],
                                          pareto_file=str(relative/'pareto.json'),scalar_score_role='diagnostic only')
                     except (Exception, KeyboardInterrupt):
                         entry['status'] = 'failed'
@@ -73,6 +74,10 @@ def main(argv=None):
     parser.add_argument('--optimizers', '--optimizer', nargs='+', choices=list_optimizers(), required=True)
     parser.add_argument('--seeds', type=int, nargs='+', required=True)
     parser.add_argument('--budget', type=int, default=20)
+    parser.add_argument('--population', type=int, default=None,
+                        help='NSGA-II/CMA-ES/lq-CMA-ES population size (default 4); baseline counts toward the budget')
+    parser.add_argument('--failure-penalty', type=float,
+                        help='Explicit positive scalar penalty to continue after CFD failures; failed vectors are excluded from Pareto/HV results')
     parser.add_argument('--regime', choices=('single', 'multi'),
                         help='Benchmark regime; omitted: infer from each optimizer. Random supports both.')
     parser.add_argument('--output', type=Path, required=True)
@@ -93,6 +98,9 @@ def main(argv=None):
     data.add_argument('--model', type=Path, help='Trained surrogate for a single data-backed problem')
     args = parser.parse_args(argv)
     try:
+        population_methods = {'nsga2', 'cmaes', 'lqcmaes'}
+        if args.population is not None and not population_methods.intersection(args.optimizers):
+            raise ValueError('--population requires selecting nsga2, cmaes or lqcmaes')
         if args.mobo_reference_point is not None and 'qlognehvi' not in args.optimizers:
             raise ValueError('--mobo-reference-point requires selecting qlognehvi')
         if args.dimension is not None and 'P003' not in args.problems:
@@ -116,11 +124,18 @@ def main(argv=None):
                 options[name]['model'] = args.model
         optimizer_options = {}
         for method in args.optimizers:
+            settings = {}
+            if args.population is not None and method in population_methods:
+                settings['population'] = args.population
+            if args.failure_penalty is not None:
+                settings['failure_penalty'] = args.failure_penalty
             if method in ('bo', *MOBO_METHODS):
-                optimizer_options[method] = dict(bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates)
+                settings.update(bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates)
             if method in MOBO_METHODS:
-                optimizer_options[method].update(mobo_mc_samples=args.mobo_mc_samples,
+                settings.update(mobo_mc_samples=args.mobo_mc_samples,
                     mobo_reference_point=args.mobo_reference_point if method == 'qlognehvi' else None)
+            if settings:
+                optimizer_options[method] = settings
         arguments = dict(problems=args.problems, optimizers=args.optimizers, seeds=args.seeds,
                          budget=args.budget, problem_options=options, optimizer_options=optimizer_options,
                          with_ioh=not args.no_ioh, regime=args.regime)

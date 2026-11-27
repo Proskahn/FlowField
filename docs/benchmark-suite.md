@@ -682,6 +682,90 @@ and validation policy are saved and cannot change on resume. P003 uses
 of its scalar power/uniformity weights. Its channel-volume constraint remains
 `g(x) <= 0`, with feasibility tolerance `1e-12`.
 
+P002 supports the same regime with its original seven variables and the raw
+objectives `voltage_V` and `pressure_sum_Pa`, both minimized. Its configured
+scalarization (`total_power_w`, `voltage_v`, or `pressure_sum_pa`) only affects
+scalar diagnostics during a multi-objective run.
+
+`flowfield-benchmark --population N` sets the population for selected NSGA-II,
+CMA-ES, and lq-CMA-ES runs (default 4); it leaves random and BO methods alone.
+`--failure-penalty VALUE` applies the same explicit failure policy to every
+selected run. Rejected meshes and failed solves still count as attempts;
+their scalar penalties never become physical objective vectors or contribute
+to feasible hypervolume. Without this option, CFD failures stop the campaign.
+Both controls are validated by `--dry-run` and recorded in the campaign plan.
+
+### P002 multi-objective benchmark
+
+Install the optimizer, logging, and analysis dependencies, then run this small
+proof of concept on the server after loading OpenFOAM v2312:
+
+```bash
+.venv/bin/python -m pip install -e '.[mobo,ioh,inspector,plot]'
+
+.venv/bin/flowfield-benchmark \
+    --problem P002 --regime multi \
+    --optimizers random nsga2 qlognehvi qlognparego \
+    --seeds 42 --budget 6 --population 4 \
+    --bo-initial-points 3 --bo-candidates 64 --mobo-mc-samples 32 \
+    --failure-penalty 1000000 --backend native --timeout 1800 \
+    --output runs/p002/multi-poc-42
+
+.venv/bin/flowfield-analyze \
+    --input runs/p002/multi-poc-42 --regime multi \
+    --output runs/p002/multi-poc-42-analysis
+```
+
+For local use, select `--backend docker` with Docker Desktop and the v2312
+image ready. The four methods run sequentially, spending at most 24 CFD
+attempts including baselines and failures. This is a pipeline check, not a
+comparison of optimizer performance. `--population 4` applies to NSGA-II;
+random and BO retain their own sampling policies. Add `--dry-run` to validate
+the plan without running CFD or creating files. Always choose a new output.
+
+The scalar failure penalty is only a continuation policy and diagnostic. A
+failed solve has no physical voltage/pressure vector, is excluded from GP
+training and Pareto archives, and contributes no hypervolume improvement.
+The campaign manifest records the objective names and links each run's
+`P002/<optimizer>/seed-<seed>/pareto.json`. The analysis produces a
+`convergence.png`, `indicators.csv`, and IOHinspector dataset. Higher feasible
+hypervolume is better. Keep `analysis-settings.json` to freeze the shared
+normalization/reference across later comparisons with `--settings`.
+
+For a longer run that survives disconnecting SSH, choose a fresh campaign path:
+
+```bash
+mkdir -p runs/p002
+campaign="runs/p002/multi-b100-seeds42-46"
+nohup bash -c '
+    set -e
+    export PYTHONUNBUFFERED=1
+    export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+    .venv/bin/flowfield-benchmark \
+        --problem P002 --regime multi \
+        --optimizers random nsga2 qlognehvi qlognparego \
+        --seeds 42 43 44 45 46 --budget 100 --population 10 \
+        --failure-penalty 1000000 --backend native --timeout 1800 \
+        --output "$1"
+    .venv/bin/flowfield-analyze --input "$1" --regime multi \
+        --output "${1}-analysis"
+' _ "$campaign" > "${campaign}.log" 2>&1 < /dev/null &
+echo $! > "${campaign}.pid"
+```
+
+This runs 20 optimizer/seed combinations sequentially, with a maximum of 2,000
+attempts, using the default BO settings. It does not modify P002's geometry,
+seven-variable dimension, coarse mesh policy, or convergence tolerances.
+`tail -f "${campaign}.log"` follows the log. Existing results can be analyzed
+separately without new CFD, for example:
+
+```bash
+.venv/bin/flowfield-analyze --input runs/p002/nsga2 --regime multi \
+    --output runs/p002/nsga2-hypervolume
+```
+
+### P003 multi-objective proof of concept
+
 For a small **local** P003 proof of concept, start Docker Desktop and use the
 existing OpenFOAM v2312 image. If the image is absent, pull it first with
 `docker pull opencfd/openfoam-default:2312`. No SSH or external server is used:
