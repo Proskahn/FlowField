@@ -44,7 +44,9 @@ def limits(name, c):
 
 def refined(c):
     if hasattr(c, 'mesh'):
-        levels=('coarse','medium','fine');start=levels.index(c.mesh)
+        from ..problems.level1_small_continuous.p006.config import ManifoldConfig, MESH_LEVELS
+        levels=MESH_LEVELS if isinstance(c,ManifoldConfig) else ('coarse','medium','fine')
+        start=levels.index(c.mesh)
         return [(f'mesh-{v}', replace(c,mesh=v)) for v in levels[start+1:]]
     return [(f'mesh-x{factor}', replace(c,cells=tuple(factor*n for n in c.cells))) for factor in (2,4)]
 

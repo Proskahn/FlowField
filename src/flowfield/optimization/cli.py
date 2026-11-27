@@ -10,7 +10,7 @@ import sys
 from ..config import load_config
 from ..problem import CFDProblem
 from ..problems.p000.config import MESHES
-from ..problems.level1_small_continuous.p006.config import DEFAULT_TIMEOUT_S as P006_TIMEOUT_S
+from ..problems.level1_small_continuous.p006.config import DEFAULT_TIMEOUT_S as P006_TIMEOUT_S, MESH_LEVELS as P006_MESH_LEVELS
 from ..registry import create_problem, list_problems, problem_config_type
 from ..runtime import DEFAULT_IMAGE, Runtime
 from .bo import bo_settings
@@ -45,6 +45,8 @@ def _make_problem(identifier, args):
             source = args.p005_config
         overrides = {}
         if args.mesh is not None:
+            if args.mesh.startswith('screening') and identifier != 'P006':
+                raise ValueError('screening mesh overrides are supported by P006 only')
             defaults = config_type()
             overrides['mesh' if hasattr(defaults, 'mesh') else 'cells'] = (
                 args.mesh if hasattr(defaults, 'mesh') else MESHES[args.mesh])
@@ -83,7 +85,8 @@ def main(argv=None):
     parser.add_argument('--optimizer', '--method', dest='method', choices=('auto',)+list_optimizers(), default='auto')
     parser.add_argument('--config', type=Path, help='Problem configuration JSON; --mesh overrides its mesh setting')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--mesh', choices=('coarse','medium','fine'), default=None)
+    parser.add_argument('--mesh', choices=P006_MESH_LEVELS, default=None,
+                        help='Mesh override; screening and screening-coarse are P006-only')
     parser.add_argument('--backend', choices=('auto','native','docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=None,
@@ -212,6 +215,8 @@ def _run_suite_impl(args):
             initial_design_length=len(_initial(problem))))
         if isinstance(problem, CFDProblem):
             entries[-1]['command_timeout_s'] = problem.runtime.timeout_s
+        if identifier == 'P006':
+            entries[-1].update(fidelity=problem.config.fidelity,config_sha256=problem.config.fingerprint)
         if method == 'random':
             entries[-1]['optimizer_settings'] = random_settings(problem)
         repair_settings = evaluation_repair_settings(problem, method)
@@ -220,9 +225,10 @@ def _run_suite_impl(args):
             entries[-1]['optimizer_revision'] = optimizer_revision(method, problem)
         if method in ('random', 'bo', 'turbo') or repair_settings:
             entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
+    mesh_label = args.mesh or (problems[0].config.mesh if len(problems)==1 and problems[0].name=='P006' else 'coarse')
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
                 maximum_cfd_attempts=sum(p.name!='P004' for p in problems)*args.budget,
-                mesh=args.mesh or 'coarse', seed=args.seed, problems=entries)
+                mesh=mesh_label, seed=args.seed, problems=entries)
     finished = {}
     if args.resume:
         remaining = 0

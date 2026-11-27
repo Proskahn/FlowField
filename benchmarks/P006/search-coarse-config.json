@@ -1,0 +1,6 @@
+{
+  "mesh": "screening-coarse",
+  "field_tolerance": 0.0001,
+  "iterations": 3500,
+  "processes": 2
+}

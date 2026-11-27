@@ -8,6 +8,7 @@ dependency, and no optimization algorithm. Existing results are never deleted.
 import math
 from collections import Counter
 from pathlib import Path
+from .config import SCREENING_SPACING_MM
 
 ZONES = ('CBP', 'CCH', 'CPTL', 'CCL', 'PEM', 'ACL', 'APTL', 'ACH', 'ABP')
 FLUID = {1, 2, 3, 5, 6, 7}
@@ -138,7 +139,7 @@ def field(case, name, dims, values, bcs, vector=False):
 
 
 def build_geometry(g, config):
-    factor = {'coarse':1, 'medium':2, 'fine':3}[config.mesh]
+    factor = 1 if config.mesh in SCREENING_SPACING_MM else {'coarse':1, 'medium':2, 'fine':3}[config.mesh]
     channels = [(c-w/2,c+w/2) for c,w in zip(g['centers_mm'],g['widths_mm'])]
     # Preserve topology throughout a width optimization: crossing 1 mm must
     # not suddenly add a cell and let the optimizer exploit remeshing noise.
@@ -148,7 +149,10 @@ def build_geometry(g, config):
         count=factor if i in (0,len(knots)-2) else 2*factor
         x.extend(a+(b-a)*j/count for j in range(1,count+1))
     w = config.manifold_width_mm
-    y = subdivide([0,w,12.5,25-w,25], 1./factor, max_ratio=8)
+    # Search resolution changes only the channel-length direction. Retain the
+    # manifolds, branch sampling plane, channel edges and every material layer.
+    spacing = SCREENING_SPACING_MM.get(config.mesh, 1./factor)
+    y = subdivide([0,w,12.5,25-w,25], spacing, max_ratio=8)
     # 0.5 mm backing + 1 mm channel/rib on each side; 0.0178 mm PEM.
     edges = [0,.5,1.5,1.8,1.85,1.8678,1.9178,2.2178,3.2178,3.7178]
     counts = [1,2,2,1,2,1,2,2,1]

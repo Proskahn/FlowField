@@ -165,6 +165,6 @@ def extract_metrics(case,config):
     constraints=manifest['design_geometry']['constraints']
     raw=fields['temperature_std_K']
     scalar=raw+1000*sum(max(0,v)**2 for v in constraints.values())
-    return dict(objective=scalar,unpenalized_objective=raw,
+    return dict(objective=scalar,unpenalized_objective=raw,fidelity=config.fidelity,
         objectives=dict(temperature_std_K=raw),constraints=constraints,
         metrics=dict(rows[-1],**fields,cells=manifest['cells']))
