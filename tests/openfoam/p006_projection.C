@@ -19,6 +19,46 @@ int main(int argc, char *argv[])
     Info<<"PROJECTION_RANKS empty="<<emptyRanks<<nl;
     if(solidHalf && Pstream::parRun() && emptyRanks!=1)return 1;
     bool passed=true;
+    {
+        // A cyclic permutation has a known inverse, but GMRES(80) stagnates
+        // for this RHS until the Krylov space spans the 193-vector cycle.
+        // Exercise the production retry, with unequal or empty MPI partitions.
+        FlowNetwork network(mesh,material);
+        const label size=193,rank=Pstream::myProcNo(),ranks=Pstream::nProcs();
+        const label n=solidHalf?(rank?0:size):(size/ranks+(rank<size%ranks));
+        labelList counts(ranks,0);counts[rank]=n;
+        Pstream::gatherList(counts);Pstream::scatterList(counts);
+        label offset=0;for(label i=0;i<rank;++i)offset+=counts[i];
+        scalarField rhs(n,0),x(n,0),product(n,0);
+        if(!rank)rhs[0]=1;
+        auto multiply=[&](const scalarField& input,scalarField& output)
+        {
+            List<scalarField> parts(ranks);parts[rank]=input;
+            Pstream::gatherList(parts);Pstream::scatterList(parts);
+            scalarField global(size,0);label at=0;
+            forAll(parts,i)forAll(parts[i],j)global[at++]=parts[i][j];
+            forAll(output,i)output[i]=global[(offset+i+size-1)%size];
+        };
+        auto identity=[](const scalarField& input,scalarField& output){output=input;};
+        scalar shortError=GREAT,error=GREAT;
+        label shortIterations=network.gmres(rhs,x,multiply,identity,shortError);
+        x=0;
+        label retryIterations=network.gmres(rhs,x,multiply,identity,error,true);
+        multiply(x,product);
+        scalar residual=std::sqrt(gSum(sqr(rhs-product))),solutionError=0;
+        forAll(x,i)solutionError=max(solutionError,mag(x[i]-(offset+i==size-1?1.:0.)));
+        reduce(solutionError,maxOp<scalar>());
+        auto singular=[](const scalarField&,scalarField& output){output=0;};
+        scalar rejected=GREAT;x=0;
+        network.gmres(rhs,x,singular,identity,rejected,true);
+        bool retryPassed=shortIterations==800 && shortError>1e-4 && retryIterations>800
+            && error<1e-6 && residual<1e-6 && solutionError<1e-7 && rejected>1e-4;
+        passed=passed && retryPassed;
+        Info<<"PROJECTION_GMRES_RETRY short_error="<<shortError
+            <<" final_error="<<error<<" independently_checked_residual="<<residual
+            <<" solution_error="<<solutionError<<" iterations="<<retryIterations
+            <<" singular_rejected="<<(rejected>1e-4)<<" passed="<<retryPassed<<nl;
+    }
     for(label mode=0;mode<2;++mode)
     {
         FlowNetwork network(mesh,material);

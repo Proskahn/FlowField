@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Verify P006's phase projection against analytic two-phase Darcy flow.
 
-Requires native OpenCFD v2312 or the installed Docker image. Checks uniform
-and 1e4 mobility contrast, in serial or MPI, optionally with a solid-only rank.
+Requires native OpenCFD v2312 or the installed Docker image. Checks a known
+GMRES stagnation problem, rejection of a singular system, and uniform/1e4
+mobility contrast, in serial or MPI, optionally with a solid-only rank.
 This is an operator test, not qualification of a full P006 design.
 """
 import argparse

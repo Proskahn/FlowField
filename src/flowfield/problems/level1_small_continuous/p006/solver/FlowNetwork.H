@@ -97,16 +97,87 @@ public:
         controls_.add("tolerance",1e-10);controls_.add("relTol",0.0);controls_.add("maxIter",10000);
     }
 
+    // Retain the normal GMRES(80) path. A gas-mass correction that misses its
+    // required accuracy gets one wider, bounded Krylov solve of the SAME
+    // operator, starting from the previous approximation. Restarting at 80
+    // vectors alone can stagnate even when the matrix is nonsingular.
+    template<class Multiply,class Precondition>
+    Foam::label gmres(const Foam::scalarField& rhs,Foam::scalarField& x,
+        Multiply multiply,Precondition precondition,Foam::scalar& error,
+        const bool retry=false)
+    {
+        using namespace Foam;
+        const label n=rhs.size();label total=0;
+        const scalar reference=max(std::sqrt(gSum(sqr(rhs))),VSMALL);
+        scalarField residual(rhs),product(n,0);
+        for(label attempt=0;attempt<(retry?2:1);++attempt)
+        {
+        const label restart=attempt?320:80,maximum=attempt?3200:800;
+        label iterations=0;
+        while(iterations<maximum)
+        {
+            multiply(x,product);residual=rhs-product;
+            scalar beta=std::sqrt(gSum(sqr(residual)));error=beta/reference;
+            if(error<1e-6)
+            {
+                total+=iterations;timings_.linearIterations+=total;
+                if(attempt)Info<<"Gas-mass GMRES retry converged: residual="<<error
+                    <<"; total iterations="<<total<<endl;
+                return total;
+            }
+            if(!std::isfinite(error))break;
+            List<scalarField> v(restart+1),z(restart);
+            forAll(v,i){v[i].setSize(n,0);}
+            forAll(z,i){z[i].setSize(n,0);}
+            v[0]=residual/beta;
+            List<scalarField> h(restart+1);forAll(h,i)h[i].setSize(restart,0);
+            scalarField cosine(restart,0),sine(restart,0),g(restart+1,0);g[0]=beta;
+            label used=0;
+            for(label j=0;j<restart&&iterations<maximum;++j,++iterations)
+            {
+                precondition(v[j],z[j]);
+                multiply(z[j],product);
+                // Reorthogonalization protects the thin-layer, high-contrast system.
+                {Timer timer(timings_.orthogonal);
+                 for(label pass=0;pass<2;++pass)for(label i=0;i<=j;++i)
+                 {scalar a=gSum(product*v[i]);h[i][j]+=a;product-=a*v[i];}}
+                h[j+1][j]=std::sqrt(gSum(sqr(product)));
+                if(h[j+1][j]>VSMALL)v[j+1]=product/h[j+1][j];
+                for(label i=0;i<j;++i)
+                {scalar a=cosine[i]*h[i][j]+sine[i]*h[i+1][j];h[i+1][j]=-sine[i]*h[i][j]+cosine[i]*h[i+1][j];h[i][j]=a;}
+                scalar norm=std::hypot(h[j][j],h[j+1][j]);
+                if(norm<VSMALL)break;
+                cosine[j]=h[j][j]/norm;sine[j]=h[j+1][j]/norm;
+                h[j][j]=norm;h[j+1][j]=0;
+                g[j+1]=-sine[j]*g[j];g[j]*=cosine[j];used=j+1;
+                if(mag(g[j+1])/reference<1e-6){++iterations;break;}
+            }
+            if(!used)break;
+            scalarField y(used,0);
+            for(label i=used-1;i>=0;--i)
+            {scalar value=g[i];for(label j=i+1;j<used;++j)value-=h[i][j]*y[j];y[i]=value/h[i][i];}
+            for(label i=0;i<used;++i)x+=y[i]*z[i];
+        }
+        multiply(x,product);error=std::sqrt(gSum(sqr(rhs-product)))/reference;
+        total+=iterations;
+        if(!retry || !std::isfinite(error) || error<=1e-4 || attempt==1)break;
+        Info<<"Gas-mass GMRES retry: residual="<<error<<" after "<<iterations
+            <<" iterations; restart=320; maximum=3200; acceptance limit remains 1e-4"<<endl;
+        }
+        timings_.linearIterations+=total;
+        return total;
+    }
+
     // Sparse LU in serial; exact local-block LU preconditions distributed GMRES.
     // All processor couplings remain in the global matrix-vector product.
     Foam::label linearSolve(Foam::lduMatrix& A,const Foam::scalarField& rhs,
         Foam::scalarField& x,const Foam::FieldField<Foam::Field,Foam::scalar>& coeff,
-        Foam::scalar& error)
+        Foam::scalar& error,const bool retry=false)
     {
         using namespace Foam;
         Timer linearTimer(timings_.linear);++timings_.linearCalls;
         const auto matrixStart=Clock::now();
-        const label restart=80,maximum=800,n=rhs.size();
+        const label n=rhs.size();
         std::vector<Eigen::Triplet<double>> entries;entries.reserve(n+2*edgeIndex_.size());
         forAll(rhs,i)entries.emplace_back(i,i,A.diag()[i]);
         for(const auto& pair:edgeIndex_)
@@ -131,51 +202,16 @@ public:
             error=(matrix*solution-b).norm()/max(b.norm(),VSMALL);
             ++timings_.linearIterations;return 1;
         }
-        const scalar reference=max(std::sqrt(gSum(sqr(rhs))),VSMALL);
-        scalarField residual(rhs),product(n,0);label iterations=0;
-        while(iterations<maximum)
+        auto multiply=[&](const scalarField& input,scalarField& output)
+        {Timer timer(timings_.matvec);A.Amul(output,input,coeff,interfaceFields_,0);};
+        auto precondition=[&](const scalarField& input,scalarField& output)
         {
-            {Timer timer(timings_.matvec);A.Amul(product,x,coeff,interfaceFields_,0);}residual=rhs-product;
-            scalar beta=std::sqrt(gSum(sqr(residual)));error=beta/reference;
-            if(error<1e-6){timings_.linearIterations+=iterations;return iterations;}
-            List<scalarField> v(restart+1),z(restart);
-            forAll(v,i){v[i].setSize(n,0);}
-            forAll(z,i){z[i].setSize(n,0);}
-            v[0]=residual/beta;
-            List<scalarField> h(restart+1);forAll(h,i)h[i].setSize(restart,0);
-            scalarField cosine(restart,0),sine(restart,0),g(restart+1,0);g[0]=beta;
-            label used=0;
-            for(label j=0;j<restart&&iterations<maximum;++j,++iterations)
-            {
-                if(n)
-                {Eigen::Map<const Eigen::VectorXd> b(v[j].cdata(),n);
-                 Eigen::VectorXd solution=factorization_.solve(b);
-                 forAll(z[j],i)z[j][i]=solution[i];}
-                {Timer timer(timings_.matvec);A.Amul(product,z[j],coeff,interfaceFields_,0);}
-                // Reorthogonalization protects the thin-layer, high-contrast system.
-                {Timer timer(timings_.orthogonal);
-                 for(label pass=0;pass<2;++pass)for(label i=0;i<=j;++i)
-                 {scalar a=gSum(product*v[i]);h[i][j]+=a;product-=a*v[i];}}
-                h[j+1][j]=std::sqrt(gSum(sqr(product)));
-                if(h[j+1][j]>VSMALL)v[j+1]=product/h[j+1][j];
-                for(label i=0;i<j;++i)
-                {scalar a=cosine[i]*h[i][j]+sine[i]*h[i+1][j];h[i+1][j]=-sine[i]*h[i][j]+cosine[i]*h[i+1][j];h[i][j]=a;}
-                scalar norm=std::hypot(h[j][j],h[j+1][j]);
-                if(norm<VSMALL)break;
-                cosine[j]=h[j][j]/norm;sine[j]=h[j+1][j]/norm;
-                h[j][j]=norm;h[j+1][j]=0;
-                g[j+1]=-sine[j]*g[j];g[j]*=cosine[j];used=j+1;
-                if(mag(g[j+1])/reference<1e-6){++iterations;break;}
-            }
-            if(!used)break;
-            scalarField y(used,0);
-            for(label i=used-1;i>=0;--i)
-            {scalar value=g[i];for(label j=i+1;j<used;++j)value-=h[i][j]*y[j];y[i]=value/h[i][i];}
-            for(label i=0;i<used;++i)x+=y[i]*z[i];
-        }
-        {Timer timer(timings_.matvec);A.Amul(product,x,coeff,interfaceFields_,0);}error=std::sqrt(gSum(sqr(rhs-product)))/reference;
-        timings_.linearIterations+=iterations;
-        return iterations;
+            if(!n)return;
+            Eigen::Map<const Eigen::VectorXd> b(input.cdata(),n);
+            Eigen::VectorXd solution=factorization_.solve(b);
+            forAll(output,i)output[i]=solution[i];
+        };
+        return gmres(rhs,x,multiply,precondition,error,retry);
     }
 
     void solve(const Foam::dictionary& props,const Foam::volScalarField& eps,
@@ -505,9 +541,10 @@ public:
         forAll(index_,c)if(index_[c]>=0)
         {const label a=index_[c];rhs[a+1]=-(res[a+1]-capacity[c]*x[a+1]);}
         scalar correctionError=GREAT;
-        const label correctionIterations=linearSolve(A,rhs,delta,interfaceCoeffs,correctionError);
+        const label correctionIterations=linearSolve(A,rhs,delta,interfaceCoeffs,correctionError,true);
         if(!std::isfinite(correctionError)||correctionError>1e-4)
-            FatalErrorInFunction<<"Gas-mass preconditioner failed: "<<correctionError<<exit(FatalError);
+            FatalErrorInFunction<<"Gas-mass preconditioner failed: "<<correctionError
+                <<" after "<<correctionIterations<<" linear iterations; required <= 1e-4"<<exit(FatalError);
         massCorrection_.setSize(mesh_.nCells());massCorrection_=0;
         forAll(index_,c)if(index_[c]>=0)massCorrection_[c]=delta[index_[c]+1];
         if(mesh_.time().value()<=3)

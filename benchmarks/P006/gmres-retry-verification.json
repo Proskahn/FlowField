@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T12:11:26.761398+00:00",
+  "status": "local_checks_passed",
+  "source_sha256": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+  "python_regression_tests_passed": 73,
+  "native_rivium_failure_reproduced": false,
+  "target_machine_rerun_required": true,
+  "reported_failure": {
+    "residual": 0.00182144741417,
+    "limit": 0.0001,
+    "momentum_fraction": 0.131072,
+    "optimization_attempts": 1,
+    "successful_evaluations": 0
+  },
+  "policy": {
+    "normal_restart": 80,
+    "normal_maximum": 800,
+    "retry_restart": 320,
+    "retry_maximum": 3200,
+    "linear_target": 1e-06,
+    "gas_correction_failure_limit": 0.0001,
+    "maximum_retries": 1,
+    "retry_uses_same_operator": true,
+    "outer_acceptance_unchanged": true
+  },
+  "operator_tests": [
+    {
+      "case_directory": "runs/p006-gmres-retry-001/analytic-serial",
+      "passed": true,
+      "processes": 1,
+      "solid_half": false,
+      "checks": [
+        "PROJECTION_RANKS empty=0",
+        "PROJECTION_GMRES_RETRY short_error=1 final_error=0 independently_checked_residual=0 solution_error=0 iterations=993 singular_rejected=1 passed=1",
+        "PROJECTION_CHECK contrast=1 pressure_error=1.5099e-13 saturation_error=9.4369e-16 flux_error=2.59248e-15",
+        "PROJECTION_CHECK contrast=10000 pressure_error=8.04903e-14 saturation_error=9.99201e-16 flux_error=7.4685e-14",
+        "PROJECTION_CHECK PASSED"
+      ],
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    {
+      "case_directory": "runs/p006-gmres-retry-001/analytic-mpi",
+      "passed": true,
+      "processes": 2,
+      "solid_half": false,
+      "checks": [
+        "PROJECTION_RANKS empty=0",
+        "PROJECTION_GMRES_RETRY short_error=1 final_error=0 independently_checked_residual=0 solution_error=0 iterations=993 singular_rejected=1 passed=1",
+        "PROJECTION_CHECK contrast=1 pressure_error=1.5099e-13 saturation_error=9.99201e-16 flux_error=2.59248e-15",
+        "PROJECTION_CHECK contrast=10000 pressure_error=8.04903e-14 saturation_error=9.99201e-16 flux_error=7.4685e-14",
+        "PROJECTION_CHECK PASSED"
+      ],
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    {
+      "case_directory": "runs/p006-gmres-retry-001/analytic-empty-rank",
+      "passed": true,
+      "processes": 2,
+      "solid_half": true,
+      "checks": [
+        "PROJECTION_RANKS empty=1",
+        "PROJECTION_GMRES_RETRY short_error=1 final_error=0 independently_checked_residual=0 solution_error=0 iterations=993 singular_rejected=1 passed=1",
+        "PROJECTION_CHECK contrast=1 pressure_error=1.5099e-13 saturation_error=9.4369e-16 flux_error=2.59248e-15",
+        "PROJECTION_CHECK contrast=10000 pressure_error=8.04903e-14 saturation_error=9.99201e-16 flux_error=7.4685e-14",
+        "PROJECTION_CHECK PASSED"
+      ],
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    }
+  ],
+  "coupled_continuation": {
+    "case_directory": "runs/p006-gmres-retry-001/coupled-continuation",
+    "qualified": true,
+    "cold_start": false,
+    "iterations": 64.0,
+    "objective": 0.7981292458811032,
+    "retry_count": 0,
+    "field_change": 9.16744926913e-05,
+    "saved_field_checks": {
+      "kinematic_velocity_consistency": 2.807129312187219e-12,
+      "saved_pressure_force_consistency": 9.002810549079049e-11,
+      "charge_balance": 1.5852192911310225e-13,
+      "oxygen_faraday": 4.1164321257229564e-15,
+      "hydrogen_faraday": 9.789949446827443e-14,
+      "heat_power_identity": 2.429016939351946e-13,
+      "membrane_water_balance": 7.170920818688829e-16,
+      "saved_local_L_balance": 0.00014528536313013633,
+      "saved_global_L_balance": 2.8476915889987504e-07,
+      "saved_local_G_balance": 5.729039079815017e-05,
+      "saved_global_G_balance": 1.6687964696359975e-07
+    }
+  },
+  "limitations": [
+    "Manufactured stagnation test exercises recovery and singular-system rejection; the exact failed native matrix was not available.",
+    "Coupled continuation verifies the new solver against saved-field acceptance; it does not reproduce native cold-start continuation.",
+    "Prior baseline evidence in search-verification.json records the previous solver source."
+  ]
+}

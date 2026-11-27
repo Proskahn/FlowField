@@ -28,7 +28,9 @@ class P006SearchTests(unittest.TestCase):
     def test_reference_identity_is_backward_compatible_and_search_is_distinct(self):
         default = ManifoldConfig()
         self.assertEqual(default.field_tolerance, 1e-5)
-        self.assertEqual(default.fingerprint,
+        # Recorded 3000-iteration cases retain their identity even when the
+        # current default iteration budget is raised to 3500.
+        self.assertEqual(replace(default, iterations=3000).fingerprint,
                          '86a236583078263b8f3cca62b73ac91761676405e97cb7982fc5a450bd2d464e')
         configs = [default, replace(default, field_tolerance=1e-4),
                    replace(default, mesh='screening'),

@@ -107,7 +107,7 @@ unchanged. These presets all use a 3500-iteration cap and two MPI ranks:
 | `search-config.json` | `screening` | 9,072 | `1e-4` |
 | `search-coarse-config.json` | `screening-coarse` | 7,056 | `1e-4` |
 
-The local OpenCFD v2312 baseline checks with two MPI ranks passed full coupled
+The recorded local OpenCFD v2312/ARM64 baseline checks with two MPI ranks passed full coupled
 convergence and independent saved-field verification:
 
 | Mesh / field limit | Solver iterations | Temperature spread | Difference from reference |
@@ -124,6 +124,24 @@ reference state; that continuation is not a cold-start speed benchmark.
 Validation jobs overlapped initially and one was paused, so their elapsed
 times are not a controlled runtime comparison. Fewer cells can require more
 iterations, as the `screening` baseline demonstrates.
+
+A subsequent native run on Rivium stopped during momentum continuation with
+`Gas-mass preconditioner failed: 0.00182144741417`. This is an inner linear
+solve failure, not exhaustion of the outer 3500-iteration budget. The local
+baseline checks therefore do not establish portable startup robustness.
+The gas-mass correction now retries a failed GMRES(80), limited to 800 steps,
+once with GMRES(320), limited to 3200 additional steps, using the same operator
+and the previous approximation. The true linear residual is recomputed, the
+`1e-4` failure limit is retained, and a failed retry still rejects the case.
+Normal successful solves keep the original path. Retry messages appear in
+the console and solver log. This bounded fallback needs a fresh pilot on the
+target machine before a campaign; existing cases contain their own solver
+sources and do not pick up the change. Keep the failed run for diagnosis and
+use a new output directory rather than resuming its failed baseline.
+The [retry verification record](../benchmarks/P006/gmres-retry-verification.json)
+covers manufactured stagnation recovery, singular-system rejection, analytic
+phase flow in serial/MPI including an empty fluid rank, and a qualified coupled
+continuation. It does not reproduce the failed native cold-start matrix.
 
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse
