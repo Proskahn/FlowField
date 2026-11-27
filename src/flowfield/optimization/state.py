@@ -297,6 +297,9 @@ def restore_options(args, supplied):
     # A crash may leave plan.json or an individual experiment at the old budget;
     # the recorded authorization lets a plain --resume finish the update.
     saved_plan = json.loads((output/'plan.json').read_text())
+    # Runs created before --dimension used their original config/defaults.
+    # Reject adding a dimension during resume rather than changing the problem.
+    options.setdefault('dimension', None)
     recorded_budget = options.get('budget', saved_plan.get('budget_per_problem'))
     if recorded_budget is None and args.extend_budget is not None:
         raise ResumeError('Cannot extend a run with no recorded original budget')

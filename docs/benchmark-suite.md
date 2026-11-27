@@ -349,6 +349,117 @@ stops replay for inspection; it is not silently re-executed. P002 remains a
 provisional paper reconstruction: these gradient checks validate derivatives
 of the implemented solver, not agreement of its physics with the paper.
 
+## Scalable P003 on a fixed medium CFD mesh
+
+Specify the dimension directly when launching optimization; no configuration
+file is needed:
+
+```bash
+.venv/bin/flowfield-optimize --problem P003 --optimizer turbo \
+    --dimension 500 --seed 42 --budget 200 --backend native --timeout 14400 \
+    --output runs/p003/scalable/n500-turbo-42
+```
+
+Change `--dimension` to select another size and `--optimizer` to select an
+algorithm, such as `cmaes`. Supported examples include **500, 512, 1000, 2000,
+2500, 3000, 4000, 5000, and 6000**. Other exact counts are accepted when they
+fit a supported rectangular design grid; unsupported counts are rejected
+before any CFD starts. The grid is selected automatically and shown with the
+actual CFD cell count in `--dry-run` output and saved run metadata.
+
+The multi-seed benchmark command accepts the same option:
+
+```bash
+.venv/bin/flowfield-benchmark --problem P003 --optimizers turbo cmaes \
+    --dimension 500 --seeds 42 43 44 45 46 --budget 200 \
+    --backend native --timeout 14400 \
+    --output runs/p003/scalable/n500-benchmark
+```
+
+`--dimension` selects the medium mesh automatically. It applies to P003 only
+and cannot be combined with `--config`. Omitting it preserves the original
+default or an explicitly supplied configuration. An optimization run saves
+the dimension and complete effective configuration; resume using just
+`--resume --output RUN`, optionally with `--extend-budget TOTAL`.
+
+These instances vary the number of nodal design variables while retaining
+the same 8,320-cell medium CFD mesh, physical
+plate, 1.2 mm inlet/outlet widths, 0.35 mm filter radius, beta 50 projection,
+power weight 1, uniformity weight 0, and material stage 1.
+The maximum CFD iteration count is 10,000: the medium-mesh uniform pilot did
+not meet its balance tolerances within the legacy limit of 3,000. The original
+convergence tolerances are unchanged, and the solver stops when they are met.
+
+| Optional configuration | Variables | Design points, rows × columns |
+| --- | ---: | ---: |
+| `n500.json` | 500 | 25 × 20 |
+| `n1000.json` | 1,000 | 40 × 25 |
+| `n2000.json` | 2,000 | 50 × 40 |
+| `n3000.json` | 3,000 | 75 × 40 |
+| `n4000.json` | 4,000 | 80 × 50 |
+| `n5000.json` | 5,000 | 100 × 50 |
+| `n6000.json` | 6,000 | 100 × 60 |
+
+These instances explicitly select `design_mapping="bilinear_cell_filter_v1"`:
+bilinear interpolation from the control nodes to CFD cell centers, followed by
+an area-weighted radial cone filter on those cells, then the original projection
+and material interpolation. This makes low-dimensional grids possible without
+enlarging the physical filter radius. It is a new parameterization, not an exact
+copy of the paper's direct nodal filtering. Use the same mapping at every
+dimension being compared. The original `nodal_filter` mapping and its default
+configuration fingerprint and numerical outputs are preserved.
+
+For advanced control, the optional configurations in `benchmarks/P003/scalable/`
+remain available. To export a configuration or specify points on both axes
+explicitly, use the following commands. They generate configurations only,
+run no CFD or optimization, and refuse to overwrite an existing file.
+
+```bash
+.venv/bin/flowfield-p003 scalable-config --dimension 2500 \
+    --output benchmarks/P003/scalable/n2500.json
+
+# Nearly equal physical point spacings; exactly 512 variables.
+.venv/bin/flowfield-p003 scalable-config --shape 32 16 \
+    --output benchmarks/P003/scalable/n512.json
+```
+
+`--mesh medium`, `--stage 1`, and `--filter-radius 0.00035` are the defaults.
+`--iterations` changes the maximum CFD solver iteration count (default 10,000),
+not the optimizer budget.
+`--dry-run` inspects the mapping without writing files. The report lists the
+actual dimension, grid shape, cell count, point spacings and variable support.
+Exact counts must factor into a rectangular grid with at least three points
+per axis. Among the supported factorizations the generator chooses the closest
+physical point spacings; it never rounds the dimension or pads unused variables.
+For more even spacing across the dimension sweep, use explicit shapes and
+accept nearby counts such as 512 rather than 500. Either axis is rejected if
+it has more design points than CFD cells, which would force redundancy in this
+bilinear mapping. Support checks do not establish numerical rank or CFD accuracy.
+
+Use `--config PATH` instead of `--dimension N` only when supplying a custom
+configuration. `flowfield-p003 gcmma --dimension 500 --output RUN` also accepts
+the direct dimension option, but that runner applies its own continuation schedule and uses
+one finite-difference CFD probe per variable per gradient. Compare fixed-stage
+instances separately from continuation campaigns; include gradient probes in
+CFD budgets. Geometry plotting reconstructs the selected mapping automatically.
+
+New mesh, dimension or mapping settings require new runs. Archived runs keep
+their original settings. GCMMA additionally pins the source code, so retain the
+original checkout for resuming a pre-update GCMMA campaign even if it uses the
+unchanged legacy mapping.
+
+The medium mesh is a common analysis resolution, not a claim of mesh independence.
+Forward CFD checks passed for a 500-variable uniform design (3,833 solver
+iterations) and a 6,000-variable parallel-channel design (1,228 iterations),
+including the existing independent balance checks. These check the implementation
+at the dimension endpoints; they do not establish mesh independence or compare
+optimization performance, since the two designs differ.
+Check representative designs on finer meshes before using small differences in
+power to rank algorithms. A fixed physical filter produces more smoothing
+relative to point spacing at higher dimensions, so record this setting and the
+control-grid shape when reporting results. Individual variable influence does
+not guarantee equal sensitivity or difficulty across dimensions.
+
 ## P003 GCMMA with material continuation
 
 `flowfield-p003 gcmma` optimizes every raw topology node (2,145 variables on

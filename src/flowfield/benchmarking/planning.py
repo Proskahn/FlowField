@@ -67,6 +67,9 @@ def plan_benchmark(*, problems, optimizers, seeds, budget, problem_options=None,
         config = getattr(problem, 'config', None)
         if config is not None:
             instance.update(config=config.to_dict(), config_sha256=config.fingerprint)
+        if identifier == 'P003':
+            from ..problems.level4_high_dimensional_topology.p003.scalability import grid_summary
+            instance.update(grid_summary(config))
         if isinstance(problem, CFDProblem):
             instance['runtime'] = dict(backend=problem.runtime.backend, image=problem.runtime.image,
                                        timeout_s=problem.runtime.timeout_s)

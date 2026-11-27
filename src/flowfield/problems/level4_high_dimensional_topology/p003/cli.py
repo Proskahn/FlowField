@@ -62,9 +62,13 @@ def main(argv=None):
     from .gcmma_cli import add_arguments, execute
     p=sub.add_parser('gcmma',help='Full-grid finite-difference GCMMA with gray-material continuation')
     add_arguments(p);_runtime_arguments(p)
+    from . import scalability
+    p=sub.add_parser('scalable-config',help='Create a configurable design grid on a fixed CFD mesh')
+    scalability.add_arguments(p)
     args=parser.parse_args(argv)
     try:
         if args.command=='gcmma':return execute(args)
+        if args.command=='scalable-config':return scalability.execute(args)
         if args.command=='run':result=run_case(args.case,Runtime(args.backend,args.image,args.timeout))
         else:
             values=json.loads(args.config.read_text()) if args.config else {}

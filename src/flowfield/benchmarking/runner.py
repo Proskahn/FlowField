@@ -7,6 +7,7 @@ from pathlib import Path
 from ..evaluation import write_json
 from ..optimization import optimize, list_optimizers
 from ..optimization.state import save_json
+from ..problems.level4_high_dimensional_topology.p003.scalability import add_dimension_argument, config_from_dimension
 from ..registry import create_problem, list_problems, problem_config_type
 from ..runtime import Runtime, DEFAULT_IMAGE
 from .planning import plan_benchmark
@@ -69,6 +70,7 @@ def main(argv=None):
     parser.add_argument('--budget', type=int, default=20)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--config', type=Path, help='JSON config for a single selected problem')
+    add_dimension_argument(parser)
     parser.add_argument('--backend', choices=('auto', 'native', 'docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=1800)
@@ -79,6 +81,10 @@ def main(argv=None):
     data.add_argument('--model', type=Path, help='Trained surrogate for a single data-backed problem')
     args = parser.parse_args(argv)
     try:
+        if args.dimension is not None and 'P003' not in args.problems:
+            raise ValueError('--dimension is supported by P003 only; include --problem P003')
+        if args.dimension is not None and args.config is not None:
+            raise ValueError('Use --dimension or --config, not both')
         if (args.config or args.dataset or args.model) and len(args.problems) != 1:
             raise ValueError('--config/--dataset/--model require one problem; use problem_options in Python for multiple configs')
         options = {}
@@ -88,6 +94,8 @@ def main(argv=None):
                 options[name]['runtime'] = Runtime(args.backend, args.image, args.timeout)
             if args.config:
                 options[name]['config'] = args.config
+            if name == 'P003' and args.dimension is not None:
+                options[name]['config'] = config_from_dimension(args.dimension)
             if args.dataset:
                 options[name]['dataset'] = args.dataset
             if args.model:

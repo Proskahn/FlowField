@@ -8,11 +8,13 @@ from pathlib import Path
 from ....runtime import Runtime
 from .config import TopologyConfig
 from .gcmma import ContinuationOptions, plan, run_continuation
+from .scalability import add_dimension_argument, config_from_dimension, grid_summary
 
 
 def add_arguments(parser):
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--config', type=Path)
+    add_dimension_argument(parser)
     parser.add_argument('--mesh', choices=('coarse', 'medium', 'fine'))
     parser.add_argument('--stages', type=int, nargs='+', help='Default: 1 2 3 above 4 Pa, otherwise 0 1 2 3')
     parser.add_argument('--iterations-per-stage', type=int, help='Accepted outer iterations per stage (default 60)')
@@ -38,6 +40,8 @@ def add_arguments(parser):
 
 
 def execute(args):
+    if args.dimension is not None and args.config is not None:
+        raise ValueError('Use --dimension or --config, not both')
     saved = None
     if args.resume:
         path = args.output/'gcmma-run.json'
@@ -45,7 +49,10 @@ def execute(args):
             raise ValueError('Missing gcmma-run.json; use a new directory for GCMMA, not --resume on TuRBO')
         saved = json.loads(path.read_text())
     values = json.loads(args.config.read_text()) if args.config else (saved['config'] if saved else {})
-    config = TopologyConfig(**values)
+    config = (config_from_dimension(args.dimension,mesh=args.mesh)
+              if args.dimension is not None and saved is None else TopologyConfig(**values))
+    if saved and args.dimension is not None and args.dimension != config.dimension:
+        raise ValueError('Cannot resume GCMMA with changed dimension')
     if args.mesh:
         config = replace(config, mesh=args.mesh)
     settings = dict(saved['options']) if saved else dict(stages=(1, 2, 3) if config.inlet_pressure_pa > 4 else (0, 1, 2, 3))
@@ -56,6 +63,7 @@ def execute(args):
     settings['stages'] = tuple(settings['stages'])
     options = ContinuationOptions(**settings)
     estimate = plan(config, options)
+    estimate.update(grid_summary(config))
     budget = args.max_evaluations
     if args.extend_budget is not None:
         if not args.resume:

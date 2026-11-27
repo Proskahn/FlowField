@@ -7,6 +7,7 @@ import math
 DOI = '10.1016/j.ijheatmasstransfer.2019.01.050'
 MODEL_REVISION = 'depth-averaged-cathode-v1'
 CONTINUATION = ((1.,10000.),(2.,1000.),(3.,100.),(5.,10.))
+SCALABLE_MAPPING = 'bilinear_cell_filter_v1'
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ class TopologyConfig:
     design_ny: int = 64
 
     # Topology parameterization
+    design_mapping: str = 'nodal_filter'
     filter_radius_m: float = .00035
     projection_beta: float = 50.
     stage: int = 1  # At 5 Pa, the paper skips stage 0.
@@ -75,8 +77,10 @@ class TopologyConfig:
             raise ValueError('Grid sizes and iteration counts must be positive')
         if self.stage not in range(4) or self.mesh not in ('coarse','medium','fine'):
             raise ValueError('Unknown continuation stage or mesh')
+        if self.design_mapping not in ('nodal_filter', SCALABLE_MAPPING):
+            raise ValueError('Unknown P003 design_mapping')
         for key,v in asdict(self).items():
-            if key in ('mesh','stage','design_nx','design_ny','iterations','write_interval'):
+            if key in ('mesh','design_mapping','stage','design_nx','design_ny','iterations','write_interval'):
                 continue
             if isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) or v<0:
                 raise ValueError(f'{key} must be finite and nonnegative')
@@ -93,8 +97,15 @@ class TopologyConfig:
         if self.outer_tolerance>1e-7 or self.balance_tolerance>1e-5:
             raise ValueError('Convergence tolerances may be tightened, not relaxed')
         # Every CFD centroid must have at least one nodal filter neighbor.
-        if self.filter_radius_m <= .5*math.hypot(self.width_m/self.design_nx,self.length_m/self.design_ny):
+        if (self.design_mapping == 'nodal_filter'
+                and self.filter_radius_m <= .5*math.hypot(self.width_m/self.design_nx,self.length_m/self.design_ny)):
             raise ValueError('Design grid is too coarse for the filter radius')
+        if self.design_mapping == SCALABLE_MAPPING:
+            from .design import grid
+            x,y=grid(self)
+            if self.design_nx+1 > len(x)-1 or self.design_ny+1 > len(y)-1:
+                raise ValueError('Scalable design points must not exceed CFD cells along either axis; '
+                                 'choose fewer design points or a finer CFD mesh')
 
     @property
     def width_m(self): return self.length_m/2
@@ -113,7 +124,12 @@ class TopologyConfig:
                     diffusion_rib=self.gdl_porosity**1.5*g/h,
                     diffusion_channel=(self.gdl_porosity**1.5*g+c)/h,
                     alpha_rib=self.viscosity_pa_s/(self.gdl_permeability_m2*g/h),alpha_channel=0.)
-    def to_dict(self):return asdict(self)
+    def to_dict(self):
+        values=asdict(self)
+        # Preserve archived configurations, fingerprints and numerical results
+        # for the original paper mapping. The new mapping versions itself.
+        if self.design_mapping == 'nodal_filter':values.pop('design_mapping')
+        return values
     @property
     def fingerprint(self):
         return hashlib.sha256(json.dumps(dict(config=self.to_dict(),revision=MODEL_REVISION),sort_keys=True,allow_nan=False).encode()).hexdigest()

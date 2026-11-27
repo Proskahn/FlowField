@@ -11,6 +11,8 @@ from ..config import load_config
 from ..problem import CFDProblem
 from ..problems.p000.config import MESHES
 from ..problems.level1_small_continuous.p006.config import DEFAULT_TIMEOUT_S as P006_TIMEOUT_S, MESH_LEVELS as P006_MESH_LEVELS
+from ..problems.level4_high_dimensional_topology.p003.scalability import (
+    add_dimension_argument, config_from_dimension, grid_summary)
 from ..registry import create_problem, list_problems, problem_config_type
 from ..runtime import DEFAULT_IMAGE, Runtime
 from .bo import bo_settings
@@ -43,6 +45,8 @@ def _make_problem(identifier, args):
             if source is not None:
                 raise ValueError('Use --config or --p005-config, not both')
             source = args.p005_config
+        if identifier == 'P003' and args.dimension is not None:
+            source = config_from_dimension(args.dimension,source=source,mesh=args.mesh)
         overrides = {}
         if args.mesh is not None:
             if args.mesh.startswith('screening') and identifier != 'P006':
@@ -84,6 +88,7 @@ def main(argv=None):
     parser.add_argument('--p003-sigma', type=float, default=.005, help='P003 step size near its sharply projected feasible baseline')
     parser.add_argument('--optimizer', '--method', dest='method', choices=('auto',)+list_optimizers(), default='auto')
     parser.add_argument('--config', type=Path, help='Problem configuration JSON; --mesh overrides its mesh setting')
+    add_dimension_argument(parser)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--mesh', choices=P006_MESH_LEVELS, default=None,
                         help='Mesh override; screening and screening-coarse are P006-only')
@@ -187,6 +192,10 @@ def _run_suite_impl(args):
     if 'all' in args.problems and len(args.problems) != 1:
         raise ValueError('Use all alone or list individual problem IDs')
     identifiers = list(list_problems()) if args.problems == ['all'] else args.problems
+    if args.dimension is not None and 'P003' not in identifiers:
+        raise ValueError('--dimension is supported by P003 only; include --problem P003')
+    if args.dimension is not None and args.config is not None:
+        raise ValueError('Use --dimension or --config, not both')
     if len(set(identifiers)) != len(identifiers):
         raise ValueError('Duplicate problem IDs would obscure the per-problem budget')
     args.output = args.output.resolve()
@@ -215,6 +224,8 @@ def _run_suite_impl(args):
             initial_design_length=len(_initial(problem))))
         if isinstance(problem, CFDProblem):
             entries[-1]['command_timeout_s'] = problem.runtime.timeout_s
+        if identifier == 'P003':
+            entries[-1].update(grid_summary(problem.config))
         if identifier == 'P006':
             entries[-1].update(fidelity=problem.config.fidelity,config_sha256=problem.config.fingerprint)
         if method == 'random':
@@ -225,7 +236,7 @@ def _run_suite_impl(args):
             entries[-1]['optimizer_revision'] = optimizer_revision(method, problem)
         if method in ('random', 'bo', 'turbo') or repair_settings:
             entries[-1]['candidate_repair'] = getattr(problem, 'candidate_repair', None)
-    mesh_label = args.mesh or (problems[0].config.mesh if len(problems)==1 and problems[0].name=='P006' else 'coarse')
+    mesh_label = args.mesh or (problems[0].config.mesh if len(problems)==1 and problems[0].name in ('P003','P006') else 'coarse')
     plan = dict(budget_per_problem=args.budget,maximum_attempts=len(problems)*args.budget,
                 maximum_cfd_attempts=sum(p.name!='P004' for p in problems)*args.budget,
                 mesh=mesh_label, seed=args.seed, problems=entries)

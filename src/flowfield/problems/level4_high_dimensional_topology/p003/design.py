@@ -1,4 +1,5 @@
-"""Nodal design -> linear radial filter -> Eq. 40 projection -> porous properties."""
+"""Versioned nodal mappings -> Eq. 40 projection -> porous properties."""
+from bisect import bisect_left, bisect_right
 from functools import lru_cache
 import math
 
@@ -33,6 +34,8 @@ def grid(config):
 
 @lru_cache(maxsize=12)
 def stencil(config):
+    if config.design_mapping == 'bilinear_cell_filter_v1':
+        return _bilinear_cell_stencil(config)
     x,y=grid(config);dx=config.width_m/config.design_nx;dy=config.length_m/config.design_ny
     r=config.filter_radius_m;rows=[];areas=[]
     for j in range(len(y)-1):
@@ -46,6 +49,46 @@ def stencil(config):
             total=sum(v for _,v in entries)
             if total<=0:raise ValueError('Filter contains an empty neighborhood')
             rows.append(tuple((n,w/total) for n,w in entries));areas.append((x[i+1]-x[i])*(y[j+1]-y[j]))
+    return tuple(rows),tuple(areas)
+
+
+def _bilinear_cell_stencil(config):
+    """Compose bilinear interpolation B and a physical-radius cell filter F.
+
+    Each row of H=F B maps nodal controls to one CFD cell before projection.
+    F uses cone weights times source-cell area, normalized at the boundaries.
+    The cell itself is always in its filter, independent of control spacing.
+    No CFD mesh, port, filter radius or projection setting depends on N.
+    """
+    x,y=grid(config)
+    cx=[(a+b)/2 for a,b in zip(x,x[1:])]
+    cy=[(a+b)/2 for a,b in zip(y,y[1:])]
+    nx=len(cx);r=config.filter_radius_m
+    areas=[(b-a)*(d-c) for c,d in zip(y,y[1:]) for a,b in zip(x,x[1:])]
+    interpolation=[]
+    for yy in cy:
+        sy=yy/config.length_m*config.design_ny
+        j=min(int(sy),config.design_ny-1);fy=sy-j
+        for xx in cx:
+            sx=xx/config.width_m*config.design_nx
+            i=min(int(sx),config.design_nx-1);fx=sx-i
+            base=j*(config.design_nx+1)+i
+            interpolation.append(((base,(1-fx)*(1-fy)),(base+1,fx*(1-fy)),
+                (base+config.design_nx+1,(1-fx)*fy),(base+config.design_nx+2,fx*fy)))
+    rows=[]
+    for yy in cy:
+        for xx in cx:
+            combined={}
+            for j in range(bisect_left(cy,yy-r),bisect_right(cy,yy+r)):
+                for i in range(bisect_left(cx,xx-r),bisect_right(cx,xx+r)):
+                    weight=max(0.,1-math.hypot(cx[i]-xx,cy[j]-yy)/r)*areas[j*nx+i]
+                    if weight <= 0:continue
+                    for node,bilinear_weight in interpolation[j*nx+i]:
+                        if bilinear_weight > 0:
+                            combined[node]=combined.get(node,0.)+weight*bilinear_weight
+            total=sum(combined.values())
+            if total <= 0:raise ValueError('Scalable filter contains an empty neighborhood')
+            rows.append(tuple((node,weight/total) for node,weight in sorted(combined.items())))
     return tuple(rows),tuple(areas)
 
 
