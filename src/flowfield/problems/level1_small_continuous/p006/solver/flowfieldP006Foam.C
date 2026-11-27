@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
             // Scale the nonlinear saturation residual by actual conservation.
             // Numerical storage must not hide a remaining phase imbalance.
             const scalarField& phaseResidual=flowNetwork.massCorrection();
-            acceleration.observe(qL,qG,p,sg,T,water,phiL,phiG,phaseResidual);
+            acceleration.observe(qL,qG,p,sg,T,water,phiL,phiG,phaseResidual,momentumFraction>=1 && thermalActive);
         }
         else acceleration.reset();
         runTime.printExecutionTime(Info);

@@ -238,7 +238,49 @@ existing parallel case to obtain those statistics without another CFD solve.
 The [serial comparison record](../benchmarks/P006/serial-diagnostic-verification.json)
 documents a local pair with identical initial-field hashes and settings apart
 from process count; both passed in 64 steps. The stalled native fields were not
-available locally, so this verifies the workflow rather than a fix for Rivium.
+available for that earlier test, so it verifies the workflow rather than a fix
+for Rivium.
+
+The subsequently supplied `p006-stalled-serial.tar.gz` reproduced the stalled
+pressure/liquid-velocity iteration locally. Its immutable input hashes passed
+verification, and its solver sources matched the code before this change.
+A fresh 200-step serial continuation still failed; a longer unchanged control
+remained unqualified through 476 steps and was deliberately stopped. Merely
+increasing the Anderson history or restarting it again did not resolve the
+tested stall.
+
+The fully coupled stage now uses `1e-14` instead of `1e-10` for the relative
+regularization of the Anderson least-squares system. The earlier momentum and
+heat initialization retains `1e-10`. This changes the numerical acceleration,
+not the equations, mesh, field-change calculation, coefficient/field bounds,
+five-pass requirement or physical acceptance limits. From the uploaded final
+fields, the production serial solver qualified in **106 additional steps** at
+the unchanged `1e-4` field limit. Independent saved-field checks also passed.
+A previously qualified coarse reference retained its stricter `1e-5` limit and
+passed in 64 steps, with an objective difference of `1.18e-6 K`.
+The two-process run from the same uploaded fields still exhausted its 400-step
+budget without qualification. The demonstrated recovery is serial; this is
+not a general MPI convergence fix and optimizer process defaults are unchanged.
+
+After syncing the updated source to Rivium, use a fresh serial continuation:
+
+```bash
+p006_recovery="runs/p006/recovery-$(.venv/bin/python -c 'import uuid; print(uuid.uuid4().hex[:12])')"
+
+.venv/bin/python scripts/diagnose_p006.py prepare \
+  runs/p006/field-diagnostics-serial-97381184bb54 \
+  "$p006_recovery" --iterations 400 --processes 1 &&
+.venv/bin/flowfield-p006 run \
+  --case "$p006_recovery" --backend native --timeout 3600
+```
+
+The archive's native serial solve took 228 seconds for 200 steps. That is a
+measurement of this warm continuation, not a cold-start or optimizer-campaign
+runtime estimate. The [stalled-state verification record](../benchmarks/P006/stalled-state-verification.json)
+records the local reproduction and validation. These tests do not establish
+convergence for every new design, native-hardware reproducibility, mesh
+independence or agreement with the paper. Keep the acceptance limits unchanged
+and verify the native continuation before restarting the optimization campaign.
 
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse

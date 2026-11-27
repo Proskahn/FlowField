@@ -61,7 +61,8 @@ public:
 
     void observe(const Foam::volVectorField& l,const Foam::volVectorField& g,const Foam::volScalarField& p,
         const Foam::volScalarField& s,const Foam::volScalarField& t,const Foam::volScalarField& water,
-        const Foam::surfaceScalarField& fl,const Foam::surfaceScalarField& fg,const Foam::scalarField& phaseResidual)
+        const Foam::surfaceScalarField& fl,const Foam::surfaceScalarField& fg,const Foam::scalarField& phaseResidual,
+        const bool fullyCoupled)
     {
         using namespace Foam;
         scalarField r(pack(l,g,p,s,t,water,fl,fg)-input_);
@@ -82,7 +83,12 @@ public:
             Eigen::MatrixXd gram(n,n);Eigen::VectorXd rhs(n);
             for(label i=0;i<n;++i)
             {rhs[i]=gSum(df_[i]*r);for(label j=0;j<n;++j)gram(i,j)=gSum(df_[i]*df_[j]);}
-            const scalar regularization=max(gram.diagonal().maxCoeff()*1e-10,1e-24);
+            // Near convergence the update differences can be almost dependent.
+            // Excessive regularization then suppresses the remaining slow modes.
+            // Retain the startup regularization until momentum AND heat are active;
+            // field bounds, coefficient limiting and physical acceptance are unchanged.
+            const scalar relativeRegularization=fullyCoupled?1e-14:1e-10;
+            const scalar regularization=max(gram.diagonal().maxCoeff()*relativeRegularization,1e-24);
             gram.diagonal().array()+=regularization;
             Eigen::VectorXd gamma=gram.colPivHouseholderQr().solve(rhs);
             const scalar largest=gamma.cwiseAbs().maxCoeff();
