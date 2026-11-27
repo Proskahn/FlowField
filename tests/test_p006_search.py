@@ -208,6 +208,17 @@ class P006SearchTests(unittest.TestCase):
             self.assertEqual(properties.count('initial_momentum_fraction'), 1)
             self.assertIn('initial_momentum_fraction 1;', properties)
             self.assertIn('initial_thermal_active true;', properties)
+            status=json.loads((post/'status.json').read_text());status['thermal_active']=False
+            (post/'status.json').write_text(json.dumps(status))
+            (post/'history.csv').write_text(
+                'iteration,momentum_fraction,thermal_active,applied_voltage_V\n10,1,0,2.2\n')
+            partial=generate_case(root/'partial',search.decode(search.initial_design()),search.config,
+                                  initial_state=source)
+            props=(partial/'constant/modelProperties').read_text()
+            self.assertEqual(props.count('initial_momentum_fraction'),1)
+            self.assertIn('initial_momentum_fraction 1;',props)
+            self.assertIn('initial_thermal_active false;',props)
+            self.assertNotIn('numerical_initialization',json.loads((partial/'case.json').read_text()))
             with self.assertRaisesRegex(ValueError, 'same physical configuration and mesh'):
                 generate_case(root/'different-mesh', search.decode(search.initial_design()),
                               ManifoldConfig(), initial_state=source)

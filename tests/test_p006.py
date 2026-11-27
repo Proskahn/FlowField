@@ -386,6 +386,69 @@ class P006Tests(unittest.TestCase):
                     generate_case(root/'invalid',p.decode(p.initial_design()),p.config,initial_state=source)
                 self.assertFalse((root/'invalid').exists())
 
+    def test_partial_initialization_retains_last_solved_stage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            post=source/'postProcessing/p006'
+            status=json.loads((post/'status.json').read_text())
+            for momentum in (0.,.524288,1.):
+                status.update(momentum_fraction=momentum,thermal_active=False)
+                (post/'status.json').write_text(json.dumps(status))
+                (post/'history.csv').write_text(
+                    f'iteration,momentum_fraction,thermal_active,applied_voltage_V\n10,{momentum},0,2.2\n')
+                case=generate_case(root/f'continued-{momentum}',p.decode(p.initial_design()),p.config,
+                                   initial_state=source)
+                props=(case/'constant/modelProperties').read_text()
+                self.assertIn(f'initial_momentum_fraction {momentum:.12g};',props)
+                self.assertIn('initial_thermal_active false;',props)
+                metadata=json.loads((case/'case.json').read_text())['initial_state']
+                self.assertTrue(metadata['coupling']['restored'])
+                self.assertFalse(metadata['qualification_inherited'])
+                self.assertFalse(metadata['source_converged'])
+                CaseEvaluator(p.case_definition)._load_case(case)
+
+    def test_budget_boundary_transition_restores_solved_not_pending_stage(self):
+        from flowfield.problems.level1_small_continuous.p006.warm_start import completed_coupling
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            history=source/'postProcessing/p006/history.csv'
+            transitions=((0.,1e-6,False,'Momentum continuation: next fraction=1e-06'),
+                         (.524288,1.,False,'Momentum continuation: next fraction=1'),
+                         (1.,1.,True,'Enabling coupled energy solve at the requested voltage.'))
+            for solved,pending,heat,message in transitions:
+                history.write_text('iteration,momentum_fraction,thermal_active,applied_voltage_V\n'
+                                   f'10,{solved},0,2.2\n')
+                status=dict(iteration=10,momentum_fraction=pending,thermal_active=heat)
+                # An earlier announcement is not evidence for the final step.
+                for log in ('Iteration = 9\n'+message+'\nIteration = 10\nEnd\n',
+                            'Iteration = 10\nEnd\n'):
+                    (source/'log.flowfieldP006Foam').write_text(log)
+                    with self.assertRaisesRegex(ValueError,'coupling evidence'):
+                        completed_coupling(source,status,p.config)
+                (source/'log.flowfieldP006Foam').write_text('Iteration = 10\n'+message+'\nEnd\n')
+                coupling=completed_coupling(source,status,p.config)
+                self.assertEqual(coupling['momentum_fraction'],solved)
+                self.assertFalse(coupling['thermal_active'])
+                self.assertTrue(coupling['pending_transition'])
+                self.assertEqual(len(coupling['log_sha256']),64)
+
+    def test_partial_stage_requires_consistent_finite_evidence(self):
+        from flowfield.problems.level1_small_continuous.p006.warm_start import completed_coupling
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);p,source=self.coupled_state(root)
+            history=source/'postProcessing/p006/history.csv'
+            history.write_text('iteration,momentum_fraction,thermal_active,applied_voltage_V\n10,.5,0,2.2\n')
+            for overrides in (dict(momentum_fraction=float('nan')),dict(momentum_fraction=1.1),
+                              dict(momentum_fraction=True),dict(thermal_active=True),
+                              dict(thermal_active=0),dict(iteration=9)):
+                status=dict(iteration=10,momentum_fraction=.5,thermal_active=False);status.update(overrides)
+                with self.assertRaisesRegex(ValueError,'coupling evidence'):
+                    completed_coupling(source,status,p.config)
+            history.unlink()
+            with self.assertRaisesRegex(ValueError,'coupling evidence'):
+                completed_coupling(source,dict(iteration=10,momentum_fraction=.5,thermal_active=False),p.config)
+            self.assertFalse(completed_coupling(source,dict(iteration=10),p.config)['restored'])
+
     def test_explicit_lower_initial_voltage_keeps_normal_initialization(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);p,source=self.coupled_state(root)

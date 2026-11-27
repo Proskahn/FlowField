@@ -18,33 +18,63 @@ NUMERICAL={'iterations','write_interval','processes','pseudo_dt','phase_numerica
 
 
 def completed_coupling(source, status, config):
-    """Restore a completed full-model stage, never its convergence certificate.
+    """Restore the last solved stage, never its convergence certificate.
 
-    Older/partially initialized guesses still use the normal continuation.
-    Explicitly requesting a lower initial voltage also keeps that behavior.
+    Partial momentum/heat initialization is useful progress too. Older states
+    without stage evidence and explicitly lowered voltages retain normal startup.
     """
-    if status.get('momentum_fraction') != 1 or status.get('thermal_active') is not True:
-        return dict(restored=False,reason='Source has not recorded the full coupled stage')
+    if not {'momentum_fraction','thermal_active'} & status.keys():
+        return dict(restored=False,reason='Source has not recorded its coupling stage')
     path=source/'postProcessing/p006/history.csv'
-    text=path.read_text()
-    reader=csv.DictReader(text.splitlines())
-    if not reader.fieldnames or len(set(reader.fieldnames))!=len(reader.fieldnames):
-        raise ValueError('Initial-state history has missing/duplicate columns')
-    last=None
-    for row in reader:last=row
+    transition=False
     try:
+        text=path.read_text()
+        reader=csv.DictReader(text.splitlines())
+        if not reader.fieldnames or len(set(reader.fieldnames))!=len(reader.fieldnames):
+            raise ValueError('Initial-state history has missing/duplicate columns')
+        last=None
+        for row in reader:last=row
         final={k:float(v) for k,v in last.items()}
+        momentum=final['momentum_fraction'];thermal=final['thermal_active']
+        recorded=status['momentum_fraction'];recorded_heat=status['thermal_active']
         if (not all(math.isfinite(v) for v in final.values())
                 or final['iteration']!=status['iteration']
-                or final['momentum_fraction']!=1 or final['thermal_active']!=1
-                or not math.isclose(final['applied_voltage_V'],config.cell_voltage,rel_tol=0,abs_tol=1e-12)):
-            raise ValueError('Completion status and final coupled history disagree')
-    except (AttributeError,KeyError,TypeError,ValueError) as exc:
-        raise ValueError('Initial-state full-coupling evidence is inconsistent') from exc
+                or not 0<=momentum<=1 or thermal not in (0,1)
+                or type(recorded) not in (int,float) or not 0<=recorded<=1
+                or type(recorded_heat) is not bool
+                or (thermal and momentum!=1) or (recorded_heat and recorded!=1)):
+            raise ValueError('Invalid completed coupling stage')
+        if not math.isclose(momentum,recorded,rel_tol=0,abs_tol=1e-12) or bool(thermal)!=recorded_heat:
+            # History/fields precede the stage update, whereas status follows it.
+            # At a budget boundary restore the solved stage, not an unsolved one.
+            log=(source/'log.flowfieldP006Foam').read_text()
+            segments=re.split(r'^Iteration = (\d+)\s*$',log,flags=re.M)
+            tail=segments[-1] if len(segments)>1 and int(segments[-2])==status['iteration'] else ''
+            next_momentum=1e-6 if momentum==0 else min(1.,2*momentum)
+            announced=re.search(r'^Momentum continuation: next fraction=([^\s]+)\s*$',tail,re.M)
+            momentum_advance=(not thermal and not recorded_heat and momentum<1
+                and math.isclose(recorded,next_momentum,rel_tol=0,abs_tol=1e-12)
+                and announced is not None
+                and math.isclose(float(announced[1]),recorded,rel_tol=0,abs_tol=1e-12))
+            heat_advance=(momentum==recorded==1 and not thermal and recorded_heat
+                and 'Enabling coupled energy solve at the requested voltage.' in tail)
+            if not (momentum_advance or heat_advance):
+                raise ValueError('Completion status and final history disagree')
+            transition=True
+        at_target=math.isclose(final['applied_voltage_V'],config.cell_voltage,rel_tol=0,abs_tol=1e-12)
+        if (thermal or recorded_heat) and not at_target:
+            raise ValueError('Energy activation requires the requested voltage')
+    except (OSError,AttributeError,KeyError,TypeError,ValueError) as exc:
+        raise ValueError('Initial-state coupling evidence is inconsistent') from exc
     if min(config.initial_voltage,config.cell_voltage)!=config.cell_voltage:
         return dict(restored=False,reason='Requested a lower initial voltage')
-    return dict(restored=True,momentum_fraction=1.,thermal_active=True,voltage_V=final['applied_voltage_V'],
-                history_sha256=hashlib.sha256(text.encode()).hexdigest())
+    if not at_target:
+        return dict(restored=False,reason='Source has not reached the requested voltage')
+    result=dict(restored=True,momentum_fraction=momentum,thermal_active=bool(thermal),
+                voltage_V=final['applied_voltage_V'],history_sha256=hashlib.sha256(text.encode()).hexdigest())
+    if transition:
+        result.update(pending_transition=True,log_sha256=hashlib.sha256(log.encode()).hexdigest())
+    return result
 
 
 def same_geometry(a,b):
@@ -153,6 +183,8 @@ def write(case, state):
         # These are already supported solver inputs. Write before case hashes
         # are generated, so both activation flags are immutable/provenanced.
         props=Path(case)/'constant/modelProperties'
+        coupling=metadata['coupling']
         with props.open('a') as stream:
-            stream.write('\ninitial_momentum_fraction 1;\ninitial_thermal_active true;\n')
+            stream.write(f"\ninitial_momentum_fraction {coupling['momentum_fraction']:.12g};\n"
+                         f"initial_thermal_active {str(coupling['thermal_active']).lower()};\n")
     return metadata

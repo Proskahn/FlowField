@@ -143,6 +143,32 @@ covers manufactured stagnation recovery, singular-system rejection, analytic
 phase flow in serial/MPI including an empty fluid rank, and a qualified coupled
 continuation. It does not reproduce the failed native cold-start matrix.
 
+A later Rivium baseline reached the 3500-iteration cap with full momentum but
+heat still off (`field_change=0.146`, local phase balances `0.113` and `0.0468`).
+That state is not close to final acceptance, and BO had not started evaluating
+new designs. Raising only the final field-change tolerance cannot bypass the
+earlier momentum and heat activation checks.
+
+Continuation now preserves a completed partial momentum/heat stage when the
+final history and completion status agree at the target voltage. In particular,
+a completed state at `momentum_fraction=1`, `thermal_active=false` keeps those
+values instead of repeating the entire momentum ramp. At a budget boundary
+where the solver announced a new stage after saving the history, continuation
+conservatively restores the last stage actually solved. No convergence status
+is inherited: all five final samples and saved-field checks must pass again.
+Older states without stage evidence and explicit lower starting voltages keep
+normal initialization. Use a new same-geometry case with `--initial-state`;
+optimizer `--resume` does not retry a failed baseline or import this continuation.
+
+A local experiment partitioned two ranks through the membrane to keep each
+fluid network local. It reduced flow linear iterations and passed a full
+coupled warm-start check, but its cold start lingered at an intermediate
+momentum stage. It has not established faster cold-start qualification and is
+not adopted as the default; generated cases retain Scotch decomposition.
+The [continuation verification record](../benchmarks/P006/continuation-stage-verification.json)
+separates the five-step partial-stage restart smoke test from the qualified
+warm partition test and the deliberately interrupted cold experiment.
+
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse
 grid, all material layers, manifold interfaces, the branch sampling plane,

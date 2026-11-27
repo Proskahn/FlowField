@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T13:52:48.372145+00:00",
+  "status": "restart_regression_checks_passed",
+  "python_regression_tests_passed": 76,
+  "target_machine_validation_required": true,
+  "shipped_change": "Preserve the last solved partial momentum/thermal stage in a new same-geometry continuation; qualification is never inherited.",
+  "default_decomposition": "scotch (unchanged)",
+  "implementation_sha256": {
+    "src/flowfield/problems/level1_small_continuous/p006/warm_start.py": "1f142687b7d911681a23fc74611c0731a663645aa4406f3c38884248ca0e83e2",
+    "src/flowfield/problems/level1_small_continuous/p006/solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee"
+  },
+  "reported_native_case": {
+    "iterations": 3500,
+    "momentum_fraction": 1,
+    "thermal_active": false,
+    "field_change": 0.146478820042,
+    "local_liquid_balance": 0.113230830345,
+    "local_gas_balance": 0.0467976847231,
+    "optimization_attempts": 1,
+    "successful_evaluations": 0
+  },
+  "partial_stage_smoke": {
+    "case_directory": "runs/p006-membrane-split-001/partial-stage-smoke",
+    "source_case": "runs/p006-phase-performance-001/reference-mpi2",
+    "source_iteration": 300,
+    "source_momentum_fraction": 0.000512,
+    "source_thermal_active": false,
+    "first_step": {
+      "iteration": 1.0,
+      "momentum_fraction": 0.000512,
+      "thermal_active": 0.0,
+      "field_change": 7.46747270785e-05,
+      "local_liquid_balance": 0.000873635908884,
+      "local_gas_balance": 0.000360590957566
+    },
+    "last_step": {
+      "iteration": 5.0,
+      "momentum_fraction": 0.001024,
+      "thermal_active": 0.0,
+      "field_change": 0.0708687587564,
+      "local_liquid_balance": 0.157664080273,
+      "local_gas_balance": 0.0650754406015
+    },
+    "execution_status": "failed",
+    "expected_budget_exhaustion": true,
+    "qualified": false,
+    "qualification_inherited": false,
+    "complete_reconstructed_fields": true,
+    "decomposition": "experimental simple z split"
+  },
+  "partition_experiment": {
+    "adopted": false,
+    "method": {
+      "method": "simple",
+      "n": [
+        1,
+        1,
+        2
+      ],
+      "delta": 0
+    },
+    "observed_interface_per_rank": {
+      "cells": 4536,
+      "processor_faces": 648,
+      "fluid_processor_faces": 0,
+      "materials": [
+        4
+      ]
+    },
+    "warm_continuation": {
+      "case_directory": "runs/p006-membrane-split-001/coupled-continuation",
+      "qualified": true,
+      "iterations": 64.0,
+      "objective": 0.7981297173190153,
+      "same_source_scotch_objective": 0.7981292458811032,
+      "objective_difference_K": 4.7143791204184993e-07,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.2123182197080496e-12,
+        "saved_pressure_force_consistency": 8.086718079366797e-11,
+        "charge_balance": 5.774380082094828e-14,
+        "oxygen_faraday": 1.413904946437962e-14,
+        "hydrogen_faraday": 6.317828431551851e-14,
+        "heat_power_identity": 1.453257996779804e-14,
+        "membrane_water_balance": 2.782517642767611e-16,
+        "saved_local_L_balance": 0.0001469712601225461,
+        "saved_global_L_balance": 2.5437019549969315e-07,
+        "saved_local_G_balance": 5.795519777330813e-05,
+        "saved_global_G_balance": 1.4906650143216646e-07
+      },
+      "linear_counts": {
+        "assemblies": 482,
+        "linear_calls": 144,
+        "linear_iterations": 144
+      }
+    },
+    "cold_start": {
+      "case_directory": "runs/p006-membrane-split-001/cold-screening",
+      "execution_status": "failed",
+      "qualified": false,
+      "termination": "Stopped by investigator after excluding this unproven partition from the production change; not a 3500-step budget failure.",
+      "last_complete_sample": {
+        "iteration": 1948.0,
+        "momentum_fraction": 0.524288,
+        "thermal_active": 0.0,
+        "field_change": 0.050086276261,
+        "local_liquid_balance": 0.0503123859228,
+        "local_gas_balance": 0.0207938347439
+      }
+    },
+    "decision": "Linear work decreased and warm qualification passed, but cold-start qualification and total runtime improvement were not established. Keep the existing decomposition.",
+    "timing_limitations": "The short validation jobs overlapped the cold test; wall times are not a controlled speed comparison."
+  },
+  "limitations": [
+    "The user native completed case is not available locally.",
+    "The five-step restart smoke checks initialization and rejection at the iteration limit; it is not a converged CFD result.",
+    "The partition experiment is not shipped and its interrupted cold case must not be used as an initial state."
+  ]
+}
