@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
         mkDir(out);history.open((out/"history.csv").c_str());history<<std::setprecision(12);
         history<<"iteration,current_anode_A,current_cathode_A,charge_residual,T_mean_K,T_std_K,T_min_K,T_max_K,flow_cv,dp_anode_Pa,dp_cathode_Pa,liquid_balance,gas_balance,local_liquid_balance,local_gas_balance,field_change,heat_W,energy_balance,bounded_cells,lambda_min,lambda_max,applied_voltage_V,liquid_momentum_residual,gas_momentum_residual,momentum_fraction,thermal_active";
         for (label i=0;i<9;++i) history<<",branch_"<<i+1<<"_kg_s";
+        history<<",field_change_T,field_change_sg,field_change_p,field_change_Ul,field_change_Ug,field_change_lambda";
         history<<'\n';
     }
     bool converged=false,thermalActive=props.lookupOrDefault<Switch>("initial_thermal_active",false);label stable=0;
@@ -489,11 +490,18 @@ int main(int argc, char *argv[])
         scalar flow=par("inlet_flow_ml_min")*1e-6/60,errL=0,errG=0;
         for(label i=0;i<2;++i){errL=max(errL,mag(netL[i]-srcL[i])/flow);errG=max(errG,mag(netG[i]-srcG[i])/max(mag(srcG[i]),flow));}
         reduce(localL,sumOp<scalar>());reduce(localG,sumOp<scalar>());localL/=2*flow;localG/=max(srcG[0]+srcG[1],2*flow);
-        scalar change=max(gMax(mag(T.primitiveField()-oldT))/max(tmax-par("inlet_temperature"),1.),gMax(mag(sg.primitiveField()-oldS)));
-        change=max(change,gMax(mag(p.primitiveField()-oldP))/max(gMax(mag(p.primitiveField())),1.));
-        change=max(change,gMax(mag(Ul.primitiveField()-oldUl))/max(gMax(mag(Ul.primitiveField())),.01));
-        change=max(change,gMax(mag(Ug.primitiveField()-oldUg))/max(gMax(mag(Ug.primitiveField())),.01));
-        change=max(change,gMax(mag(water.primitiveField()-oldW))/par("membrane_water_boundary"));
+        // Expose the existing normalized block updates without changing their
+        // scales or acceptance. old* is the input after Anderson acceleration.
+        const char* changeNames[]={"T","sg","p","Ul","Ug","lambda"};
+        const scalar changes[]={
+            gMax(mag(T.primitiveField()-oldT))/max(tmax-par("inlet_temperature"),1.),
+            gMax(mag(sg.primitiveField()-oldS)),
+            gMax(mag(p.primitiveField()-oldP))/max(gMax(mag(p.primitiveField())),1.),
+            gMax(mag(Ul.primitiveField()-oldUl))/max(gMax(mag(Ul.primitiveField())),.01),
+            gMax(mag(Ug.primitiveField()-oldUg))/max(gMax(mag(Ug.primitiveField())),.01),
+            gMax(mag(water.primitiveField()-oldW))/par("membrane_water_boundary")};
+        scalar change=changes[0];label dominantChange=0;
+        for(label i=1;i<6;++i){if(changes[i]>change)dominantChange=i;change=max(change,changes[i]);}
         scalar heatW=gSum(heat.primitiveField()*mesh.V());
         // Discrete nonconservative LTE balance, including all faces and source divergence.
         volScalarField energyResidual("energyResidual",fvc::div(heatPhi,T)-fvc::div(heatPhi)*T-fvc::laplacian(kF,T)-heat);
@@ -504,8 +512,12 @@ int main(int argc, char *argv[])
         reduce(cooling,sumOp<scalar>());scalar energyError=mag(energy+cooling)/max(mag(heatW),.01);
         scalar lambdaMin=gMin(water.primitiveField()),lambdaMax=gMax(water.primitiveField());
         Info<<"P006: V="<<appliedVoltage<<"; I="<<Ia<<" A; sigmaT="<<sdT<<" K; CV="<<cv<<"; change="<<change<<"; phase balances="<<localL<<','<<localG<<"; momentum="<<momentumL<<','<<momentumG<<"; momentum fraction="<<momentumFraction<<"; bounded="<<bounded<<endl;
+        Info<<"P006 changes:";
+        for(label i=0;i<6;++i)Info<<' '<<changeNames[i]<<'='<<changes[i]<<';';
+        Info<<" dominant="<<changeNames[dominantChange]<<"; charge="<<chargeError
+            <<"; energy="<<energyError<<"; heat="<<(thermalActive?1:0)<<endl;
         if(Pstream::master())
-        {history<<runTime.value()<<','<<Ia<<','<<Ic<<','<<chargeError<<','<<mean<<','<<sdT<<','<<lo<<','<<hi<<','<<cv<<','<<dp[0]<<','<<dp[1]<<','<<errL<<','<<errG<<','<<localL<<','<<localG<<','<<change<<','<<heatW<<','<<energyError<<','<<bounded<<','<<lambdaMin<<','<<lambdaMax<<','<<appliedVoltage<<','<<momentumL<<','<<momentumG<<','<<momentumFraction<<','<<(thermalActive?1:0);for(label i=0;i<9;++i)history<<','<<branches[i];history<<'\n';history.flush();}
+        {history<<runTime.value()<<','<<Ia<<','<<Ic<<','<<chargeError<<','<<mean<<','<<sdT<<','<<lo<<','<<hi<<','<<cv<<','<<dp[0]<<','<<dp[1]<<','<<errL<<','<<errG<<','<<localL<<','<<localG<<','<<change<<','<<heatW<<','<<energyError<<','<<bounded<<','<<lambdaMin<<','<<lambdaMax<<','<<appliedVoltage<<','<<momentumL<<','<<momentumG<<','<<momentumFraction<<','<<(thermalActive?1:0);for(label i=0;i<9;++i)history<<','<<branches[i];for(label i=0;i<6;++i)history<<','<<changes[i];history<<'\n';history.flush();}
         bool modelChanged=false;
         if(momentumFraction<1 && max(localL,localG)<.001 && max(momentumL,momentumG)<.001 && change<.001 && !bounded)
         {momentumFraction=momentumFraction==0 ? 1e-6 : min(1.,2*momentumFraction);modelChanged=true;acceleration.reset();Info<<"Momentum continuation: next fraction="<<momentumFraction<<endl;}

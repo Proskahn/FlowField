@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T15:17:06.446511+00:00",
+  "status": "local_checks_passed",
+  "python_regression_tests_passed": 81,
+  "target_machine_plateau_reproduced": false,
+  "solver_cpp_sha256": "16a323b5c1e2dbacea5408aed41961536908ea5892305913a0e1415f9edb91ce",
+  "case_directory": "runs/p006-field-diagnostics-001/coupled-continuation",
+  "runtime": {
+    "backend": "docker",
+    "image": "opencfd/openfoam-default:2312",
+    "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+    "repo_digests": [
+      "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+    ],
+    "architecture": "arm64"
+  },
+  "configured_iterations": 200,
+  "qualified": true,
+  "iterations": 64.0,
+  "objective": 0.7981292458811032,
+  "comparison": {
+    "case_directory": "runs/p006-gmres-retry-001/coupled-continuation",
+    "objective_difference": 0.0,
+    "all_preexisting_history_values_identical": true
+  },
+  "saved_field_checks": {
+    "kinematic_velocity_consistency": 2.807129312187219e-12,
+    "saved_pressure_force_consistency": 9.002810549079049e-11,
+    "charge_balance": 1.5852192911310225e-13,
+    "oxygen_faraday": 4.1164321257229564e-15,
+    "hydrogen_faraday": 9.789949446827443e-14,
+    "heat_power_identity": 2.429016939351946e-13,
+    "membrane_water_balance": 7.170920818688829e-16,
+    "saved_local_L_balance": 0.00014528536313013633,
+    "saved_global_L_balance": 2.8476915889987504e-07,
+    "saved_local_G_balance": 5.729039079815017e-05,
+    "saved_global_G_balance": 1.6687964696359975e-07
+  },
+  "diagnostic_report": {
+    "case_directory": "/Users/zhuang/FlowField/runs/p006-field-diagnostics-001/coupled-continuation",
+    "execution_status": "ok",
+    "assessment": "Diagnostic only; not a convergence certificate.",
+    "total_history_samples": 64,
+    "window": {
+      "first": 1.0,
+      "last": 64.0,
+      "samples": 64,
+      "stage": {
+        "momentum_fraction": 1.0,
+        "thermal_active": 1.0,
+        "applied_voltage_V": 2.2
+      }
+    },
+    "field_tolerance": 0.0001,
+    "field_change": {
+      "last": 9.16744926913e-05,
+      "minimum": 6.18160040471e-05,
+      "maximum": 0.000168861247041,
+      "samples_at_or_above_limit": 1,
+      "longest_streak_below_limit": 63
+    },
+    "components": {
+      "T": {
+        "last": 1.9707119003e-05,
+        "minimum": 6.79928343579e-06,
+        "maximum": 3.75300821111e-05,
+        "samples_at_or_above_limit": 0,
+        "dominant_samples": 0
+      },
+      "sg": {
+        "last": 1.34622329118e-08,
+        "minimum": 1.32997522717e-08,
+        "maximum": 2.17514107836e-08,
+        "samples_at_or_above_limit": 0,
+        "dominant_samples": 0
+      },
+      "p": {
+        "last": 7.91543682267e-05,
+        "minimum": 2.64494940993e-05,
+        "maximum": 0.000155762402429,
+        "samples_at_or_above_limit": 1,
+        "dominant_samples": 1
+      },
+      "Ul": {
+        "last": 9.16744926913e-05,
+        "minimum": 6.18160040471e-05,
+        "maximum": 0.000168861247041,
+        "samples_at_or_above_limit": 1,
+        "dominant_samples": 63
+      },
+      "Ug": {
+        "last": 1.08045335385e-05,
+        "minimum": 5.12547033303e-06,
+        "maximum": 1.62415619101e-05,
+        "samples_at_or_above_limit": 0,
+        "dominant_samples": 0
+      },
+      "lambda": {
+        "last": 6.18495154082e-14,
+        "minimum": 1.1304088978e-15,
+        "maximum": 9.0432711824e-14,
+        "samples_at_or_above_limit": 0,
+        "dominant_samples": 0
+      }
+    },
+    "final_checks": {
+      "charge_residual": 7.37810205898e-13,
+      "energy_balance": 3.69542748038e-13,
+      "liquid_balance": 2.84767603797e-07,
+      "gas_balance": 1.66879034807e-07,
+      "local_liquid_balance": 0.000145285364269,
+      "local_gas_balance": 5.72903913336e-05,
+      "liquid_momentum_residual": 3.54740199402e-09,
+      "gas_momentum_residual": 1.44752598864e-07,
+      "bounded_cells": 0.0
+    },
+    "note": "Changes are normalized block-solve updates after Anderson input; dominance identifies a blocker, not its cause."
+  },
+  "limitations": [
+    "This same-geometry warm continuation validates diagnostics and unchanged acceptance; it does not reproduce the Rivium stagnation.",
+    "The requested 200-step target-machine diagnostic is still needed to identify its dominant field."
+  ]
+}

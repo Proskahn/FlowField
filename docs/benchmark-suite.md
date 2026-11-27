@@ -169,6 +169,41 @@ The [continuation verification record](../benchmarks/P006/continuation-stage-ver
 separates the five-step partial-stage restart smoke test from the qualified
 warm partition test and the deliberately interrupted cold experiment.
 
+If a completed continuation still oscillates above the field-change limit,
+use a short diagnostic continuation before raising the budget again. The solver
+now prints `P006 changes:` with normalized updates for `T`, `sg`, `p`, `Ul`,
+`Ug`, and `lambda`, identifies the largest component, and shows charge/energy
+errors and heat activation. The same six numeric components are appended to
+`history.csv` as `field_change_<field>`. Their maximum remains the existing
+acceptance metric. They measure block-solve changes relative to the input after
+Anderson acceleration, not differences between saved field directories.
+
+After syncing the updated source, from the repository root:
+
+```bash
+.venv/bin/python scripts/diagnose_p006.py prepare \
+  runs/p006/bo42-continuation-001/continuation \
+  runs/p006/field-diagnostics-001 --iterations 200
+
+.venv/bin/flowfield-p006 run --case runs/p006/field-diagnostics-001 \
+  --backend native --timeout 3600
+
+.venv/bin/python scripts/diagnose_p006.py report \
+  runs/p006/field-diagnostics-001 --last 100
+```
+
+Preparation requires a completed source with reconstructed fields and a new
+destination. It copies the exact geometry/configuration, changing only the
+iteration budget, and preserves verified momentum/heat activation without
+inheriting qualification. It does not alter the source or run CFD. A 200-step
+budget error is an expected possible diagnostic outcome; run `report` after
+that error too. The report counts which components exceed the limit and dominate
+the recent final-stage samples. It identifies a blocker, not its cause or a
+convergence certificate. Old histories lack these columns and require a newly
+generated case. The [diagnostic verification record](../benchmarks/P006/field-diagnostics-verification.json)
+records a local two-rank coupled check; the Rivium plateau still requires its own
+diagnostic continuation.
+
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse
 grid, all material layers, manifold interfaces, the branch sampling plane,
