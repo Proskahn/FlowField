@@ -63,6 +63,12 @@ def _inspect_case(case, *, max_field_bytes=128*1024*1024):
             out.update(status='not_applicable',reason='No registered CFD stability profile for this case.');return out
         problem=create_problem(name,config=manifest['config']);config=problem.config
         out['config']=config.to_dict();out['model_revision']=manifest.get('model_revision')
+        if name=='P006':
+            out['fidelity']=config.fidelity
+            if config.fidelity['reference_recheck_required']:
+                check('evaluation_fidelity','passed',
+                      'Search configuration: qualification applies to its recorded mesh and tolerance. '
+                      'Recheck finalists using reference settings.')
     except (OSError,ValueError,TypeError,KeyError) as exc:
         out.update(status='incompatible',error=str(exc));return out
     try:

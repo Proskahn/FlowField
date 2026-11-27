@@ -25,6 +25,19 @@ class FlowNetwork
     Eigen::SparseLU<Eigen::SparseMatrix<double>> factorization_;
     bool patternAnalyzed_=false;
     Foam::scalarField massCorrection_;
+    using Clock=std::chrono::steady_clock;
+    struct Timings
+    {
+        double assembly=0,exchange=0,matrix=0,symbolic=0,factor=0,linear=0,matvec=0,orthogonal=0;
+        Foam::label assemblies=0,linearCalls=0,linearIterations=0;
+    } timings_;
+    struct Timer
+    {
+        double& elapsed;
+        Clock::time_point start;
+        explicit Timer(double& value):elapsed(value),start(Clock::now()){}
+        ~Timer(){elapsed+=std::chrono::duration<double>(Clock::now()-start).count();}
+    };
 
 public:
     const Foam::scalarField& massCorrection() const {return massCorrection_;}
@@ -91,6 +104,8 @@ public:
         Foam::scalar& error)
     {
         using namespace Foam;
+        Timer linearTimer(timings_.linear);++timings_.linearCalls;
+        const auto matrixStart=Clock::now();
         const label restart=80,maximum=800,n=rhs.size();
         std::vector<Eigen::Triplet<double>> entries;entries.reserve(n+2*edgeIndex_.size());
         forAll(rhs,i)entries.emplace_back(i,i,A.diag()[i]);
@@ -98,12 +113,13 @@ public:
         {label a=pair.first.first,b=pair.first.second,e=pair.second;
          entries.emplace_back(a,b,A.upper()[e]);entries.emplace_back(b,a,A.lower()[e]);}
         Eigen::SparseMatrix<double> matrix(n,n);matrix.setFromTriplets(entries.begin(),entries.end());matrix.makeCompressed();
+        timings_.matrix+=std::chrono::duration<double>(Clock::now()-matrixStart).count();
         // A rank may own only solid cells. It still participates in every
         // distributed reduction and matrix exchange, but has no local LU block.
         if(n)
         {
-            if(!patternAnalyzed_){factorization_.analyzePattern(matrix);patternAnalyzed_=true;}
-            factorization_.factorize(matrix);
+            if(!patternAnalyzed_){Timer timer(timings_.symbolic);factorization_.analyzePattern(matrix);patternAnalyzed_=true;}
+            {Timer timer(timings_.factor);factorization_.factorize(matrix);}
             if(factorization_.info()!=Eigen::Success)FatalErrorInFunction<<"Phase Jacobian factorization failed"<<exit(FatalError);
         }
         if(!Pstream::parRun())
@@ -113,15 +129,15 @@ public:
             Eigen::VectorXd solution=factorization_.solve(b);
             forAll(x,i)x[i]=solution[i];
             error=(matrix*solution-b).norm()/max(b.norm(),VSMALL);
-            return 1;
+            ++timings_.linearIterations;return 1;
         }
         const scalar reference=max(std::sqrt(gSum(sqr(rhs))),VSMALL);
         scalarField residual(rhs),product(n,0);label iterations=0;
         while(iterations<maximum)
         {
-            A.Amul(product,x,coeff,interfaceFields_,0);residual=rhs-product;
+            {Timer timer(timings_.matvec);A.Amul(product,x,coeff,interfaceFields_,0);}residual=rhs-product;
             scalar beta=std::sqrt(gSum(sqr(residual)));error=beta/reference;
-            if(error<1e-6)return iterations;
+            if(error<1e-6){timings_.linearIterations+=iterations;return iterations;}
             List<scalarField> v(restart+1),z(restart);
             forAll(v,i){v[i].setSize(n,0);}
             forAll(z,i){z[i].setSize(n,0);}
@@ -135,10 +151,11 @@ public:
                 {Eigen::Map<const Eigen::VectorXd> b(v[j].cdata(),n);
                  Eigen::VectorXd solution=factorization_.solve(b);
                  forAll(z[j],i)z[j][i]=solution[i];}
-                A.Amul(product,z[j],coeff,interfaceFields_,0);
+                {Timer timer(timings_.matvec);A.Amul(product,z[j],coeff,interfaceFields_,0);}
                 // Reorthogonalization protects the thin-layer, high-contrast system.
-                for(label pass=0;pass<2;++pass)for(label i=0;i<=j;++i)
-                {scalar a=gSum(product*v[i]);h[i][j]+=a;product-=a*v[i];}
+                {Timer timer(timings_.orthogonal);
+                 for(label pass=0;pass<2;++pass)for(label i=0;i<=j;++i)
+                 {scalar a=gSum(product*v[i]);h[i][j]+=a;product-=a*v[i];}}
                 h[j+1][j]=std::sqrt(gSum(sqr(product)));
                 if(h[j+1][j]>VSMALL)v[j+1]=product/h[j+1][j];
                 for(label i=0;i<j;++i)
@@ -156,7 +173,8 @@ public:
             {scalar value=g[i];for(label j=i+1;j<used;++j)value-=h[i][j]*y[j];y[i]=value/h[i][i];}
             for(label i=0;i<used;++i)x+=y[i]*z[i];
         }
-        A.Amul(product,x,coeff,interfaceFields_,0);error=std::sqrt(gSum(sqr(rhs-product)))/reference;
+        {Timer timer(timings_.matvec);A.Amul(product,x,coeff,interfaceFields_,0);}error=std::sqrt(gSum(sqr(rhs-product)))/reference;
+        timings_.linearIterations+=iterations;
         return iterations;
     }
 
@@ -169,6 +187,8 @@ public:
         Foam::surfaceScalarField& pressureFaceL,Foam::surfaceScalarField& pressureFaceG)
     {
         using namespace Foam;
+        timings_=Timings{};
+        const auto phaseStart=Clock::now();
         const scalar pressureScale=1000.,satFloor=1e-6;
         scalarField x(2*count_,0),oldS(sg.primitiveField()),initialS(count_,0);
         // Solve for the saturation increment, not the absolute saturation.
@@ -269,6 +289,7 @@ public:
         scalarField columnActivity(2*count_,0);
         auto assemble=[&](const scalarField& trial,scalarField& res,bool jacobian,bool saveFlux)
         {
+            Timer assemblyTimer(timings_.assembly);++timings_.assemblies;
             res=0;if(jacobian){columnActivity=0;A.diag()=0;A.upper()=0;A.lower()=0;forAll(interfaceCoeffs,pi)interfaceCoeffs[pi]=0;}
             auto add=[&](label row,label col,scalar value)
             {if(!jacobian)return;columnActivity[col]+=mag(value);if(row==col)A.diag()[row]+=value;
@@ -281,7 +302,8 @@ public:
                 res[a+1]=capacity[c]*trial[a+1]-Sg[c]*V;
                 add(a+1,a+1,capacity[c]);
             }
-            syncTools::swapBoundaryCellList(mesh_,pv,nbrP);syncTools::swapBoundaryCellList(mesh_,sv,nbrS);
+            {Timer timer(timings_.exchange);
+             syncTools::swapBoundaryCellList(mesh_,pv,nbrP);syncTools::swapBoundaryCellList(mesh_,sv,nbrS);}
             forAll(mesh_.neighbour(),f)
             {
                 label o=mesh_.owner()[f],n=mesh_.neighbour()[f],a=index_[o],b=index_[n];
@@ -492,5 +514,15 @@ public:
             Info<<"Gas-mass preconditioner: linear residual="<<correctionError
                 <<"; iterations="<<correctionIterations
                 <<"; maximum saturation correction="<<gMax(mag(massCorrection_))<<endl;
+        // Inclusive timings: linear contains matrix/factor/matvec/orthogonal;
+        // assembly contains exchange. Per-rank output adds no MPI reductions.
+        Pout<<"PHASE_TIMING iteration="<<mesh_.time().value()<<" rank="<<Pstream::myProcNo()
+            <<" total_s="<<std::chrono::duration<double>(Clock::now()-phaseStart).count()
+            <<" assembly_s="<<timings_.assembly<<" exchange_s="<<timings_.exchange
+            <<" matrix_s="<<timings_.matrix<<" symbolic_s="<<timings_.symbolic
+            <<" factor_s="<<timings_.factor<<" linear_s="<<timings_.linear
+            <<" matvec_s="<<timings_.matvec<<" orthogonal_s="<<timings_.orthogonal
+            <<" assemblies="<<timings_.assemblies<<" linear_calls="<<timings_.linearCalls
+            <<" linear_iterations="<<timings_.linearIterations<<endl;
     }
 };

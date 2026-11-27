@@ -94,6 +94,116 @@ baseline diagnostics without calibration, but optimization requires a frozen
 qualified EWM calibration. Setup errors are rejected before starting an
 experiment or creating its output directory.
 
+## P006 search resolution and reference rechecks
+
+P006 supports explicitly cheaper search configurations. Its default remains
+`mesh=coarse`, `field_tolerance=1e-5`; existing case and optimizer identities are
+unchanged. These presets all use a 3500-iteration cap and two MPI ranks:
+
+| Configuration in `benchmarks/P006/` | Mesh | Baseline cells | Field-change limit |
+| --- | --- | ---: | ---: |
+| `reference-config.json` | `coarse` | 13,104 | `1e-5` |
+| `search-tolerance-config.json` | `coarse` | 13,104 | `1e-4` |
+| `search-config.json` | `screening` | 9,072 | `1e-4` |
+| `search-coarse-config.json` | `screening-coarse` | 7,056 | `1e-4` |
+
+The local OpenCFD v2312 baseline checks with two MPI ranks passed full coupled
+convergence and independent saved-field verification:
+
+| Mesh / field limit | Solver iterations | Temperature spread | Difference from reference |
+| --- | ---: | ---: | ---: |
+| `coarse` / `1e-5` | 1,973 | 0.813470 K | reference |
+| `screening` / `1e-4` | 2,734 | 0.798144 K | -1.88% |
+| `screening-coarse` / `1e-4` | 2,053 | 0.803560 K | -1.22% |
+
+See [recorded validation evidence](../benchmarks/P006/search-verification.json).
+The difference is not monotonic with mesh size, and these baseline comparisons
+do not establish accuracy across optimized designs or grid independence.
+The tolerance-only preset also passed a continuation from the completed
+reference state; that continuation is not a cold-start speed benchmark.
+Validation jobs overlapped initially and one was paused, so their elapsed
+times are not a controlled runtime comparison. Fewer cells can require more
+iterations, as the `screening` baseline demonstrates.
+
+Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
+length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse
+grid, all material layers, manifold interfaces, the branch sampling plane,
+inlet flow and fixed topology across channel-width designs. Reduced grids
+start at the existing `1e-6` momentum continuation stage, where numerical
+pseudo-storage can regularize the initial pressure/saturation solve. This
+avoids the zero-storage startup used by the reference grid; it does not
+change the required final momentum fraction of 1.
+
+The field-change limit measures change between nonlinear iterations, not
+physical prediction error. `1e-4` is the maximum supported search limit.
+Conservation and momentum limits remain at `1e-3` or tighter, charge acceptance
+remains at `1e-6`, boundedness violations must be zero, and five consecutive
+iterations must pass with full momentum and energy coupling at the requested
+voltage. Independent saved-field checks still run. A 3500-iteration cap does
+not guarantee convergence; failed or timed-out cases remain unqualified.
+
+Cases, evaluation metadata and optimizer plans record `fidelity`, including
+`purpose=search` and `reference_recheck_required=true` for reduced meshes or
+relaxed field-change limits. A passing search case qualifies only under its
+recorded settings. Mesh independence and preservation of design rankings
+require comparison against reference results. Pilot the tolerance-only preset
+first, then compare reduced meshes on the baseline and several varied feasible
+designs before committing to a large optimization campaign.
+
+Run a pilot on the machine with OpenCFD v2312 loaded:
+
+```bash
+.venv/bin/flowfield-check run --problem P006 \
+  --config P006=benchmarks/P006/search-tolerance-config.json \
+  --backend native --timeout 28800 \
+  --output runs/p006/search-tolerance-check-001
+```
+
+Select `search-config.json` or `search-coarse-config.json` to test fewer cells.
+Keep the same configuration for each optimizer and seed being compared. For
+example, after qualifying the pilot:
+
+```bash
+.venv/bin/flowfield-optimize --problem P006 --optimizer bo --seed 42 \
+  --budget 200 --config benchmarks/P006/search-tolerance-config.json \
+  --backend native --timeout 28800 \
+  --output runs/p006/search-tolerance/p006-bo-42
+```
+
+`random`, `turbo` and `cmaes` use the same options. The budget counts attempted
+design evaluations, including the baseline and failures; each accepted
+evaluation still requires a full coupled solve under the selected settings.
+Use new output directories when changing mesh or tolerance. Resume verifies
+the configuration fingerprint and refuses to mix different fidelities in one
+optimizer history. `flowfield-p006 generate/evaluate` also accepts
+`--mesh screening` and `--field-tolerance 1e-4` directly; existing cases cannot
+be relabeled by overriding these flags on `run` or `extract`.
+
+Re-evaluate the best feasible designs with reference settings. For example,
+export the winning normalized design and run it as a new case:
+
+```bash
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+run = Path('runs/p006/search-tolerance/p006-bo-42/P006')
+winner = json.loads((run/'best-feasible.json').read_text())
+(run/'reference-design.json').write_text(json.dumps(winner['x']))
+PY
+.venv/bin/flowfield evaluate --problem P006 \
+  --config benchmarks/P006/reference-config.json \
+  --design runs/p006/search-tolerance/p006-bo-42/P006/reference-design.json \
+  --backend native --timeout 28800 --output runs/p006/reference-recheck-001
+```
+
+Repeat this for several finalists to check ranking. For mesh sensitivity,
+create a reference configuration with `mesh=medium` and retain `1e-5`, then
+compare the physical observables. Reference here means the original numerical
+settings, not a claim of grid independence. Same-geometry, same-mesh completed
+fields may initialize a new stricter case through `--initial-state`, but never
+transfer qualification. Changing mesh requires a fresh solve; cross-mesh
+field copying is rejected.
+
 ## Plan experiments, then execute them
 
 ```bash

@@ -1,0 +1,6 @@
+{
+  "mesh": "coarse",
+  "field_tolerance": 0.00001,
+  "iterations": 3500,
+  "processes": 2
+}

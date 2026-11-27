@@ -52,7 +52,7 @@ class P006Problem(CFDProblem):
                         error=str(exc),case_directory=exc.case_directory)
         result['metadata']=dict(problem_id=self.name,problem_name=self.ioh_name,dimension=3,
             design=g['normalized_design'],geometry=g,config=self.config.to_dict(),
-            config_sha256=self.config.fingerprint,paper_doi=DOI,paper_validated=False,
+            config_sha256=self.config.fingerprint,fidelity=self.config.fidelity,paper_doi=DOI,paper_validated=False,
             replication_status='provisional_two_fluid_thermal_reconstruction',
             objective_unit='K',valid_cfd=result['status']=='ok',case_directory=result['case_directory'])
         self.last_result=result

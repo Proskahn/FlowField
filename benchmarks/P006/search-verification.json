@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T11:31:28.053844+00:00",
+  "status": "passed",
+  "scope": "Baseline numerical qualification and comparison to the original coarse mesh; not a mesh-independence or design-ranking study.",
+  "unit_and_regression_tests_passed": 115,
+  "mesh_independence_established": false,
+  "optimization_design_ranking_validated": false,
+  "timing_note": "Validation jobs initially overlapped; the screening-coarse solver was paused while screening finished. Elapsed times are not a controlled performance comparison. CPU time is the OpenFOAM rank-zero diagnostic, not total core-seconds.",
+  "cases": {
+    "reference": {
+      "case_directory": "runs/p006-phase-performance-001/reference-full",
+      "status": "ok",
+      "configuration_preset": "benchmarks/P006/reference-config.json",
+      "qualified": true,
+      "cells": 13104,
+      "mesh": "coarse",
+      "field_tolerance": 1e-05,
+      "balance_tolerance": 0.001,
+      "iterations": 1973,
+      "config_sha256": "881228d007d88c486859d09f1ea5ac801211b4fcb51562dfa49415dd7bb07d07",
+      "cold_start": true,
+      "numerical_initialization": {},
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "eigen": {
+        "version": "3.4.1",
+        "headers_sha256": "3117eb9c83bb3a3efd231eaadbd09f513d617fcdeaa728fc5038352d05461b91"
+      },
+      "solver_cpu_seconds_rank0": 2293.5,
+      "solver_elapsed_seconds": 2640.0,
+      "last_history": {
+        "field_change": 8.714139908e-06,
+        "local_liquid_balance": 3.47132058454e-05,
+        "local_gas_balance": 1.3669358099e-05,
+        "momentum_fraction": 1.0,
+        "thermal_active": 1.0
+      },
+      "observables": {
+        "temperature_std_K": 0.8134699513539857,
+        "current_anode_A": 7.316358952164379,
+        "dp_anode_Pa": 82.7215709059,
+        "dp_cathode_Pa": 84.7315837402,
+        "flow_cv": 1.4575094494
+      },
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 1.7014812881954703e-12,
+        "saved_pressure_force_consistency": 8.882116587863817e-11,
+        "charge_balance": 3.823981355135317e-14,
+        "oxygen_faraday": 3.931961516636558e-15,
+        "hydrogen_faraday": 3.949834068984895e-14,
+        "heat_power_identity": 1.8952369642074226e-13,
+        "membrane_water_balance": 3.7632113447831165e-16,
+        "saved_local_L_balance": 3.471321687627872e-05,
+        "saved_global_L_balance": 2.3155702154929185e-07,
+        "saved_local_G_balance": 1.3669359608689932e-05,
+        "saved_global_G_balance": 8.785589709649827e-08
+      }
+    },
+    "tolerance_continuation": {
+      "case_directory": "runs/p006-search-validation-001/tolerance-continuation",
+      "status": "ok",
+      "configuration_preset": "benchmarks/P006/search-tolerance-config.json",
+      "qualified": true,
+      "cells": 13104,
+      "mesh": "coarse",
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "iterations": 64,
+      "config_sha256": "0574eae428e83b50abb9497c222ce82ff4eeeb60dc5038254c70f06329be9410",
+      "cold_start": false,
+      "numerical_initialization": {},
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "eigen": {
+        "version": "3.4.1",
+        "headers_sha256": "3117eb9c83bb3a3efd231eaadbd09f513d617fcdeaa728fc5038352d05461b91"
+      },
+      "solver_cpu_seconds_rank0": 102.12,
+      "solver_elapsed_seconds": 307.0,
+      "last_history": {
+        "field_change": 7.06724625577e-06,
+        "local_liquid_balance": 1.43202390373e-05,
+        "local_gas_balance": 5.63901962058e-06,
+        "momentum_fraction": 1.0,
+        "thermal_active": 1.0
+      },
+      "observables": {
+        "temperature_std_K": 0.8134688175978609,
+        "current_anode_A": 7.316358854077989,
+        "dp_anode_Pa": 82.7215105249,
+        "dp_cathode_Pa": 84.731652603,
+        "flow_cv": 1.45750984396
+      },
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.192094498526956e-12,
+        "saved_pressure_force_consistency": 7.879104405828444e-11,
+        "charge_balance": 3.7390040418146304e-14,
+        "oxygen_faraday": 3.860471358998212e-14,
+        "hydrogen_faraday": 1.251078681156831e-15,
+        "heat_power_identity": 1.5065147264768084e-13,
+        "membrane_water_balance": 9.441806249959652e-16,
+        "saved_local_L_balance": 1.4320233693286319e-05,
+        "saved_global_L_balance": 1.8348348386728077e-08,
+        "saved_local_G_balance": 5.639021985438894e-06,
+        "saved_global_G_balance": 1.0739311126476104e-08
+      },
+      "relative_difference_percent_vs_reference": {
+        "temperature_std_K": -0.0001393728339738054,
+        "current_anode_A": -1.3406448506891877e-06,
+        "dp_anode_Pa": -7.299305287977731e-05,
+        "dp_cathode_Pa": 8.127170172400611e-05,
+        "flow_cv": 2.7070836505771467e-05
+      }
+    },
+    "screening": {
+      "case_directory": "runs/p006-search-validation-001/screening-regularized-baseline",
+      "status": "ok",
+      "configuration_preset": "benchmarks/P006/search-config.json",
+      "qualified": true,
+      "cells": 9072,
+      "mesh": "screening",
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "iterations": 2734,
+      "config_sha256": "eb93b44ed8ea4cd600212b292b4e56f6bb211761eb8676fe2f7b35812c6587cb",
+      "cold_start": true,
+      "numerical_initialization": {
+        "momentum_fraction": 1e-06
+      },
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "eigen": {
+        "version": "3.4.1",
+        "headers_sha256": "3117eb9c83bb3a3efd231eaadbd09f513d617fcdeaa728fc5038352d05461b91"
+      },
+      "solver_cpu_seconds_rank0": 1905.64,
+      "solver_elapsed_seconds": 2154.0,
+      "last_history": {
+        "field_change": 8.17507373633e-05,
+        "local_liquid_balance": 0.000308242433336,
+        "local_gas_balance": 0.000121549264055,
+        "momentum_fraction": 1.0,
+        "thermal_active": 1.0
+      },
+      "observables": {
+        "temperature_std_K": 0.7981435212037318,
+        "current_anode_A": 7.306148097361046,
+        "dp_anode_Pa": 83.422205214,
+        "dp_cathode_Pa": 85.4047410842,
+        "flow_cv": 1.44846448321
+      },
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 1.5771346216085122e-12,
+        "saved_pressure_force_consistency": 7.573171577415679e-11,
+        "charge_balance": 3.112086867296854e-14,
+        "oxygen_faraday": 4.93971841655766e-14,
+        "hydrogen_faraday": 1.3602123176028776e-14,
+        "heat_power_identity": 7.871813941277247e-14,
+        "membrane_water_balance": 1.6481896822545855e-16,
+        "saved_local_L_balance": 0.000308242433192628,
+        "saved_global_L_balance": 7.659696935442924e-07,
+        "saved_local_G_balance": 0.0001215492655465954,
+        "saved_global_G_balance": 2.7473819432296455e-07
+      },
+      "relative_difference_percent_vs_reference": {
+        "temperature_std_K": -1.8840806749829797,
+        "current_anode_A": -0.1395619716049068,
+        "dp_anode_Pa": 0.8469789686380791,
+        "dp_cathode_Pa": 0.7944585882685873,
+        "flow_cv": -0.6205768472872353
+      }
+    },
+    "screening_coarse": {
+      "case_directory": "runs/p006-search-validation-001/screening-coarse-regularized-baseline",
+      "status": "ok",
+      "configuration_preset": "benchmarks/P006/search-coarse-config.json",
+      "qualified": true,
+      "cells": 7056,
+      "mesh": "screening-coarse",
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "iterations": 2053,
+      "config_sha256": "fb9fdbca5a1300da82d8e832ea47e533fd379e403b99f85c2fff4a412fd61bd1",
+      "cold_start": true,
+      "numerical_initialization": {
+        "momentum_fraction": 1e-06
+      },
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "eigen": {
+        "version": "3.4.1",
+        "headers_sha256": "3117eb9c83bb3a3efd231eaadbd09f513d617fcdeaa728fc5038352d05461b91"
+      },
+      "solver_cpu_seconds_rank0": 1014.2,
+      "solver_elapsed_seconds": 3087.0,
+      "last_history": {
+        "field_change": 9.33779420945e-05,
+        "local_liquid_balance": 0.000317158948645,
+        "local_gas_balance": 0.000125220270889,
+        "momentum_fraction": 1.0,
+        "thermal_active": 1.0
+      },
+      "observables": {
+        "temperature_std_K": 0.8035597699395256,
+        "current_anode_A": 7.297106988149809,
+        "dp_anode_Pa": 83.8645659003,
+        "dp_cathode_Pa": 85.8236173264,
+        "flow_cv": 1.44320716909
+      },
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 4.079789647445925e-12,
+        "saved_pressure_force_consistency": 8.927771420898568e-11,
+        "charge_balance": 7.412535659347956e-14,
+        "oxygen_faraday": 9.031531581824094e-14,
+        "hydrogen_faraday": 2.938831705196595e-14,
+        "heat_power_identity": 2.596586615548466e-13,
+        "membrane_water_balance": 9.309982417769682e-17,
+        "saved_local_L_balance": 0.0003171589429812691,
+        "saved_global_L_balance": 1.3541869129107229e-06,
+        "saved_local_G_balance": 0.0001252202747133124,
+        "saved_global_G_balance": 5.846438750081226e-07
+      },
+      "relative_difference_percent_vs_reference": {
+        "temperature_std_K": -1.2182602932001352,
+        "current_anode_A": -0.26313585952304486,
+        "dp_anode_Pa": 1.381737534578753,
+        "dp_cathode_Pa": 1.2888152658026009,
+        "flow_cv": -0.9812821670478922
+      }
+    }
+  },
+  "additional_mesh_checks": [
+    {
+      "case": "screening-coarse-baseline",
+      "passed": true,
+      "cells": 7056
+    },
+    {
+      "case": "screening-taper",
+      "passed": true,
+      "cells": 9072
+    },
+    {
+      "case": "screening-coarse-taper",
+      "passed": true,
+      "cells": 7056
+    }
+  ],
+  "startup_note": "The reduced grids failed the zero-storage Darcy startup. Their generated cases now start at the existing 1e-6 momentum continuation stage; full fraction=1 and active energy remain mandatory for acceptance.",
+  "model_source_sha256": "4e54089929273f672afe502d5fec02855708332aeea73f211833c2a2226df4cd"
+}

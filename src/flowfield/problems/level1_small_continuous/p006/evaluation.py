@@ -11,6 +11,10 @@ def validate(case,manifest,config):
     from . import P006Problem
     g=manifest['design_geometry']
     if g!=P006Problem(config=config).decode(g['normalized_design']):raise ValueError('Geometry was changed')
+    # Older manifests have no descriptive fidelity metadata; their immutable
+    # configuration still supplies the exact numerical settings.
+    if 'fidelity' in manifest and manifest['fidelity']!=config.fidelity:
+        raise ValueError('Fidelity metadata differs from the recorded configuration')
     for name in SOLVER_INPUTS:
         if (case/'solver'/name).read_bytes()!=(Path(__file__).parent/'solver'/name).read_bytes():
             raise ValueError('Solver sources differ from this model revision')

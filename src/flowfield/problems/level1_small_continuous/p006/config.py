@@ -10,6 +10,11 @@ MODEL_REVISION = 'manifold-two-fluid-thermal-v2'
 DEFAULT_TIMEOUT_S = 14400
 PARAMETERS = ('win', 'wmid', 'wout')
 BASELINE_X = (0.375,)*3
+# Ordered from least to most resolved. Search meshes retain the coarse x/z grid.
+SCREENING_SPACING_MM = {'screening-coarse': 2.0, 'screening': 1.5}
+MESH_LEVELS = (*SCREENING_SPACING_MM, 'coarse', 'medium', 'fine')
+REFERENCE_FIELD_TOLERANCE = 1e-5
+SEARCH_FIELD_TOLERANCE = 1e-4
 
 
 @dataclass(frozen=True)
@@ -86,8 +91,8 @@ class ManifoldConfig:
     balance_tolerance: float = 1e-3
 
     def __post_init__(self):
-        if self.mesh not in ('coarse', 'medium', 'fine'):
-            raise ValueError('mesh must be coarse, medium or fine')
+        if self.mesh not in MESH_LEVELS:
+            raise ValueError('mesh must be one of: '+', '.join(MESH_LEVELS))
         for key, value in asdict(self).items():
             if key == 'mesh':
                 continue
@@ -109,8 +114,23 @@ class ManifoldConfig:
             raise ValueError('Use a nonzero capillary slope: contact angle in (0,180), excluding 90')
         if not 273.15 < self.inlet_temperature < 373.15:
             raise ValueError('Liquid-water inlet must lie between freezing and boiling')
-        if self.field_tolerance > 1e-5 or self.balance_tolerance > 1e-3:
-            raise ValueError('Verification tolerances may be tightened, not relaxed')
+        if self.field_tolerance > SEARCH_FIELD_TOLERANCE:
+            raise ValueError('field_tolerance must be <= 1e-4; values above 1e-5 are search settings')
+        if self.balance_tolerance > 1e-3:
+            raise ValueError('Conservation tolerance must be <= 1e-3, including search runs')
+
+    @property
+    def fidelity(self):
+        """Describe numerical settings, not a convergence certificate.
+
+        Derived metadata deliberately stays out of to_dict/fingerprint, keeping
+        existing case and optimizer identities unchanged. New meshes/tolerances
+        are already distinguished by those existing configuration fields.
+        """
+        search = self.mesh in SCREENING_SPACING_MM or self.field_tolerance > REFERENCE_FIELD_TOLERANCE
+        return dict(purpose='search' if search else 'reference', mesh=self.mesh,
+                    field_tolerance=self.field_tolerance, balance_tolerance=self.balance_tolerance,
+                    reference_recheck_required=search)
 
     def to_dict(self):
         return asdict(self)
