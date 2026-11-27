@@ -20,7 +20,7 @@ from .turbo import turbo_settings
 from .random import random_settings
 from .repair import evaluation_repair_settings
 from .mobo import MOBO_METHODS, mobo_settings
-from .registry import create_sampler, list_optimizers, optimizer_label, optimizer_revision
+from .registry import create_sampler, list_optimizers, optimizer_label, optimizer_revision, resolve_regime
 from .runner import optimize, _experiment, _initial, _method, _validate_options, _verify_history
 from .state import (ResumeError, check_legacy_pid, load_history, next_session,
                     pristine_initialization, restore_options, run_lock, save_json,
@@ -74,6 +74,8 @@ def main(argv=None):
     budgets.add_argument('--extend-budget', type=int, metavar='TOTAL',
                         help='With --resume, increase the total budget while reusing all saved evaluations')
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--regime', choices=('single', 'multi'),
+                        help='Objective regime; omitted: infer from optimizer. Random supports both.')
     parser.add_argument('--population', type=int, default=4, help='Population size; NSGA-II includes the baseline in its initial population')
     parser.add_argument('--sigma', type=float, default=.1, help='CMA-ES initial step size in normalized coordinates')
     parser.add_argument('--bo-initial-points', type=int, default=5,
@@ -147,7 +149,8 @@ def _suite_history(problem, args, folder):
             max_seconds=args.max_seconds_per_problem,
             bo_initial_points=args.bo_initial_points, bo_candidates=args.bo_candidates,
             turbo_initial_points=args.turbo_initial_points, turbo_candidates=args.turbo_candidates,
-            mobo_mc_samples=args.mobo_mc_samples, mobo_reference_point=args.mobo_reference_point)
+            mobo_mc_samples=args.mobo_mc_samples, mobo_reference_point=args.mobo_reference_point,
+            regime=args.regime)
         validate_experiment(saved_experiment,current,allow_budget_extension=extending)
         history, pending = load_history(folder,saved_experiment['budget'],args.failure_penalty)
         args._replay_inputs[problem.name] = (saved_experiment, current, history)
@@ -223,10 +226,12 @@ def _run_suite_impl(args):
                 entries.append(dict(problem=identifier, status='skipped', reason=str(exc)))
                 continue
         method = _method(problem,args.method)
+        selected_regime = resolve_regime(method, args.regime)
         if args.mobo_reference_point is not None and method != 'qlognehvi':
             raise ValueError('--mobo-reference-point is only used by qlognehvi')
         problems.append(problem)
         entries.append(dict(problem=identifier,status='ready',dimension=problem.dimension,
+            regime=selected_regime,
             algorithm=optimizer_label(method, problem),
             maximum_attempts=args.budget, evaluation_kind='current_lookup_or_surrogate' if identifier=='P004' else 'CFD',
             sigma_normalized=(args.p003_sigma if identifier=='P003' else args.sigma) if method in ('cmaes','lqcmaes') else None,
@@ -372,6 +377,7 @@ def _execute_suite(args,problems,entries,finished):
                 bo_initial_points=args.bo_initial_points,bo_candidates=args.bo_candidates,
                 turbo_initial_points=args.turbo_initial_points,turbo_candidates=args.turbo_candidates,
                 mobo_mc_samples=args.mobo_mc_samples,mobo_reference_point=args.mobo_reference_point,
+                regime=args.regime,
                 resume=args.resume and (args.output/problem.name).exists(),
                 extend_budget=args.budget if getattr(args,'_allow_budget_extension',False)
                               and (args.output/problem.name).exists() else None,

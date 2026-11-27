@@ -169,6 +169,20 @@ The [continuation verification record](../benchmarks/P006/continuation-stage-ver
 separates the five-step partial-stage restart smoke test from the qualified
 warm partition test and the deliberately interrupted cold experiment.
 
+A subsequent fully coupled serial recovery on Rivium also exhausted 400 steps.
+The user confirmed that its bundled solver used the proposed `1e-14` final-stage
+Anderson regularization. Its final liquid-velocity and pressure changes were
+`4.06e-4` and `1.44e-4`, respectively, against a `1e-4` field limit. A local
+106-step pass with that setting therefore did not establish portable recovery.
+Further direct-QR experiments passed independent least-squares checks in serial
+and MPI, but full CFD remained sensitive: variants that qualified the original
+saved state failed a `1e-8 Pa` starting-pressure perturbation with the identical
+solver binary and otherwise identical inputs. These candidates are not adopted
+as recovery fixes. The [sensitivity verification record](../benchmarks/P006/anderson-sensitivity-verification.json)
+records completed failures separately from deliberately stopped experiments.
+The nonlinear convergence problem remains unresolved; the observed objective
+stability is insufficient to qualify the case or establish campaign readiness.
+
 Cell counts refer to the 1 mm manifold. Search meshes coarsen only the channel
 length direction (nominal spacing 1.5 or 2 mm). They preserve the transverse
 grid, all material layers, manifold interfaces, the branch sampling plane,
@@ -636,9 +650,9 @@ rerunning CFD. Resume verifies settings and the original Python, NumPy, SciPy,
 PyTorch, BoTorch, GPyTorch and linear-operator versions. Model/acquisition work
 uses one PyTorch CPU thread and restores the caller's thread count and CPU RNG.
 
-These adapters use the existing multi-objective/Pareto execution path. The
-separate `--regime` selector and common hypervolume benchmark scoring are not
-implemented here. Scalar `best_objective` and IOH traces remain diagnostics;
+These adapters use the multi-objective/Pareto execution path. Select
+`--regime multi` explicitly and use `flowfield-analyze` below for shared
+hypervolume scoring. Scalar `best_objective` and IOH traces remain diagnostics;
 do not use them to rank these algorithms' Pareto-front quality. Acquisition
 reference points inferred separately per run are not a common scoring reference.
 The adapters accept full P003 dimensions, but correctness tests at 500 and
@@ -647,6 +661,134 @@ The adapters accept full P003 dimensions, but correctness tests at 500 and
 The implementations use the upstream [BoTorch 0.16.1 acquisition APIs](https://botorch.readthedocs.io/en/v0.16.1/acquisition.html)
 for [qLogNEHVI](https://botorch.readthedocs.io/en/v0.16.1/_modules/botorch/acquisition/multi_objective/logei.html)
 and [qLogNParEGO](https://botorch.readthedocs.io/en/v0.16.1/_modules/botorch/acquisition/multi_objective/parego.html).
+
+## Objective regimes and IOHinspector analysis
+
+`flowfield-optimize` and `flowfield-benchmark` accept `--regime single|multi`.
+The Python `optimize`, `plan_benchmark`, and `run_benchmark` APIs accept the same
+`regime` keyword. Explicit selections reject incompatible optimizers before
+preflight or CFD. Existing commands that omit it retain per-optimizer inference.
+
+| Regime | Optimizers | Benchmark result |
+| --- | --- | --- |
+| `single` | random, CMA-ES, lq-CMA-ES, BO, TuRBO, COBYLA | Best feasible scalar objective |
+| `multi` | random, NSGA-II, qLogNEHVI, qLogNParEGO | Feasible Pareto archive and hypervolume history |
+
+Random search uses the same proposals in both regimes. In `multi` it also
+maintains `pareto.json`. Explicit multi-objective execution requires at least
+two finite named raw objectives; scalar values remain diagnostic. The regime
+and validation policy are saved and cannot change on resume. P003 uses
+`negative_power_domain_W` and `current_std_A_m2`, both minimized, regardless
+of its scalar power/uniformity weights. Its channel-volume constraint remains
+`g(x) <= 0`, with feasibility tolerance `1e-12`.
+
+For a small **local** P003 proof of concept, start Docker Desktop and use the
+existing OpenFOAM v2312 image. If the image is absent, pull it first with
+`docker pull opencfd/openfoam-default:2312`. No SSH or external server is used:
+
+```bash
+cd /Users/zhuang/FlowField
+.venv/bin/python -m pip install -e '.[mobo,p003,ioh,inspector]'
+
+.venv/bin/flowfield-benchmark \
+    --problem P003 --dimension 500 --regime multi \
+    --optimizers random qlognehvi qlognparego --seeds 42 --budget 6 \
+    --bo-initial-points 3 --bo-candidates 64 --mobo-mc-samples 32 \
+    --backend docker --timeout 14400 \
+    --output runs/p003/multi-poc-d500-42
+
+.venv/bin/flowfield-analyze \
+    --input runs/p003/multi-poc-d500-42 --regime multi \
+    --output runs/p003/multi-poc-d500-42-analysis
+```
+
+This spends at most 18 CFD attempts: six per optimizer, including each baseline.
+The medium mesh and 500-variable parameterization are unchanged. Six attempts
+and one seed verify the pipeline; they do not establish algorithm performance.
+Use new output paths for another campaign. Add `--dry-run` to the benchmark
+command to validate the plan without creating files or launching CFD. Native
+Linux execution can instead use `--backend native` after sourcing OpenFOAM.
+
+Analysis only reads existing journals and never instantiates a problem or
+executes a solver. It also works on older scalar-optimizer runs that retained
+both raw objectives:
+
+```bash
+.venv/bin/flowfield-analyze \
+    --input runs/p003-turbo-42 --regime multi \
+    --output runs/p003/turbo42-hypervolume
+```
+
+Inputs may be run directories, parent/benchmark directories, or individual
+`evaluations.jsonl` paths. Resume-session copies are excluded; overlapping
+input paths are deduplicated. Duplicate algorithm/seed runs are rejected.
+Analyze each problem/configuration, dimension and failure policy separately.
+Unfinished and failed attempts remain in the evaluation clock. Only valid,
+feasible objective vectors contribute hypervolume. A recovered attempt is
+counted once; a run without a feasible solution has zero hypervolume. If no
+selected run has feasible observations, provide an explicit reference point.
+Incomplete/truncated JSON lines are rejected; retry once the writer finishes.
+
+The new analysis directory contains:
+
+- `evaluations.csv`, `mapping.json`, `columns.json`: all attempts, raw objective
+  vectors, constraints, validity, feasibility and recorded evaluation times.
+- `iohinspector/`: the converted IOHinspector Parquet dataset, ready for
+  `DataManager.add_dataset(...)`. No upload occurs.
+- `analysis.json`, `indicators.csv`, `convergence.png`: per-run anytime scores
+  at every recorded attempt, without extrapolating to unspent budget.
+- `analysis-settings.json` in multi mode: shared objective normalization and
+  the hypervolume reference, plus the problem identity for reuse.
+
+Hypervolume is computed by IOHinspector 0.2.1's `add_indicator` and `HyperVolume`,
+using moocore 0.3.2. Full histories are imported with `monotonic=False`; filtering
+by scalar improvements would lose genuine Pareto improvements. Invalid and
+infeasible rows are represented by zero-volume reference points only in the
+temporary scoring frame; the exported physical objectives are retained.
+
+By default, each objective is normalized using the minimum and maximum over
+**all selected feasible observations, across algorithms and seeds**. The shared
+reference is `(1.1, ..., 1.1)` in normalized coordinates. A constant axis uses
+`max(abs(value), 1)` as its recorded scale. These are empirical analysis
+settings, not a known Pareto front or optimal hypervolume. Reuse the generated
+settings for later comparisons; independently normalized reports have different
+scales and their scores must not be compared directly:
+
+```bash
+.venv/bin/flowfield-analyze --input runs/p003/multi-poc-d500-42 \
+    --settings runs/p003/multi-poc-d500-42-analysis/analysis-settings.json \
+    --output runs/p003/multi-poc-d500-42-analysis-repeat
+```
+
+Alternatively, `--reference-point` accepts a JSON map with **raw minimization
+values** for every objective. This disables normalization and produces
+hypervolume in the product of the raw objective units. For example,
+`'{"negative_power_domain_W":0,"current_std_A_m2":1000}'` is a user-selected
+reference, not a physically validated standard. Designs outside that reference
+box contribute no volume. This scoring reference is independent of BoTorch's
+`--mobo-reference-point` acquisition setting.
+
+Recorded cumulative time is the sum of evaluation durations, excluding BO
+fitting/proposal overhead. It becomes unknown when a duration is missing; it
+is not reported as total campaign wall time. Source journal hashes and analysis
+dependency versions are included in `analysis.json`.
+
+For single-objective runs, use `flowfield-analyze --regime single` to export
+the same IOHinspector dataset and compute best feasible scalar histories.
+`flowfield analyze` is an equivalent entry point. To access the exported data
+directly (without discarding scalar non-improvements):
+
+```python
+from iohinspector import DataManager
+
+manager = DataManager()
+manager.add_dataset("runs/p003/multi-poc-d500-42-analysis/iohinspector")
+data = manager.load(monotonic=False, include_meta_data=True)
+# columns.json maps objective_0, objective_1, ... to physical objective names.
+```
+
+See the [IOHinspector project](https://github.com/IOHprofiler/IOHinspector) and
+its [multi-objective tutorial](https://github.com/IOHprofiler/IOHinspector/blob/main/examples/MO_Examples.ipynb).
 
 ## Plot objective histories
 

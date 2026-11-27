@@ -20,6 +20,7 @@ mobo = ["numpy>=1.24", "scipy>=1.10", "botorch==0.16.1"]
 plot = ["matplotlib>=3.7"]
 p004-ml = ["numpy>=1.24"]
 ioh = ["ioh==0.3.22"]
+inspector = ["iohinspector==0.2.1", "moocore==0.3.2"]
 p001 = ["gmsh==4.13.1"]
 p006 = ["scipy>=1.16,<1.19", "cmeel-eigen==3.4.1"]
 p010 = ["numpy>=1.24", "scipy>=1.10", "cmeel-eigen==3.4.1"]
@@ -38,6 +39,7 @@ flowfield-p005 = "flowfield.problems.level1_small_continuous.p005.cli:main"
 flowfield-p006 = "flowfield.problems.level1_small_continuous.p006.cli:main"
 flowfield-optimize = "flowfield.optimization.cli:main"
 flowfield-benchmark = "flowfield.benchmarking.runner:main"
+flowfield-analyze = "flowfield.benchmarking.inspector:main"
 flowfield-plot = "flowfield.benchmarking.plotting:main"
 flowfield-p004 = "flowfield.problems.level3_discrete_combinatorial.p004.cli:main"
 flowfield-p003 = "flowfield.problems.level4_high_dimensional_topology.p003.cli:main"

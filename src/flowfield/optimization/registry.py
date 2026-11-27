@@ -56,6 +56,18 @@ def optimizer_definition(name):
         raise ValueError(f'Unknown optimizer {name!r}; available: {", ".join(list_optimizers())}') from exc
 
 
+def resolve_regime(name, regime=None):
+    """Keep legacy inference; explicit regimes reject incompatible optimizers."""
+    if regime not in (None, 'single', 'multi'):
+        raise ValueError('regime must be single or multi')
+    multi = optimizer_definition(name).multi_objective
+    if regime == 'single' and multi:
+        raise ValueError(f'{name} requires --regime multi')
+    if regime == 'multi' and not multi and name != 'random':
+        raise ValueError(f'{name} is a single-objective optimizer; use --regime single')
+    return regime or ('multi' if multi else 'single')
+
+
 def resolve_optimizer(problem, name='auto'):
     kind = getattr(problem, 'variable_type', 'real')
     if name == 'auto':

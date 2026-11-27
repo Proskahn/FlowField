@@ -11,7 +11,7 @@ import time
 
 from ..problem import AbstractFlowFieldProblem
 from ..benchmarking.ioh import analyzer_logger, make_ioh_problem
-from .registry import create_sampler, resolve_optimizer, optimizer_label, optimizer_definition, optimizer_revision
+from .registry import create_sampler, resolve_optimizer, resolve_regime, optimizer_label, optimizer_revision
 from ..runtime import SimulationError
 from .state import (ResumeError, append_json, load_history,
     next_session, pristine_initialization, run_lock, save_json, validate_experiment,
@@ -66,11 +66,13 @@ def _initial(problem):
 class _FailurePolicy(AbstractFlowFieldProblem):
     """Make explicitly penalized CFD failures visible to the same IOH call."""
 
-    def __init__(self, problem, penalty):
+    def __init__(self, problem, penalty, *, require_multi=False):
         super().__init__(problem.name, problem.dimension, problem.lower_bounds, problem.upper_bounds)
         self.problem, self.penalty = problem, penalty
         self.replay_result = None
         self.variable_type = getattr(problem, 'variable_type', 'real')
+        self.require_multi = require_multi
+        self.objective_names = None
 
     @property
     def ioh_name(self):
@@ -83,16 +85,29 @@ class _FailurePolicy(AbstractFlowFieldProblem):
     def evaluate_raw(self, x):
         if self.replay_result is not None:
             result, self.replay_result = self.replay_result, None
-            return result
-        try:
-            self.problem(x)
-        except SimulationError as exc:
-            if self.penalty is None:
-                raise
-            return dict(status='penalized', objective=self.penalty, objectives={}, constraints={},
-                        error=str(exc), metadata=dict(valid_cfd=False,
-                        failure_penalty=self.penalty, case_directory=exc.case_directory))
-        return self.problem.last_result
+        else:
+            try:
+                self.problem(x)
+            except SimulationError as exc:
+                if self.penalty is None:
+                    raise
+                return dict(status='penalized', objective=self.penalty, objectives={}, constraints={},
+                            error=str(exc), metadata=dict(valid_cfd=False,
+                            failure_penalty=self.penalty, case_directory=exc.case_directory))
+            result = self.problem.last_result
+        if (self.require_multi and result.get('status') not in ('failed', 'penalized')
+                and result.get('metadata', {}).get('valid_cfd', True)):
+            objectives = result.get('objectives')
+            if (not isinstance(objectives, dict) or len(objectives) < 2
+                    or any(not isinstance(k, str) or not k for k in objectives)
+                    or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                           or not math.isfinite(v) for v in objectives.values())):
+                raise ValueError('The multi regime requires at least two finite named raw objectives')
+            names = tuple(sorted(objectives))
+            if self.objective_names is not None and names != self.objective_names:
+                raise ValueError('Multi-objective names changed during the run')
+            self.objective_names = names
+        return result
 
 
 def _proposals(problem, x0, method, population, sigma, seed, state, *,
@@ -170,6 +185,11 @@ def optimize(problem, *, output, resume=False, extend_budget=None, _verified_rep
     _validate_options(options.get('budget',20),options.get('seed',42),options.get('population',4),
                       options.get('sigma',.1),options.get('failure_penalty'),options.get('max_seconds'))
     method = _method(problem,options.get('method','auto'))
+    if resume and 'regime' not in options and (Path(output)/'experiment.json').is_file():
+        saved = json.loads((Path(output)/'experiment.json').read_text())
+        if saved.get('strict_multi_objective'):
+            options['regime'] = saved['regime']
+    resolve_regime(method, options.get('regime'))
     bo_settings(options.get('bo_initial_points',5), options.get('bo_candidates',2048))
     turbo_settings(problem.dimension, options.get('turbo_initial_points',5), options.get('turbo_candidates',512))
     if method in MOBO_METHODS:
@@ -193,12 +213,14 @@ def optimize(problem, *, output, resume=False, extend_budget=None, _verified_rep
 
 def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_ioh,
                 failure_penalty, max_seconds, bo_initial_points, bo_candidates,
-                turbo_initial_points, turbo_candidates, mobo_mc_samples=128, mobo_reference_point=None):
+                turbo_initial_points, turbo_candidates, mobo_mc_samples=128, mobo_reference_point=None,
+                regime=None):
     """Build the same manifest for read-only validation and actual execution."""
     diagonal = method in ('cmaes', 'lqcmaes') and problem.dimension > 100
     algorithm = optimizer_label(method, problem)
     config = getattr(problem,'config',None)
     experiment = dict(schema_version=3, algorithm=algorithm, optimizer=method,
+        regime=resolve_regime(method, regime), strict_multi_objective=regime == 'multi',
         optimizer_revision=optimizer_revision(method, problem), problem=problem.name,
         problem_name=_FailurePolicy(problem, failure_penalty).ioh_name, dimension=problem.dimension, budget=budget, seed=seed,
         initial_design=x0, population=population if method not in ('random', 'bo', 'turbo', 'cobyla', *MOBO_METHODS) else None,
@@ -209,10 +231,12 @@ def _experiment(problem, x0, method, *, budget, seed, population, sigma, with_io
         config=config.to_dict() if config is not None else None,
         budget_includes_baseline_and_failed_attempts=True, automatic_retries=False,
         recovery='deterministic_journal_replay', soft_time_limit_scope='per_invocation')
-    if optimizer_definition(method).multi_objective:
+    if experiment['regime'] == 'multi':
         experiment.update(optimization_mode='multi_objective',
                           objective_source='named raw objectives, all minimized; scalar fallback if empty',
                           ioh_trace='scalar diagnostic only; Pareto results in pareto.json')
+        if regime == 'multi':
+            experiment['objective_source'] = 'at least two named raw objectives, all minimized; no scalar fallback'
     if method == 'random':
         experiment['optimizer_settings'] = random_settings(problem)
     if method == 'nsga2':
@@ -252,7 +276,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
               initial=None, progress=None, resume=False, bo_initial_points=5, bo_candidates=2048,
               turbo_initial_points=5, turbo_candidates=512, allow_budget_extension=False,
               _verified_replay=None, _resources=None, replay_progress=None,
-              mobo_mc_samples=128, mobo_reference_point=None):
+              mobo_mc_samples=128, mobo_reference_point=None, regime=None):
     method = _method(problem,method)
     x0 = _initial(problem) if initial is None else list(initial)
     problem.decode(x0)
@@ -276,13 +300,13 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
     if with_ioh:
         from ..benchmarking.ioh import _ioh
         _ioh()
-    wrapped = _FailurePolicy(problem,failure_penalty)
-    archive = ParetoArchive() if optimizer_definition(method).multi_objective else None
+    wrapped = _FailurePolicy(problem,failure_penalty, require_multi=regime == 'multi')
+    archive = ParetoArchive() if resolve_regime(method, regime) == 'multi' else None
     experiment = _experiment(problem, x0, method, budget=budget, seed=seed, population=population,
         sigma=sigma, with_ioh=with_ioh, failure_penalty=failure_penalty, max_seconds=max_seconds,
         bo_initial_points=bo_initial_points, bo_candidates=bo_candidates,
         turbo_initial_points=turbo_initial_points, turbo_candidates=turbo_candidates,
-        mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point)
+        mobo_mc_samples=mobo_mc_samples, mobo_reference_point=mobo_reference_point, regime=regime)
     algorithm = experiment['algorithm']
     history, pending, previous = [], [], {}
     ioh_output = output/'ioh'
@@ -324,6 +348,7 @@ def _optimize(problem, *, budget=20, seed=42, output, method='auto', population=
         _save(output/'experiment.json',experiment)
     objective = make_ioh_problem(wrapped) if with_ioh else wrapped
     summary = dict(status='running',problem=problem.name,algorithm=algorithm,budget=budget,
+        regime=resolve_regime(method, regime),
         seed=seed,attempts=0,successful_evaluations=0,failed_evaluations=0,
         baseline_objective=None,best_objective=None,best_design=None,best_case_directory=None,
         best_feasible_objective=None,best_feasible_design=None,best_feasible_case_directory=None,

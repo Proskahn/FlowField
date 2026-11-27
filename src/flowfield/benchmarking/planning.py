@@ -13,14 +13,14 @@ _OPTIMIZER_OPTIONS = {
 
 
 def plan_benchmark(*, problems, optimizers, seeds, budget, problem_options=None,
-                   optimizer_options=None, with_ioh=True):
+                   optimizer_options=None, with_ioh=True, regime=None):
     """Return a JSON-ready plan; no files, preflight, adapters or CFD calls.
 
     All combinations must be compatible. Problem-owned setup requirements such
     as frozen objective calibration must hold; unavailable problems are never
     silently omitted. Runtime/package availability is checked during execution.
     """
-    from ..optimization.registry import list_optimizers, resolve_optimizer
+    from ..optimization.registry import list_optimizers, resolve_optimizer, resolve_regime
     from ..optimization.runner import _validate_options
     from ..optimization.bo import bo_settings
     from ..optimization.turbo import turbo_settings
@@ -40,6 +40,7 @@ def plan_benchmark(*, problems, optimizers, seeds, budget, problem_options=None,
         raise ValueError('budget must be a positive integer')
     if set(problems) - set(list_problems()) or set(optimizers) - set(list_optimizers()):
         raise ValueError('Select registered problem and optimizer IDs')
+    regimes = {method: resolve_regime(method, regime) for method in optimizers}
     problem_options = problem_options or {}
     optimizer_options = optimizer_options or {}
     if set(problem_options) - set(problems):
@@ -80,7 +81,9 @@ def plan_benchmark(*, problems, optimizers, seeds, budget, problem_options=None,
                                        timeout_s=problem.runtime.timeout_s)
         instances.append(instance)
     count = len(problems) * len(optimizers) * len(seeds)
-    return dict(schema_version=2, problems=problems, optimizers=optimizers, seeds=seeds,
+    return dict(schema_version=3, problems=problems, optimizers=optimizers, seeds=seeds,
+                regime=regime or (next(iter(regimes.values())) if len(set(regimes.values())) == 1 else 'mixed'),
+                optimizer_regimes=regimes,
                 budget=budget, ioh_enabled=with_ioh, instances=instances,
                 optimizer_options=optimizer_options, run_count=count, maximum_attempts=count * budget,
                 objective_direction='minimize', constraint_convention='g(x) <= 0',

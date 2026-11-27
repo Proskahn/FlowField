@@ -206,6 +206,12 @@ def extend_budget_metadata(saved, target):
 def validate_experiment(saved, current, *, allow_budget_extension=False):
     # Dataclass configurations can contain tuples; JSON stores those as lists.
     current = json.loads(json.dumps(current,allow_nan=False))
+    def regime(record):
+        return record.get('regime', 'multi' if record.get('optimization_mode') == 'multi_objective' else 'single')
+    if regime(saved) != regime(current):
+        raise ResumeError('Cannot resume with changed regime')
+    if saved.get('strict_multi_objective', False) != current.get('strict_multi_objective', False):
+        raise ResumeError('Cannot resume with changed multi-objective validation policy')
     keys = ('algorithm', 'problem', 'problem_name', 'dimension', 'budget', 'seed',
             'initial_design', 'population', 'sigma_normalized', 'diagonal_covariance',
             'lower_bounds', 'upper_bounds', 'failure_penalty', 'ioh_enabled', 'config',

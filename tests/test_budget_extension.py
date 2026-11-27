@@ -81,7 +81,7 @@ class BudgetExtensionTests(unittest.TestCase):
                 if method == 'nsga2':
                     actual = self.read(folder/'pareto.json')
                     expected = self.read(reference_folder/'pareto.json')
-                    self.assertEqual(actual['objective_names'], ['loss','negative_sum'])
+                    self.assertEqual(actual['objective_names'], ['loss','negative_sum','other_loss'])
                     self.assertEqual([r['x'] for r in actual['solutions']], [r['x'] for r in expected['solutions']])
                 # Backups must not be discovered as duplicate independent runs.
                 report = _comparison(folder)

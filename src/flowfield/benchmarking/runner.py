@@ -15,7 +15,7 @@ from .planning import plan_benchmark
 
 
 def run_benchmark(*, problems, optimizers, seeds, budget, output,
-                  problem_options=None, optimizer_options=None, with_ioh=True):
+                  problem_options=None, optimizer_options=None, with_ioh=True, regime=None):
     """One fresh problem and optimizer per run; no implicit full-suite execution.
 
     problem_options maps problem IDs to create_problem kwargs. optimizer_options
@@ -28,7 +28,7 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
     optimizer_options = optimizer_options or {}
     plan = plan_benchmark(problems=problems, optimizers=optimizers, seeds=seeds, budget=budget,
                           problem_options=problem_options, optimizer_options=optimizer_options,
-                          with_ioh=with_ioh)
+                          with_ioh=with_ioh, regime=regime)
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     manifest = dict(plan, status='running', runs=[])
@@ -45,9 +45,10 @@ def run_benchmark(*, problems, optimizers, seeds, budget, output,
                     manifest['runs'].append(entry)
                     try:
                         summary = optimize(problem, optimizer=optimizer, budget=budget, seed=seed,
-                            output=folder, with_ioh=with_ioh, **optimizer_options.get(optimizer, {}))
+                            output=folder, with_ioh=with_ioh, regime=regime,
+                            **optimizer_options.get(optimizer, {}))
                         entry.update(status=summary['status'], attempts=summary['attempts'],
-                                     best_objective=summary['best_objective'])
+                                     best_objective=summary['best_objective'], regime=summary['regime'])
                         if summary.get('optimization_mode') == 'multi_objective':
                             entry.update(optimization_mode='multi_objective',pareto_size=summary['pareto_size'],
                                          pareto_file=str(relative/'pareto.json'),scalar_score_role='diagnostic only')
@@ -72,6 +73,8 @@ def main(argv=None):
     parser.add_argument('--optimizers', '--optimizer', nargs='+', choices=list_optimizers(), required=True)
     parser.add_argument('--seeds', type=int, nargs='+', required=True)
     parser.add_argument('--budget', type=int, default=20)
+    parser.add_argument('--regime', choices=('single', 'multi'),
+                        help='Benchmark regime; omitted: infer from each optimizer. Random supports both.')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--config', type=Path, help='JSON config for a single selected problem')
     parser.add_argument('--bo-initial-points',type=int,default=5,help='BO/MOBO initialization attempts, including baseline')
@@ -120,7 +123,7 @@ def main(argv=None):
                     mobo_reference_point=args.mobo_reference_point if method == 'qlognehvi' else None)
         arguments = dict(problems=args.problems, optimizers=args.optimizers, seeds=args.seeds,
                          budget=args.budget, problem_options=options, optimizer_options=optimizer_options,
-                         with_ioh=not args.no_ioh)
+                         with_ioh=not args.no_ioh, regime=args.regime)
         result = (plan_benchmark(**arguments) if args.dry_run
                   else run_benchmark(**arguments, output=args.output))
     except (OSError, ValueError, TypeError, RuntimeError) as exc:

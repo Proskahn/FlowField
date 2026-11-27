@@ -14,6 +14,7 @@ from .registry import create_problem, list_problems, problem_info
 _DISPATCH = {
     'optimize': 'flowfield.optimization',
     'benchmark': 'flowfield.benchmarking.runner',
+    'analyze': 'flowfield.benchmarking.inspector',
     'plot': 'flowfield.benchmarking.plotting',
     'check': 'flowfield.stability.cli',
     'p000': 'flowfield.problems.p000.cli',

@@ -1,0 +1,527 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T17:14:06.741316+00:00",
+  "status": "unresolved_nonlinear_convergence_sensitivity",
+  "production_solver_changed": false,
+  "acceptance_thresholds_changed": false,
+  "native_recovery": {
+    "source_sha256": "c55c15294170c84def9a23518cb12ee8e82bc64b08e1a52017981a46694e63cc",
+    "native_case": "/local/zkang/FlowField/runs/p006/recovery-0b4fa82f2aed",
+    "status": "failed",
+    "iterations": 400,
+    "processes": 1,
+    "field_tolerance": 0.0001,
+    "balance_tolerance": 0.001,
+    "user_confirmed_fully_coupled_regularization": 1e-14,
+    "last_printed_sample": {
+      "iteration": 400,
+      "temperature_std_K": 0.796522876533,
+      "field_change": 0.000406390779342,
+      "components": {
+        "T": 6.4293716735e-05,
+        "sg": 6.24422094031e-08,
+        "p": 0.000143577717508,
+        "Ul": 0.000406390779342,
+        "Ug": 1.70917873916e-05,
+        "lambda": 2.46913600677e-13
+      }
+    }
+  },
+  "comparison_controls": {
+    "same_solver_binary_for_pressure_perturbations": true,
+    "same_geometry_and_configuration_for_pressure_perturbations": true,
+    "pressure_perturbation_only": true
+  },
+  "operator_tests": {
+    "serial": [
+      "QR_NEAR_DEPENDENT empty=0 residual=1.14439e-10 coefficients=1.25355e-12 passed=1",
+      "QR_RANK_DEFICIENT empty=0 rank=1 coefficients=5.55112e-17 passed=1",
+      "QR_ZERO_HISTORY passed=1",
+      "QR_NEAR_DEPENDENT empty=1 residual=1.14439e-10 coefficients=1.25355e-12 passed=1",
+      "QR_RANK_DEFICIENT empty=1 rank=1 coefficients=5.55112e-17 passed=1",
+      "QR_ZERO_HISTORY passed=1",
+      "QR_CHECK PASSED"
+    ],
+    "two_processes": [
+      "QR_NEAR_DEPENDENT empty=0 residual=1.14439e-10 coefficients=1.25355e-12 passed=1",
+      "QR_RANK_DEFICIENT empty=0 rank=1 coefficients=5.55112e-17 passed=1",
+      "QR_ZERO_HISTORY passed=1",
+      "QR_NEAR_DEPENDENT empty=1 residual=1.14439e-10 coefficients=1.25355e-12 passed=1",
+      "QR_RANK_DEFICIENT empty=1 rank=1 coefficients=5.55112e-17 passed=1",
+      "QR_ZERO_HISTORY passed=1",
+      "QR_CHECK PASSED"
+    ]
+  },
+  "candidates": {
+    "qr-cap10": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-cap10",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "failed",
+      "qualified": false,
+      "deliberately_stopped": null,
+      "last_iteration": 400,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 0.000356121061057,
+      "last_five_field_changes": [
+        0.000358716351446,
+        0.000358004283901,
+        0.000357297515346,
+        0.000356696880138,
+        0.000356121061057
+      ],
+      "temperature_std_K": 0.796584486348,
+      "bounded_cells": 0.0,
+      "saved_field_checks": null,
+      "solver_binary_sha256": "ac4bb54fe8f1daf5b9b8414b4a68fb593302a0f2c03a7aa44e83bf32249f2097",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "5c2c7c659508eb65aaa8b3e263b10a823c85affff4dfa13e28edccba635ed982",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-cap100": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-cap100",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "ok",
+      "qualified": true,
+      "deliberately_stopped": null,
+      "last_iteration": 256,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 9.07734792191e-05,
+      "last_five_field_changes": [
+        9.25143729743e-05,
+        9.5337985353e-05,
+        8.08561014275e-05,
+        7.98374042446e-05,
+        9.07734792191e-05
+      ],
+      "temperature_std_K": 0.796565246762,
+      "bounded_cells": 0.0,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.831193958987715e-12,
+        "saved_pressure_force_consistency": 8.219859313080688e-11,
+        "charge_balance": 3.3431033587625555e-14,
+        "oxygen_faraday": 5.2440412097912e-14,
+        "hydrogen_faraday": 7.302282640255716e-14,
+        "heat_power_identity": 5.0172620680678146e-14,
+        "membrane_water_balance": 1.2735027141622062e-15,
+        "saved_local_L_balance": 0.0002683928183824979,
+        "saved_global_L_balance": 1.5757612101057221e-06,
+        "saved_local_G_balance": 0.0001058366404370919,
+        "saved_global_G_balance": 9.234378039271306e-07
+      },
+      "solver_binary_sha256": "02af870c1e76dcacefcc3f4ffe15e8f36a8f673c355e87d1266e4ccdbf864a96",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "c08d6c6cbb90c5b9744e65b3e0725bbde03adee4ab670aec9067699ea66e80f7",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-cap100-perturbed-plus-cached": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-cap100-perturbed-plus-cached",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "ok",
+      "qualified": true,
+      "deliberately_stopped": null,
+      "last_iteration": 339,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 8.22496436594e-05,
+      "last_five_field_changes": [
+        7.99266538474e-05,
+        8.6124142944e-05,
+        7.4270978796e-05,
+        7.93164734786e-05,
+        8.22496436594e-05
+      ],
+      "temperature_std_K": 0.796582280104,
+      "bounded_cells": 0.0,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.924501834672901e-12,
+        "saved_pressure_force_consistency": 7.217530006088178e-11,
+        "charge_balance": 3.8658425605862286e-14,
+        "oxygen_faraday": 9.306829380948742e-15,
+        "hydrogen_faraday": 5.3872223916650085e-14,
+        "heat_power_identity": 3.788897322347915e-14,
+        "membrane_water_balance": 1.2597492208913783e-15,
+        "saved_local_L_balance": 0.00025475721139817364,
+        "saved_global_L_balance": 2.9085878577404236e-07,
+        "saved_local_G_balance": 0.0001004596339766183,
+        "saved_global_G_balance": 1.704511041350485e-07
+      },
+      "solver_binary_sha256": "02af870c1e76dcacefcc3f4ffe15e8f36a8f673c355e87d1266e4ccdbf864a96",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "c08d6c6cbb90c5b9744e65b3e0725bbde03adee4ab670aec9067699ea66e80f7",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 1e-08,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-cap100-perturbed-minus-cached": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-cap100-perturbed-minus-cached",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "failed",
+      "qualified": false,
+      "deliberately_stopped": null,
+      "last_iteration": 400,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 0.000763589869135,
+      "last_five_field_changes": [
+        0.000767722638221,
+        0.000778481629449,
+        0.000766871807656,
+        0.000745297564494,
+        0.000763589869135
+      ],
+      "temperature_std_K": 0.796546417398,
+      "bounded_cells": 0.0,
+      "saved_field_checks": null,
+      "solver_binary_sha256": "02af870c1e76dcacefcc3f4ffe15e8f36a8f673c355e87d1266e4ccdbf864a96",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "c08d6c6cbb90c5b9744e65b3e0725bbde03adee4ab670aec9067699ea66e80f7",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": -1e-08,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-uncapped": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-uncapped",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "ok",
+      "qualified": true,
+      "deliberately_stopped": null,
+      "last_iteration": 133,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 9.55498955044e-05,
+      "last_five_field_changes": [
+        9.28289903384e-05,
+        9.45186555049e-05,
+        8.91619289399e-05,
+        9.91784733505e-05,
+        9.55498955044e-05
+      ],
+      "temperature_std_K": 0.796510469768,
+      "bounded_cells": 0.0,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 3.0018335388382203e-12,
+        "saved_pressure_force_consistency": 8.976371216133918e-11,
+        "charge_balance": 3.829374672856191e-14,
+        "oxygen_faraday": 2.7025617111686027e-14,
+        "hydrogen_faraday": 1.2528431773629442e-15,
+        "heat_power_identity": 2.1107112054389085e-14,
+        "membrane_water_balance": 2.8129633823058176e-16,
+        "saved_local_L_balance": 0.0002739901184697162,
+        "saved_global_L_balance": 4.828672991185538e-07,
+        "saved_local_G_balance": 0.00010804388142832321,
+        "saved_global_G_balance": 2.829734361875002e-07
+      },
+      "solver_binary_sha256": "fcaf52a6d10a1f02724dedeb95ff6fbeb88e2b504581148d08b0347eae3747e0",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "90955c102cee0f1789136401f0d6089a1eeafa6c0785e4f6229706eb44c81179",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-uncapped-perturbed-plus": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-uncapped-perturbed-plus",
+      "processes": 1,
+      "cells": 9072,
+      "execution_status": "failed",
+      "qualified": false,
+      "deliberately_stopped": null,
+      "last_iteration": 400,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 0.000441726138837,
+      "last_five_field_changes": [
+        0.000828347048963,
+        0.000901950486863,
+        0.00043101854635,
+        0.000433331062622,
+        0.000441726138837
+      ],
+      "temperature_std_K": 0.796569870221,
+      "bounded_cells": 0.0,
+      "saved_field_checks": null,
+      "solver_binary_sha256": "fcaf52a6d10a1f02724dedeb95ff6fbeb88e2b504581148d08b0347eae3747e0",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "90955c102cee0f1789136401f0d6089a1eeafa6c0785e4f6229706eb44c81179",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 1e-08,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-uncapped-strict": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-uncapped-strict",
+      "processes": 1,
+      "cells": 13104,
+      "execution_status": "ok",
+      "qualified": true,
+      "deliberately_stopped": null,
+      "last_iteration": 64,
+      "iteration_budget": 400,
+      "field_tolerance": 1e-05,
+      "balance_tolerance": 0.001,
+      "last_field_change": 5.01512466848e-06,
+      "last_five_field_changes": [
+        5.01491701954e-06,
+        4.89440194416e-06,
+        4.89083913062e-06,
+        4.93292445186e-06,
+        5.01512466848e-06
+      ],
+      "temperature_std_K": 0.813468455565,
+      "bounded_cells": 0.0,
+      "saved_field_checks": {
+        "kinematic_velocity_consistency": 2.495882033500907e-12,
+        "saved_pressure_force_consistency": 8.014470316331907e-11,
+        "charge_balance": 4.382404097135587e-14,
+        "oxygen_faraday": 2.0553435519130724e-14,
+        "hydrogen_faraday": 5.594108971729067e-14,
+        "heat_power_identity": 6.064067317651528e-14,
+        "membrane_water_balance": 7.517536960329824e-16,
+        "saved_local_L_balance": 1.7587955291600056e-05,
+        "saved_global_L_balance": 8.244905256285573e-08,
+        "saved_local_G_balance": 6.925783370198257e-06,
+        "saved_global_G_balance": 2.4464048835260068e-08
+      },
+      "solver_binary_sha256": "fcaf52a6d10a1f02724dedeb95ff6fbeb88e2b504581148d08b0347eae3747e0",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "90955c102cee0f1789136401f0d6089a1eeafa6c0785e4f6229706eb44c81179",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-cap100-mpi": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-cap100-mpi",
+      "processes": 2,
+      "cells": 9072,
+      "execution_status": "failed",
+      "qualified": false,
+      "deliberately_stopped": {
+        "deliberately_stopped": true,
+        "reason": "Candidate failed completed serial pressure-perturbation test; no production promotion.",
+        "qualification_claimed": false
+      },
+      "last_iteration": 146,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 0.000125700835476,
+      "last_five_field_changes": [
+        0.000120805484348,
+        0.000122303607961,
+        0.000135641546646,
+        0.000133774198757,
+        0.000125700835476
+      ],
+      "temperature_std_K": 0.796526134669,
+      "bounded_cells": 0.0,
+      "saved_field_checks": null,
+      "solver_binary_sha256": "02af870c1e76dcacefcc3f4ffe15e8f36a8f673c355e87d1266e4ccdbf864a96",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "c08d6c6cbb90c5b9744e65b3e0725bbde03adee4ab670aec9067699ea66e80f7",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    },
+    "qr-uncapped-mpi": {
+      "case_directory": "runs/p006-rivium-stall-002/qr-uncapped-mpi",
+      "processes": 2,
+      "cells": 9072,
+      "execution_status": "failed",
+      "qualified": false,
+      "deliberately_stopped": {
+        "deliberately_stopped": true,
+        "reason": "Candidate failed completed serial pressure-perturbation test; no production promotion.",
+        "qualification_claimed": false
+      },
+      "last_iteration": 304,
+      "iteration_budget": 400,
+      "field_tolerance": 0.0001,
+      "balance_tolerance": 0.001,
+      "last_field_change": 0.000362033261134,
+      "last_five_field_changes": [
+        0.000337323468337,
+        0.000341020119588,
+        0.000347621110976,
+        0.000357114195247,
+        0.000362033261134
+      ],
+      "temperature_std_K": 0.796585262546,
+      "bounded_cells": 0.0,
+      "saved_field_checks": null,
+      "solver_binary_sha256": "fcaf52a6d10a1f02724dedeb95ff6fbeb88e2b504581148d08b0347eae3747e0",
+      "solver_source_sha256": {
+        "solver/Anderson.H": "90955c102cee0f1789136401f0d6089a1eeafa6c0785e4f6229706eb44c81179",
+        "solver/ChargeNetwork.H": "43b311b8bfc9c14c21a31c489c3c05378c482ed6725b6b73d13e6195e1a27488",
+        "solver/FlowNetwork.H": "68eb283cd88e1646be7b1954a3340f61319e3a6b1520f882bc374ce6e79a16ee",
+        "solver/Make/files": "3e053ba4693b6640b03684e6ef90287c2dca9952d0e008898828b6bc517595ed",
+        "solver/Make/options": "ad767e1b3222d77d68830e9f9e4370b9b104cd8907cbdc46be287cf03be268df",
+        "solver/Tools.H": "a51a1ba526e663aaabd8b51f0074ad0f877e860cc4947cc9abd13897c66d8995",
+        "solver/flowfieldP006Foam.C": "3b5d629d3b64db95ef7ef1fc8fc6d2461daae18fccacab7507fd82ef75c8fec2"
+      },
+      "initial_pressure_perturbation_Pa": 0,
+      "immutable_input_hashes_valid": true,
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      }
+    }
+  },
+  "conclusions": [
+    "The user confirmed that the failed native case contained the suggested fully coupled relative regularization of 1e-14.",
+    "A local pass from one saved state did not establish portable or perturbation-robust recovery.",
+    "Direct QR passed its independent near-dependent, rank-deficient, zero-history and empty-rank checks; QR alone did not qualify the stalled CFD state within 400 steps.",
+    "Two coefficient-limiting variants qualified the unperturbed state but failed a 1e-8 Pa initial-pressure perturbation with the identical compiled binary and unchanged acceptance.",
+    "The tested QR candidates are rejected as reliable recovery fixes. Production numerical code and tolerances are unchanged in this investigation.",
+    "The originating nonlinear mode has not been isolated. These tests do not prove a physical instability or establish a robust coupled solver."
+  ],
+  "limitations": [
+    "Full CFD experiments used local OpenCFD v2312 ARM64; native failure and setting verification were supplied by the user.",
+    "Candidate MPI experiments were deliberately stopped after completed serial sensitivity failures; they are not full-budget failure evidence.",
+    "Qualification here means the implemented five-sample and saved-field checks, not mesh independence or paper validation.",
+    "No optimization campaign was run."
+  ],
+  "method_references": [
+    "https://libeigen.gitlab.io/eigen/docs-master/group__LeastSquares.html",
+    "https://sundials.readthedocs.io/en/latest/kinsol/Mathematics_link.html"
+  ]
+}
