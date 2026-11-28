@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "source_tree": "/Users/zhuang/FlowField/runs/p011-newton-audit/patched-source",
+  "source_note": "P011 files match checkout; independent audit source retains P006 files while user worktree deletions remain untouched.",
+  "source_files_sha256": {
+    "flowfield/problems/level1_small_continuous/p011/__init__.py": "8058936c6786df507a6f78468a2345610814c31407ca4b7a1214ff513c2407e1",
+    "flowfield/problems/level1_small_continuous/p011/case.py": "e53b199e07fc1ed82d67262435f0482eef0ff4a3f402bd2c4f39d967c19808b5",
+    "flowfield/problems/level1_small_continuous/p011/cli.py": "2f749301e742a29747cc0f46c9e2d1c50446fcdc066762ca884da0e8608eb66a",
+    "flowfield/problems/level1_small_continuous/p011/config.py": "97a71935b1825c26de08c0d1c977ab7588d8629549fb7f7f9339b73d4b3253dc",
+    "flowfield/problems/level1_small_continuous/p011/evaluation.py": "89840d812bffad11f87c7eeef8b6a57de027a354aa4916e33353d36dbf1c01e0",
+    "flowfield/problems/level1_small_continuous/p011/geometry.py": "81f00ab788adb42eb87ec0bdb8c8a7a83481719cf196857600d8e0bc6c401891",
+    "flowfield/problems/level1_small_continuous/p011/metrics.py": "1739c740b19b3a20c13da4db574d4bcd0cbd42cf8eb6536abc46b1ab4edadf9e",
+    "flowfield/problems/level1_small_continuous/p011/reference.py": "77bc5186745568ab1c76c9022e78192d4418463dc826129b0ea7be36587d1b8e",
+    "flowfield/problems/level1_small_continuous/p011/runtime.py": "8ffe6cff38c3ea3ce06ab16b763ebe420f03d8b5fecd7cb4368a6a2017ff63e3",
+    "flowfield/problems/level1_small_continuous/p011/solver/Charge.H": "81faaf2ab463c2dc7abc4c8db862ccfc8e05ccd02368d05b5f3808297ffd37b5",
+    "flowfield/problems/level1_small_continuous/p011/solver/ChargeNewton.H": "19a90b182d51ff1a4724243130f5865fcf7e8e2df4169b03dfdfe2eb2788be08",
+    "flowfield/problems/level1_small_continuous/p011/solver/Common.H": "dc10350378a7d5ba06f141cc90c61fb0a5f126ba60fa259c0fd40e5f1441f5bf",
+    "flowfield/problems/level1_small_continuous/p011/solver/Gas.H": "da44ffb08185edb720c0bdbcdf5a80c81aa415518984bd0ddfd4bc10932b6dc9",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/files": "ea48732dba2086fe9ecaeab40badf7bf4174c72e76496c5782e7613efb9eaf22",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/options": "0e0cf352d95f489a039f0a6eaacb834892a8e363feb909d9f11ebd053cda5091",
+    "flowfield/problems/level1_small_continuous/p011/solver/WaterHeat.H": "0c4cb1db320628a30572bb48c696a42b723b545133853538e5bbe0d0108e599e",
+    "flowfield/problems/level1_small_continuous/p011/solver/flowfieldP011Foam.C": "cdbe1ab21374cc36758ee360fbb46bdfddc55738756d04c22c51940cad91e249",
+    "flowfield/problems/level1_small_continuous/p011/study.py": "44c839e069cdcaeb0951b2eced3f6dee606f21f217d1f9fb2e01396dd2be89b6"
+  },
+  "pyproject_sha256": "5a90d6b9007bf31c6cbaf0f6bfd770a440656219de8624a7d392992ca54ce7df",
+  "wheel": "/Users/zhuang/FlowField/runs/p011-newton-audit/packaging/wheels/flowfield_benchmarks-0.8.0-py3-none-any.whl",
+  "wheel_sha256": "d1043457eeba1f238a23b42a6c854a10974683b879c4e9fe4150428266b5a45c",
+  "solver_files_verified": [
+    "flowfield/problems/level1_small_continuous/p011/solver/Charge.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/ChargeNewton.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Common.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Gas.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/files",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/options",
+    "flowfield/problems/level1_small_continuous/p011/solver/WaterHeat.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/flowfieldP011Foam.C"
+  ],
+  "isolated_case_verification": {
+    "imported_from": "/Users/zhuang/FlowField/runs/p011-newton-audit/packaging/installed/flowfield/__init__.py",
+    "site_packages_disabled": true,
+    "cells": 3520,
+    "solver_files_copied": 8,
+    "new_header_hash": "19a90b182d51ff1a4724243130f5865fcf7e8e2df4169b03dfdfe2eb2788be08",
+    "case_manifest_hashes_header": true,
+    "tampered_header_with_updated_manifest_rejected": true,
+    "source_integrity_verified": true,
+    "cfd_executed": false
+  }
+}

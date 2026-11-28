@@ -123,6 +123,34 @@ paper-comparison outcomes in [verification.json](../benchmarks/P011/verification
 The paper's GA/IGA is not implemented; existing framework optimizers operate on
 this explicitly identified CFD reconstruction.
 
+Model revision `tapered-pemfc-two-phase-v2` fixes a charge Newton line search
+failure near the preferred `1e-10` residual target. A stalled solve retains its
+current iterate only after recomputing its residual and passing the existing
+strict `<1e-7` charge gate. Butler–Volmer assembly uses `sinh`/`cosh` to avoid
+subtracting nearly equal exponentials. Final conservation and saved-field
+checks are unchanged. The exact geometry that failed on Rivium now converges
+locally in 552 iterations; the square baseline remains numerically unchanged.
+See [charge solver verification](../benchmarks/P011/charge-newton-verification.json)
+for the original failure, patched runs and regression evidence.
+
+Generate new cases with this revision. An optimization journal containing an
+unpenalized failed evaluation cannot be resumed by the current framework, and
+changing the model revision also changes the experiment identity. Preserve
+the old directory and start a fresh proof-of-concept run after updating the
+source on the execution host:
+
+```bash
+cd ~/FlowField
+.venv/bin/python -m flowfield optimize \
+  --problem P011 --optimizer cmaes --budget 20 --population 4 --seed 42 \
+  --mesh coarse --backend native --timeout 14400 --ioh \
+  --failure-penalty 1000000 --output runs/p011-cmaes-poc-002
+```
+
+The explicit penalty allows subsequent candidate simulation failures to count
+against the attempt budget without stopping the search. Failed candidates
+remain recorded as failures; a qualified baseline is still required.
+
 ## P006 search resolution and reference rechecks
 
 P006 supports explicitly cheaper search configurations. Its default remains

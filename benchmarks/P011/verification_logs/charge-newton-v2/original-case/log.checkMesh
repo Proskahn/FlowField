@@ -1,0 +1,122 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _c39a0f64-20231220 OPENFOAM=2312 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : checkMesh -case /case -allTopology -meshQuality
+Date   : Nov 28 2026
+Time   : 10:55:56
+Host   : be9594177f2d
+PID    : 7
+I/O    : uncollated
+Case   : /case
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Check mesh...
+    Enabling all (cell, face, edge, point) topology checks.
+    Enabling user-defined geometry checks.
+
+Time = 0
+
+Mesh stats 
+    points:           13041
+    faces:            35852
+    internal faces:   32788
+    cells:            11440
+    faces per cell:   6
+    boundary patches: 7
+    point zones:      0
+    face zones:       0
+    cell zones:       9
+
+Overall number of cells of each type:
+    hexahedra:     11440
+    prisms:        0
+    wedges:        0
+    pyramids:      0
+    tet wedges:    0
+    tetrahedra:    0
+    polyhedra:     0
+
+Checking topology...
+    Boundary definition OK.
+    Cell to face addressing OK.
+    Point usage OK.
+    Upper triangular ordering OK.
+    Face vertices OK.
+    Topological cell zip-up check OK.
+    Face-face connectivity OK.
+    Number of regions: 1 (OK).
+
+Checking patch topology for multiply connected surfaces...
+    Patch               Faces    Points     Surface topology
+    anodeInlet          60       84       ok (non-closed singly connected)  
+    anodeOutlet         50       66       ok (non-closed singly connected)  
+    cathodeInlet        28       40       ok (non-closed singly connected)  
+    cathodeOutlet       60       78       ok (non-closed singly connected)  
+    anodeTerminal       440      483      ok (non-closed singly connected)  
+    cathodeTerminal     440      483      ok (non-closed singly connected)  
+    externalWalls       1986     2132     ok (non-closed singly connected)  
+    ".*"                3064     3066     ok (closed singly connected)      
+
+
+Checking faceZone topology for multiply connected surfaces...
+    No faceZones found.
+
+Checking basic cellZone addressing...
+    CellZone            Cells        Points       Volume       BoundingBox
+    CBP                 3174         4153         5.8366310438839e-08 (0 0 0) (0.02 0.002 0.0019654220313551)
+    CCH                 786          1154         2.0250570815364e-08 (0 0.00052144355082656 0.0005) (0.02 0.0014785564491734 0.0019654220313551)
+    CGDL                1320         1932         1.2e-08      (0 0 0.0019654220313551) (0.02 0.002 0.0022654220313551)
+    CCL                 440          966          5.1600000000001e-10 (0 0 0.0022654220313551) (0.02 0.002 0.0022783220313551)
+    PEM                 880          1449         4.32e-09     (0 0 0.0022783220313551) (0.02 0.002 0.0023863220313551)
+    ACL                 440          966          5.1599999999999e-10 (0 0 0.0023863220313551) (0.02 0.002 0.0023992220313551)
+    AGDL                1320         1932         1.2e-08      (0 0 0.0023992220313551) (0.02 0.002 0.0026992220313551)
+    ACH                 1326         1886         2.0700385246334e-08 (0 0.00024195396514481 0.0026992220313551) (0.02 0.0017580460348552 0.0037665795493846)
+    ABP                 1754         2605         4.1993915474846e-08 (0 0 0.0026992220313551) (0.02 0.002 0.0042665795493846)
+
+Checking basic pointZone addressing...
+    No pointZones found.
+
+Checking geometry...
+    Overall domain bounding box (0 0 0) (0.02 0.002 0.0042665795493846)
+    Mesh has 3 geometric (non-empty/wedge) directions (1 1 1)
+    Mesh has 3 solution (non-empty) directions (1 1 1)
+    Boundary openness (2.1256539196051e-18 -2.0564465826877e-17 -1.9971260081871e-16) OK.
+    Max cell openness = 1.0961524347576e-16 OK.
+    Max aspect ratio = 98.913441194747 OK.
+    Minimum face area = 1.3041705802755e-10. Maximum face area = 2.5e-07.  Face area magnitudes OK.
+    Min volume = 1.3041705802754e-13. Max volume = 6.0488491286203e-11.  Total volume = 1.7066318197538e-07.  Cell volumes OK.
+    Mesh non-orthogonality Max: 0 average: 0
+    Non-orthogonality check OK.
+    Face pyramids OK.
+    Max skewness = 8.3452894917142e-14 OK.
+    Coupled point location match (average 0) OK.
+Checking faces in error :
+    non-orthogonality > 10  degrees                        : 0
+    faces with face pyramid volume < 1e-20                 : 0
+    faces with face-decomposition tet quality < 1e-12      : 0
+    faces with concavity > 80  degrees                     : 0
+    faces with area < 1e-20 m^2                            : 0
+    faces with skewness > 1   (internal) or 1   (boundary) : 0
+    faces with interpolation weights (0..1)  < 0.1         : 0
+    faces with volume ratio of neighbour cells < 0.01      : 0
+    faces with face twist < 0.02                           : 0
+    faces on cells with determinant < 0.0001                : 0
+
+Mesh OK.
+
+End
+

@@ -1,0 +1,71 @@
+{
+  "scope": "Synthetic objective only; no CFD was run by this recovery audit.",
+  "original_evidence": "The first audit used temporary directories and printed tool output. This report records a repeat with retained mock journals.",
+  "reproduce_command": "MPLCONFIGDIR=/tmp/flowfield-resume-audit-mpl .venv/bin/python runs/p011-newton-audit/verify_resume.py",
+  "mock_root": "/Users/zhuang/FlowField/runs/p011-newton-audit/resume-mock-vvn3u5re",
+  "original": {
+    "status": "failed",
+    "attempts": 15,
+    "successful_evaluations": 14,
+    "failed_evaluations": 1,
+    "complete_generations": 3,
+    "partial_generation_evaluations": 1,
+    "stop_reason": "error"
+  },
+  "resume_checks": [
+    {
+      "request": "plain resume",
+      "overrides": {},
+      "error": "Evaluation 15 has no scalar result. Resuming it requires an originally configured --failure-penalty; no CFD is retried.",
+      "new_evaluations": 0,
+      "original_journals_unchanged": true
+    },
+    {
+      "request": "add failure penalty",
+      "overrides": {
+        "failure_penalty": 1000000.0
+      },
+      "error": "Cannot resume with changed problem_name",
+      "new_evaluations": 0,
+      "original_journals_unchanged": true
+    },
+    {
+      "request": "extend budget",
+      "overrides": {
+        "extend_budget": 21
+      },
+      "error": "Evaluation 15 has no scalar result. Resuming it requires an originally configured --failure-penalty; no CFD is retried.",
+      "new_evaluations": 0,
+      "original_journals_unchanged": true
+    }
+  ],
+  "fresh_penalized": {
+    "status": "completed_with_failures",
+    "attempts": 20,
+    "successful_evaluations": 19,
+    "failed_evaluations": 1,
+    "complete_generations": 4,
+    "partial_generation_evaluations": 3,
+    "stop_reason": "evaluation_budget"
+  },
+  "regression_tests": {
+    "command": [
+      "/Users/zhuang/FlowField/.venv/bin/python",
+      "-m",
+      "unittest",
+      "test_optimization_resume.ResumeTests.test_pending_attempt_without_penalty_refuses_without_new_calls",
+      "test_optimization_resume.ResumeTests.test_interrupted_attempt_keeps_budget_and_receives_original_penalty",
+      "test_optimization_resume.ResumeTests.test_changed_settings_or_versions_refuse"
+    ],
+    "environment": {
+      "PYTHONPATH": "tests"
+    },
+    "exit_code": 0,
+    "output": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.101s\n\nOK\n"
+  },
+  "source_sha256": {
+    "src/flowfield/optimization/runner.py": "480f665a0330db71754cdfaea57fb91baeb84a9d175787a67d425e85a2fb92b5",
+    "src/flowfield/optimization/state.py": "193c2a097c3d77d599dd1cdd9f98280e67ae1db7d135fbfe6e378780677d3ca0"
+  },
+  "conclusion": "Preserve the original failed run. Existing resume cannot retry its unpenalized missing scalar. A fresh run may configure a failure penalty from its start."
+}

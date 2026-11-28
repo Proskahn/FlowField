@@ -1,0 +1,21 @@
+{
+  "budget_per_problem": 20,
+  "maximum_attempts": 20,
+  "maximum_cfd_attempts": 20,
+  "mesh": "coarse",
+  "seed": 42,
+  "problems": [
+    {
+      "problem": "P011",
+      "status": "ready",
+      "dimension": 4,
+      "regime": "single",
+      "algorithm": "CMA-ES",
+      "maximum_attempts": 20,
+      "evaluation_kind": "CFD",
+      "sigma_normalized": 0.1,
+      "initial_design_length": 4,
+      "command_timeout_s": 14400.0
+    }
+  ]
+}

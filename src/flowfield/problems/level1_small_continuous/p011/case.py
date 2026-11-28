@@ -8,7 +8,7 @@ from ....evaluation import write_json
 from .config import DOI,MODEL_REVISION,decode
 from .geometry import build_geometry,mesh,field,write,FLUID,PATCHES
 
-SOLVER_INPUTS=('flowfieldP011Foam.C','Common.H','Charge.H','Gas.H','WaterHeat.H','Make/files','Make/options')
+SOLVER_INPUTS=('flowfieldP011Foam.C','Common.H','Charge.H','ChargeNewton.H','Gas.H','WaterHeat.H','Make/files','Make/options')
 INITIAL=('material','p','T','s','lambda','yr','yw','phiS','phiE','U')
 INPUTS=({'0/'+v for v in INITIAL}|{'solver/'+v for v in SOLVER_INPUTS}
  |{'constant/polyMesh/'+v for v in ('points','faces','owner','neighbour','boundary','cellZones','faceZones')}

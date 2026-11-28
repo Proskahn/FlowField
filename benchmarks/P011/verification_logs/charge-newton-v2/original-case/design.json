@@ -1,0 +1,27 @@
+{
+  "cathode_inlet_width_mm": 0.682397274371034,
+  "cathode_outlet_width_mm": 0.9571128983468833,
+  "anode_inlet_width_mm": 1.5160920697103708,
+  "anode_outlet_width_mm": 0.9368931994278189,
+  "cathode_inlet_height_mm": 1.4654220313551232,
+  "cathode_outlet_height_mm": 1.0448088221642304,
+  "anode_inlet_height_mm": 0.6595905486076691,
+  "anode_outlet_height_mm": 1.0673575180295063,
+  "normalized_design": [
+    0.1019263811910095,
+    0.32268000760017407,
+    0.7718596988744051,
+    0.30643203525449736
+  ],
+  "length_mm": 20.0,
+  "pitch_mm": 2.0,
+  "active_area_m2": 4e-05,
+  "temperature_K": 343.14,
+  "humidity_percent": 100.0,
+  "cathode_stoichiometry": 2.0,
+  "gdl_porosity": 0.4,
+  "endpoint_area_mm2": 1.0,
+  "constraints": {},
+  "cathode_taper_angle_deg": 1.2047904839183898,
+  "anode_taper_angle_deg": -1.1680044960179459
+}
