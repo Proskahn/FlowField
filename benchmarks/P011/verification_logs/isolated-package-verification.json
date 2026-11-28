@@ -1,0 +1,13 @@
+{
+  "imported_from": "/Users/zhuang/FlowField/tmp/p011-packaging/installed/flowfield/__init__.py",
+  "site_packages_disabled": true,
+  "case": "/Users/zhuang/FlowField/tmp/p011-packaging/isolated-case",
+  "cells": 3520,
+  "source_integrity_verified": true,
+  "reference_designs": [
+    "CFC",
+    "GA",
+    "IGA"
+  ],
+  "cfd_executed": false
+}

@@ -1,0 +1,42 @@
+{
+  "status": "completed",
+  "problem": "P011",
+  "algorithm": "RandomSearch",
+  "budget": 2,
+  "regime": "single",
+  "seed": 42,
+  "attempts": 2,
+  "successful_evaluations": 2,
+  "failed_evaluations": 0,
+  "baseline_objective": 114.54508197452486,
+  "best_objective": 114.54508197452486,
+  "best_design": [
+    0.3571428571428571,
+    0.3571428571428571,
+    0.3571428571428571,
+    0.3571428571428571
+  ],
+  "best_case_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/cases/P011-84040804802d4ea780a435eb4230fbda",
+  "best_feasible_objective": 114.54508197452486,
+  "best_feasible_design": [
+    0.3571428571428571,
+    0.3571428571428571,
+    0.3571428571428571,
+    0.3571428571428571
+  ],
+  "best_feasible_case_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/cases/P011-84040804802d4ea780a435eb4230fbda",
+  "complete_generations": 0,
+  "partial_generation_evaluations": 0,
+  "stop_reason": "evaluation_budget",
+  "resumed": false,
+  "replayed_evaluations": 0,
+  "new_attempts": 2,
+  "recovered_interruptions": 0,
+  "ioh_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/ioh",
+  "session_wall_time_s": 129.98713929206133,
+  "wall_time_s": 129.98713929206133,
+  "random_draws": 1,
+  "random_repaired_draws": 0,
+  "random_duplicate_draws": 0,
+  "objective_improvement": 0.0
+}

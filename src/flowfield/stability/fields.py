@@ -17,7 +17,8 @@ def final_fields(case, name, config, expected_step, cells, max_bytes=128*1024*10
     if expected_step is not None and not math.isclose(t,expected_step,rel_tol=1e-8,abs_tol=1e-12):
         return dict(status='failed',reason=f'Saved time {t} differs from solver step {expected_step}.',fields={})
     results={};errors=[];unchecked=[]
-    required={'P010':('p','U','T','s','lambda','yr','yw','phiS','phiE','iVol','phiGas','phiReact','phiVapor','phiLiquid','phiWater','phiHeat'), 'P009':('p','U','phi'), 'P000':('p','U'),'P001':('p','U'), 'P004-hydraulic':('p','U'),
+    required={'P011':('p','U','T','s','lambda','yr','yw','phiS','phiE','iVol','phiGas','phiReact','phiVapor','phiLiquid','phiWater','phiHeat'),
+        'P010':('p','U','T','s','lambda','yr','yw','phiS','phiE','iVol','phiGas','phiReact','phiVapor','phiLiquid','phiWater','phiHeat'), 'P009':('p','U','phi'), 'P000':('p','U'),'P001':('p','U'), 'P004-hydraulic':('p','U'),
         'P002':('p','U','T','Cgas'),'P003':('p','oxygen','water','nitrogen'),
         'P005':('alpha.water','p_rgh','U'),'P006':('p','sg','T','Ul','Ug','qL','qG'),
         'P008':('p','T','sg','U','Ul','Ug','phiS','phiE','phiL','phiG','iVol','heatSource'),
@@ -56,7 +57,7 @@ def final_fields(case, name, config, expected_step, cells, max_bytes=128*1024*10
                 results[key]=dict(count=0);continue
             low,high=min(vals),max(vals);bounds=None
             if key in ('s','yr','yw','sg','oxygen','water','nitrogen','alpha.water','gamma'):bounds=(0,1)
-            elif key=='T':bounds=(273.15,373.15) if name in ('P006','P008','P010') else (0,1) if name=='P007' else (0,None)
+            elif key=='T':bounds=(273.15,373.15) if name in ('P006','P008','P010','P011') else (0,1) if name=='P007' else (0,None)
             elif key=='brinkman':bounds=(0,None)
             elif key in ('k','epsilon','nut','Cgas'):bounds=(0,None)
             tol=getattr(config,'alpha_tolerance',1e-8) if key=='alpha.water' else 1e-8

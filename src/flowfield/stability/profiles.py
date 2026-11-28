@@ -2,6 +2,7 @@
 from dataclasses import replace
 
 PROFILES = {
+    "P011": ("log.flowfieldP011Foam", "postProcessing/p011/history.csv"),
     "P010": ("log.flowfieldP010Foam", "postProcessing/p010/history.csv"),
     'P009': ('log.simpleFoam', None),
     'P000': ('log.simpleFoam', None),
@@ -18,7 +19,7 @@ PROFILES = {
 
 def limits(name, c):
     """Final physical acceptance limits, not linear-solver residual tolerances."""
-    if name == 'P010':
+    if name in ('P010','P011'):
         return dict(field_change=c.field_tolerance,charge_residual=1e-7,**dict.fromkeys(
             ('gas_balance','species_balance','liquid_balance','membrane_balance','momentum_residual','energy_balance'),c.balance_tolerance))
     if name == 'P008':
@@ -58,7 +59,7 @@ def stricter(name, c):
     if name == 'P002':
         return replace(c,model_overrides=dict(c.model_overrides,
             outerTolerance=c.model['outerTolerance']/10,balanceTolerance=c.model['balanceTolerance']/10))
-    keys = {'P010':('field_tolerance','balance_tolerance'), 'P009':('residual_tolerance','balance_tolerance','steady_tolerance'),
+    keys = {'P011':('field_tolerance','balance_tolerance'), 'P010':('field_tolerance','balance_tolerance'), 'P009':('residual_tolerance','balance_tolerance','steady_tolerance'),
             'P000':('residual_tolerance','mass_balance_tolerance'),
             'P001':('residual_tolerance','mass_balance_tolerance','stability_tolerance'),
             'P003':('outer_tolerance','balance_tolerance'),
@@ -92,7 +93,8 @@ def observables(name, extracted):
     if name=='P008':
         from ..problems.level1_small_continuous.p008.ewm import INDICATORS
         return {k:m[k] for k,_ in INDICATORS}
-    keys={'P010':('net_power_W','current_cathode_A','pressure_drop_Pa','mean_membrane_water'), 'P009':('pressure_drop_pa','mean_speed_m_s','flow_cv','performance_m_s_per_bar'),
+    keys={'P011':('current_cathode_A','pumping_power_W','net_power_W','pressure_drop_Pa'),
+          'P010':('net_power_W','current_cathode_A','pressure_drop_Pa','mean_membrane_water'), 'P009':('pressure_drop_pa','mean_speed_m_s','flow_cv','performance_m_s_per_bar'),
           'P000':('pressure_drop_pa',), 'P001':('uniformity','pressure_drop_pa'),
           'P002':('voltage_V','pressure_sum_Pa'),
           'P003':('power_domain_W','current_std_A_m2','inlet_flow_half_cell_m3_s'),

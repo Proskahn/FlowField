@@ -173,7 +173,7 @@ class StabilityTests(unittest.TestCase):
 
     def test_all_plan_covers_cfd_and_explicit_surrogate_exclusion(self):
         p=make_plan(list_problems(),studies=['repeat','mesh','numerics','parallel'])
-        self.assertEqual(p['case_count'],56)
+        self.assertEqual(p['case_count'],61)
         d={e['problem']:e for e in p['problems']}
         self.assertIn('not_applicable',d['P004'])
         self.assertEqual(len(d['P006']['jobs']),6)

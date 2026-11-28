@@ -18,6 +18,7 @@ _DISPATCH = {
     'plot': 'flowfield.benchmarking.plotting',
     'check': 'flowfield.stability.cli',
     'p000': 'flowfield.problems.p000.cli',
+    'p011': 'flowfield.problems.level1_small_continuous.p011.cli',
 }
 
 

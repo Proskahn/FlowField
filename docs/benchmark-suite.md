@@ -94,6 +94,35 @@ baseline diagnostics without calibration, but optimization requires a frozen
 qualified EWM calibration. Setup errors are rejected before starting an
 experiment or creating its output directory.
 
+## P011 tapered PEMFC channels
+
+P011 reconstructs the coupled 3D two-phase tapered-channel model from Li et al.,
+Renewable Energy 264 (2026) 125531. Four independent endpoint widths determine
+the eight printed dimensions; reciprocal heights enforce 1 mm² inlet/outlet
+sections. The scalar objective is `100000 * cathode_pumping_power / gross_power`.
+Named raw objectives retain pumping power and negative gross electrical power.
+
+```bash
+python -m pip install -e '.[p011,optim,ioh]'
+flowfield describe P011
+flowfield p011 reference
+flowfield p011 generate --design IGA --case runs/p011-iga
+flowfield run runs/p011-iga --backend docker --timeout 14400
+flowfield optimize --problem P011 --optimizer cmaes --population 8 \
+  --budget 40 --seed 42 --backend docker --timeout 14400 \
+  --output runs/p011-cmaes --ioh
+```
+
+Use native v2312 instead of Docker when loaded. Baseline and tapered cases pass
+the numerical gates, and the framework/IOH smoke run completed two CFD evaluations.
+This is a provisional reconstruction: missing source closures are declared in
+[the paper specification](../benchmarks/P011/paper-spec.json). Its default power
+prediction differs substantially from the paper, and coarse/medium pressure
+changes do not establish mesh independence. See the separate numerical and
+paper-comparison outcomes in [verification.json](../benchmarks/P011/verification.json).
+The paper's GA/IGA is not implemented; existing framework optimizers operate on
+this explicitly identified CFD reconstruction.
+
 ## P006 search resolution and reference rechecks
 
 P006 supports explicitly cheaper search configurations. Its default remains

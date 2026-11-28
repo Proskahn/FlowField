@@ -34,7 +34,7 @@ def _command_timeout(identifier, args):
         return args.timeout
     # A resumed run keeps the effective limits recorded in its plan.
     saved = getattr(args, 'command_timeouts', {})
-    return saved.get(identifier, P006_TIMEOUT_S if identifier in ('P006','P010') else 1800)
+    return saved.get(identifier, P006_TIMEOUT_S if identifier in ('P006','P010','P011') else 1800)
 
 
 def _make_problem(identifier, args):
@@ -102,7 +102,7 @@ def main(argv=None):
     parser.add_argument('--backend', choices=('auto','native','docker'), default='auto')
     parser.add_argument('--image', default=DEFAULT_IMAGE)
     parser.add_argument('--timeout', type=float, default=None,
-                        help='Seconds per mesh/build/solver command (default: P006/P010 14400; other problems 1800)')
+                        help='Seconds per mesh/build/solver command (default: P006/P010/P011 14400; other problems 1800)')
     parser.add_argument('--ioh', action='store_true')
     parser.add_argument('--failure-penalty', type=float, help='Explicit finite penalty for SimulationError; otherwise stop that problem')
     parser.add_argument('--max-seconds-per-problem', type=float, help='Soft cap; finish an in-flight evaluation before stopping')

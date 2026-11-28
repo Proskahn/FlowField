@@ -175,13 +175,13 @@ class OptimizationTests(unittest.TestCase):
         self.assertLessEqual(len(p.calls),1)
         self.assertEqual(s['stop_reason'],'soft_wall_time_limit')
 
-    def test_dry_run_has_200_cfd_attempts_and_skips_missing_inputs(self):
+    def test_dry_run_has_220_cfd_attempts_and_skips_missing_inputs(self):
         capture=io.StringIO()
         with contextlib.redirect_stdout(capture):
             result=main(['--problems','all','--budget','20','--output',str(self.root/'plan'),'--dry-run'])
         plan=json.loads(capture.getvalue())
         self.assertEqual(result,0)
-        self.assertEqual(plan['maximum_cfd_attempts'],200)
+        self.assertEqual(plan['maximum_cfd_attempts'],220)
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P003')['sigma_normalized'],.005)
         self.assertFalse((self.root/'plan').exists())
         self.assertEqual(next(p for p in plan['problems'] if p['problem']=='P004')['status'],'skipped')
@@ -191,6 +191,7 @@ class OptimizationTests(unittest.TestCase):
         timeouts={p['problem']:p['command_timeout_s'] for p in plan['problems'] if p['status']=='ready'}
         self.assertEqual(timeouts.pop('P006'),14400)
         self.assertEqual(timeouts.pop('P010'),14400)
+        self.assertEqual(timeouts.pop('P011'),14400)
         self.assertTrue(all(value==1800 for value in timeouts.values()))
 
     def test_explicit_timeout_overrides_defaults_in_a_mixed_suite(self):

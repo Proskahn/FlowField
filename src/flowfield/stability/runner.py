@@ -60,7 +60,7 @@ def preflight(problem):
         raise RuntimeError('P001 requires gmsh: python -m pip install gmsh==4.13.1')
     if info['backend']=='native':
         required=[]
-        if problem.name in ('P002','P003','P005','P006','P007','P008','P010'):required.append('wmake')
+        if problem.name in ('P002','P003','P005','P006','P007','P008','P010','P011'):required.append('wmake')
         if getattr(problem.config,'processes',1)>1:required.extend(('mpirun','decomposePar','reconstructPar'))
         missing=[n for n in required if not shutil.which(n)]
         if missing:raise RuntimeError('Missing native runtime tools: '+', '.join(missing))

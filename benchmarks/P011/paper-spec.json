@@ -1,0 +1,198 @@
+{
+  "problem": "P011",
+  "title": "Optimization of tapered flow channels with variable cross-sections for proton exchange membrane fuel cells based on improved genetic algorithm",
+  "authors": "Xinze Li et al.",
+  "doi": "10.1016/j.renene.2026.125531",
+  "journal": "Renewable Energy 264 (2026) 125531",
+  "source_file": "1-s2.0-S0960148126003563-main.pdf",
+  "source_sha256": "516e4de6b959d90d7621e4f17f6e31c5d17693a3e3cb5d4bc5fa310e1f72af8d",
+  "status": "Provisional OpenFOAM reconstruction; quantitative agreement and paper optimization are not established.",
+  "paper_model": {
+    "pages": [
+      3,
+      4,
+      5
+    ],
+    "description": "Steady 3D laminar nonisothermal two-phase single-channel PEMFC; ideal gas; isotropic GDL/CL; no gravity; fully wetted impermeable membrane stated.",
+    "domains": [
+      "cathode channel",
+      "cathode GDL",
+      "cathode CL",
+      "PEM",
+      "anode CL",
+      "anode GDL",
+      "anode channel"
+    ],
+    "equations": "Mass, laminar momentum/Darcy resistance, species, electronic/protonic potentials with Butler-Volmer reaction, heat. Printed liquid-water transport closures are absent."
+  },
+  "geometry": {
+    "source": "Table 1 and Figs. 2,5,8; pages 3,6,9",
+    "length_mm": 20,
+    "baseline_channel_width_mm": 1,
+    "baseline_channel_height_mm": 1,
+    "baseline_rib_width_mm": 1,
+    "gdl_thickness_mm": 0.3,
+    "cl_thickness_mm": 0.0129,
+    "membrane_thickness_mm": 0.108,
+    "pitch_mm": 2,
+    "active_area_m2": 4e-05,
+    "pitch_and_area_provenance": "Inferred full channel-plus-rib repeat width 2 mm, fixed across designs; source gives width and rib but not an explicit activation area.",
+    "profile": "Linear width and linear height between inlet and outlet; endpoint products fixed. Interior cross-sectional area is not constrained to 1 mm2.",
+    "mesh_representation": "Orthogonal voxel approximation of tapered side/top walls. Exact endpoint dimensions are retained unless knots are closer than 0.001 mm; regularization is recorded and mesh port errors above 0.5 percent are rejected. Geometric sensitivity remains necessary."
+  },
+  "optimization": {
+    "source": "Section 3, Eqs.17-19, Fig.5; pages 5-6",
+    "level": 1,
+    "paper_dimension_names": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h"
+    ],
+    "paper_dimension_meanings": [
+      "cathode inlet width",
+      "cathode inlet height",
+      "cathode outlet width",
+      "cathode outlet height",
+      "anode inlet width",
+      "anode inlet height",
+      "anode outlet width",
+      "anode outlet height"
+    ],
+    "paper_bounds_mm": [
+      0.5,
+      1.8
+    ],
+    "endpoint_constraints_mm2": {
+      "a*b": 1,
+      "c*d": 1,
+      "e*f": 1,
+      "g*h": 1
+    },
+    "independent_dimensions": [
+      "a",
+      "c",
+      "e",
+      "g"
+    ],
+    "independent_width_bounds_mm": [
+      0.5555555555555556,
+      1.8
+    ],
+    "dependent_heights_mm": "b=1/a, d=1/c, f=1/e, h=1/g",
+    "baseline_widths_mm": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "objective": "minimize 100000 * (pressure_drop_cathode_Pa * inlet_flow_cathode_m3_s) / (cell_voltage_V * current_density_A_m2 * active_area_m2)",
+    "cell_voltage_V": 0.4,
+    "pumping_scope": "Cathode only; no compressor efficiency factor reported. This is a pumping-to-gross-power ratio, not negative net power.",
+    "original_algorithm": {
+      "implementation": "MATLAB coupled to COMSOL Multiphysics",
+      "population": 20,
+      "generations": 30,
+      "IGA_strategies": [
+        "circle chaos mapping",
+        "adaptive crossover/mutation",
+        "Cauchy-Gaussian mutation"
+      ]
+    },
+    "implementation_scope": "Register CFD problem with existing framework optimizers; do not claim reproduction of published GA/IGA implementation or optima."
+  },
+  "reported_parameters": {
+    "source": "Table 2, page 4",
+    "temperature_K": 343.14,
+    "humidification_temperature_K": 343.14,
+    "pressure_Pa": 101325,
+    "inlet_relative_humidity": 1,
+    "anode_stoichiometry": 2,
+    "cathode_stoichiometry": 2,
+    "gdl_porosity": 0.4,
+    "permeability_gdl_m2": 1.76e-11,
+    "electronic_conductivity_gdl_S_m": 1250,
+    "exchange_current_anode_A_m3": 10500000000.0,
+    "exchange_current_cathode_A_m3": 100,
+    "hydrogen_reference_concentration_mol_m3": 40.88,
+    "oxygen_reference_concentration_mol_m3": 40.88,
+    "binary_diffusivities_m2_s": {
+      "H2_H2O": 0.0001111,
+      "N2_H2O": 3.107e-05,
+      "O2_H2O": 3.405e-05,
+      "O2_N2": 2.897e-05
+    },
+    "molar_masses_g_mol": {
+      "H2": 2,
+      "N2": 28,
+      "H2O": 18,
+      "O2": 32
+    }
+  },
+  "reported_boundary_conditions": {
+    "source": "Section2.3, p5",
+    "feed_and_surrounding_wall_temperature_K": 343.14,
+    "inlets": "Stoichiometric velocities from reference maximum current im, whose value is not supplied.",
+    "outlets": "Operating pressure 1 atm; detailed outlet and terminal boundary setup not supplied."
+  },
+  "explicit_reconstruction_assumptions": {
+    "reference_current_density_A_m2": 10000,
+    "reference_current_provenance": "Unreported; declared estimate, not fitted to paper output. Fixed for all geometries.",
+    "transfer_coefficients": 0.5,
+    "concentration_exponent": 1,
+    "diffusivity_reference_temperature_K": 343.14,
+    "reactant_kinetics": "Use local gas concentration ct*yr relative to reported 40.88 mol/m3. Separate (1-s)^1.5 available-reaction factor is a supplementary closure.",
+    "membrane": "Initialize fully hydrated lambda=14.003, then solve conservative water diffusion, electro-osmotic drag and sorption. This extends the paper fully-wetted statement; hydration is not held fixed.",
+    "liquid": "Supplementary capillary/Darcy transport in GDL/CL, carrier advection/dispersion in channel, and condensation/evaporation. Coefficients are assumptions, not author data.",
+    "species": "Conservative molar-mixture formulation with mixture-averaged diffusivities, rather than literal paper mass-fraction notation.",
+    "other_unreported_inputs": [
+      "CL porosity/permeability/conductivity",
+      "ionomer content",
+      "membrane transport and proton conductivity law",
+      "activation energies and reversible voltage",
+      "gas/liquid viscosity and thermal properties",
+      "contact angle and capillary closure",
+      "phase-change and sorption rates",
+      "plate backing thickness/conductivity and exact terminal placement",
+      "solver tolerances and detailed mesh distributions"
+    ],
+    "open_circuit_voltage_V": 1.18,
+    "plate_backing_thickness_mm": 0.5,
+    "thermoneutral_voltage_V": 1.48,
+    "thermal_reference_status": "Thermoneutral1.48V uses liquid-product HHV; reaction reversible heat is split equally between CLs after subtracting MW*latent_heat/(2F), assigning vapor enthalpy to generated/dissolved water. Explicit condensation/evaporation then adds/subtracts latent heat without double-counting. Sorption enthalpy is neglected.",
+    "reversible_heat_per_current_per_CL_V": "0.5 * (thermoneutral_voltage - open_circuit_voltage - 0.018 * latent_heat / (2 * 96485.33212))"
+  },
+  "equation_corrections": [
+    {
+      "source": "p4 Eq10",
+      "issue": "Printed water source is negative and uses MO2.",
+      "implementation": "Generate water using positive H2O stoichiometry and conserve Faraday/mass/charge sources."
+    },
+    {
+      "source": "p5 Eqs11-12 prose",
+      "issue": "Cathode electronic/protonic source signs both printed positive despite their required zero sum.",
+      "implementation": "Use equal-and-opposite signed sources."
+    },
+    {
+      "source": "p5 Eqs13-14",
+      "issue": "Both forward/reverse BV exponential signs are printed positive.",
+      "implementation": "Use opposing exponent signs with alpha*F/(R*T); alpha is unreported and explicitly estimated."
+    },
+    {
+      "source": "p5 Eq16",
+      "issue": "Cathode oxygen feed uses 2F rather than stoichiometric4F; w notation is ambiguous.",
+      "implementation": "Use4F per O2 and2F per H2 with declared mole fractions and fixed reference current."
+    }
+  ],
+  "reference_discrepancies": [
+    "Table3 rounded widths/heights do not multiply to exactly1 mm2. Reference feasible designs retain printed widths and derive reciprocal heights.",
+    "Figure7f IGA power572.28 minus CFC480.84 equals91.44 mW/cm2, whereas text reports90.42.",
+    "Figure4a mesh test at0.4V is approximately1.099 A/cm2, whereas Figure7f CFC power at0.4V implies1.2021 A/cm2; unreported setup differences are possible.",
+    "The reported GA and IGA fitness values plus Figure7f powers/pressures imply inlet flow rates differing by about1.88%, despite stated consistent inlet conditions. These are reference inconsistencies, not solver calibration targets."
+  ],
+  "validation_policy": "Numerical qualification, mesh independence, and agreement with paper/experiment must be recorded separately. No reference numbers substitute for CFD; no hidden parameter fitting."
+}

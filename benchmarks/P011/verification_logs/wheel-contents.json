@@ -1,0 +1,23 @@
+{
+  "wheel": "/Users/zhuang/FlowField/tmp/p011-packaging/wheels/flowfield_benchmarks-0.8.0-py3-none-any.whl",
+  "p011_files": [
+    "flowfield/problems/level1_small_continuous/p011/__init__.py",
+    "flowfield/problems/level1_small_continuous/p011/case.py",
+    "flowfield/problems/level1_small_continuous/p011/cli.py",
+    "flowfield/problems/level1_small_continuous/p011/config.py",
+    "flowfield/problems/level1_small_continuous/p011/evaluation.py",
+    "flowfield/problems/level1_small_continuous/p011/geometry.py",
+    "flowfield/problems/level1_small_continuous/p011/metrics.py",
+    "flowfield/problems/level1_small_continuous/p011/reference.py",
+    "flowfield/problems/level1_small_continuous/p011/runtime.py",
+    "flowfield/problems/level1_small_continuous/p011/solver/Charge.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Common.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Gas.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/files",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/options",
+    "flowfield/problems/level1_small_continuous/p011/solver/WaterHeat.H",
+    "flowfield/problems/level1_small_continuous/p011/solver/flowfieldP011Foam.C",
+    "flowfield/problems/level1_small_continuous/p011/study.py"
+  ],
+  "solver_files_verified": 7
+}

@@ -1,0 +1,558 @@
+{
+  "problem": "P011",
+  "date": "2026-11-28",
+  "model_revision": "tapered-pemfc-two-phase-v1",
+  "implementation_status": "executable provisional reconstruction integrated with the existing optimization framework",
+  "numerical_qualification": "passed for the cases listed; not proof of mesh independence or paper agreement",
+  "paper_validated": false,
+  "mesh_independent": false,
+  "source_sha256": {
+    "__init__.py": "8058936c6786df507a6f78468a2345610814c31407ca4b7a1214ff513c2407e1",
+    "case.py": "b92f1685bcca69272e5b39c6e0ba5df832b6e80614257351cbcde3f783092cb8",
+    "cli.py": "2f749301e742a29747cc0f46c9e2d1c50446fcdc066762ca884da0e8608eb66a",
+    "config.py": "2ae229b753c04e45fec74e2b30fd858654fa88099f3d59c5e1e9649af88db134",
+    "evaluation.py": "89840d812bffad11f87c7eeef8b6a57de027a354aa4916e33353d36dbf1c01e0",
+    "geometry.py": "81f00ab788adb42eb87ec0bdb8c8a7a83481719cf196857600d8e0bc6c401891",
+    "metrics.py": "1739c740b19b3a20c13da4db574d4bcd0cbd42cf8eb6536abc46b1ab4edadf9e",
+    "reference.py": "77bc5186745568ab1c76c9022e78192d4418463dc826129b0ea7be36587d1b8e",
+    "runtime.py": "8ffe6cff38c3ea3ce06ab16b763ebe420f03d8b5fecd7cb4368a6a2017ff63e3",
+    "solver/Charge.H": "c7c7bf36d8c498f1f1bacc03527efcdccbafbb2bab6d49bd943f5787dfb283fb",
+    "solver/Common.H": "dc10350378a7d5ba06f141cc90c61fb0a5f126ba60fa259c0fd40e5f1441f5bf",
+    "solver/Gas.H": "da44ffb08185edb720c0bdbcdf5a80c81aa415518984bd0ddfd4bc10932b6dc9",
+    "solver/Make/files": "ea48732dba2086fe9ecaeab40badf7bf4174c72e76496c5782e7613efb9eaf22",
+    "solver/Make/options": "0e0cf352d95f489a039f0a6eaacb834892a8e363feb909d9f11ebd053cda5091",
+    "solver/WaterHeat.H": "0c4cb1db320628a30572bb48c696a42b723b545133853538e5bbe0d0108e599e",
+    "solver/flowfieldP011Foam.C": "cdbe1ab21374cc36758ee360fbb46bdfddc55738756d04c22c51940cad91e249",
+    "study.py": "44c839e069cdcaeb0951b2eced3f6dee606f21f217d1f9fb2e01396dd2be89b6"
+  },
+  "tests": {
+    "command": "PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v",
+    "passed": 476,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_s": 66.941,
+    "evidence": "verification_logs/tests.log"
+  },
+  "packaging": {
+    "status": "passed",
+    "checks": [
+      "wheel includes seven solver sources/build recipes",
+      "isolated -I -S imports",
+      "case generation and immutable source validation from wheel",
+      "read-only reference CLI"
+    ],
+    "final_wheel_sha256": "b2d8d76891bafc25979948644824a3f21899e60f5cfef733658651ed134591cf",
+    "all_p011_packaged_files_match_current_sources": true,
+    "editable_console_install": "passed; flowfield-p011 reference and flowfield describe P011"
+  },
+  "cases": [
+    {
+      "label": "baseline-coarse",
+      "case_directory": "/Users/zhuang/FlowField/runs/p011-baseline-002",
+      "status": "ok",
+      "qualified": true,
+      "config_sha256": "d5c74a089c48a415b6bbc04d727d9c09fb5b9e4ab7f943d4a9cf3535c835d25d",
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "solver_binary_sha256": "5dda6187eb33749dff08bf39f8b1fd88f424371b6f90b64b108d32e91fb0a802",
+      "wall_time_s": 39.28290441678837,
+      "geometry_diagnostics": {
+        "representation": "orthogonal staircase of linearly tapered width and height",
+        "axial_sampling": "cell centers; exact endpoint sections held in first and last cells",
+        "knot_merge_threshold_mm": 0.001,
+        "cells_per_axis": [
+          20,
+          8,
+          22
+        ],
+        "minimum_spacing_mm": {
+          "x": 1.0,
+          "y": 0.25,
+          "z": 0.012899999999999912
+        },
+        "maximum_spacing_mm": {
+          "x": 1.0,
+          "y": 0.25,
+          "z": 0.25
+        },
+        "target_port_area_m2": 1e-06,
+        "port_areas_m2": {
+          "cathodeInlet": 1.0000000000000002e-06,
+          "cathodeOutlet": 1.0000000000000002e-06,
+          "anodeInlet": 1.0000000000000002e-06,
+          "anodeOutlet": 1.0000000000000002e-06
+        },
+        "port_area_relative_errors": {
+          "cathodeInlet": 2.220446049250313e-16,
+          "cathodeOutlet": 2.220446049250313e-16,
+          "anodeInlet": 2.220446049250313e-16,
+          "anodeOutlet": 2.220446049250313e-16
+        },
+        "analytical_channel_volume_m3": {
+          "cathode": 2e-08,
+          "anode": 2e-08
+        },
+        "meshed_channel_volume_m3": {
+          "cathode": 2.000000000000007e-08,
+          "anode": 2.000000000000007e-08
+        },
+        "channel_volume_relative_errors": {
+          "cathode": 3.552713678800501e-15,
+          "anode": 3.552713678800501e-15
+        },
+        "maximum_section_area_relative_errors": {
+          "cathode": 2.220446049250313e-16,
+          "anode": 2.220446049250313e-16
+        },
+        "plate_thickness_mm": 0.5,
+        "active_area_m2": 3.9999999999999996e-05
+      },
+      "metrics": {
+        "net_power_W": 0.0013431431084157805,
+        "current_cathode_A": 0.003361708442730922,
+        "current_anode_A": 0.003361708442730918,
+        "pressure_drop_Pa": 3.840729628024569,
+        "inlet_flow_m3_s": 4.0103543486878587e-07,
+        "pumping_power_W": 1.540268676588263e-06,
+        "mean_membrane_water": 13.943137029168563,
+        "mean_cathode_liquid_saturation": 0.008386639545970869,
+        "max_temperature_K": 343.18882997367,
+        "cells": 3520,
+        "iteration": 563,
+        "checks": {
+          "anodeInlet_temperature_bc": 0.0,
+          "anodeInlet_velocity_bc": 1.9774223851822234e-15,
+          "anodeOutlet_temperature_bc": 0.0,
+          "cathodeInlet_temperature_bc": 0.0,
+          "cathodeInlet_velocity_bc": 8.443593584728093e-15,
+          "cathodeOutlet_temperature_bc": 0.0,
+          "anodeTerminal_temperature_bc": 0.0,
+          "anodeTerminal_wall_velocity": 0.0,
+          "anodeTerminal_potential_bc": 0.0,
+          "cathodeTerminal_temperature_bc": 0.0,
+          "cathodeTerminal_wall_velocity": 0.0,
+          "cathodeTerminal_potential_bc": 0.0,
+          "externalWalls_temperature_bc": 0.0,
+          "externalWalls_wall_velocity": 0.0,
+          "saved_gas_balance": 9.103260781182639e-13,
+          "saved_react_balance": 7.143909790040176e-07,
+          "saved_vapor_balance": 0.000927407035947537,
+          "saved_liquid_balance": 0.0003681042679477864,
+          "saved_water_balance": 0.0006032196242742914,
+          "saved_heat_balance": 6.692299889915411e-06,
+          "faraday_reactant": 1.3307891741192637e-17,
+          "total_molar_source": 1.2705974625062326e-17,
+          "total_water_source": 1.1685834182740045e-14,
+          "latent_heat_source": 7.277867042331264e-15,
+          "current_continuity": 1.1610548289479458e-15,
+          "anode_composition": 0.0,
+          "react_constitutive_divergence": 3.67393807768235e-12,
+          "react_constitutive_face": 2.2370454833926633e-14,
+          "vapor_constitutive_divergence": 2.5521849269319255e-09,
+          "vapor_constitutive_face": 9.070737904368391e-12,
+          "electronic_charge_balance": 3.9904792226440017e-08,
+          "protonic_charge_balance": 1.900545966277265e-07,
+          "reaction_joule_heat": 7.447052592901706e-11,
+          "global_reaction_heat": 1.1232312514739235e-16,
+          "butler_volmer": 3.988969207937385e-08,
+          "membrane_transport": 1.1497572011380895e-06,
+          "sorption_closure": 0.0002454818615769165,
+          "phase_change_closure": 1.1903240770145733e-05,
+          "heat_transport": 3.7884123759971067e-07,
+          "cathodeOutlet_pressure_bc": 1.5265566588596e-16,
+          "anodeOutlet_pressure_bc": 3.1225022567583e-17,
+          "anodeInlet_flow": 4.440892098500626e-16,
+          "cathodeInlet_flow": 1.887379141862766e-15,
+          "net_power_W_history": 1.452982856589088e-14,
+          "current_cathode_A_history": 2.3221096578958917e-14,
+          "current_anode_A_history": 2.4382151407906892e-14,
+          "pressure_drop_Pa_history": 8.093838332872497e-15,
+          "inlet_flow_m3_s_history": 1.0296560500235518e-14,
+          "pumping_power_W_history": 2.3921757136019155e-14
+        },
+        "audit_scope": "Saved local balances, charge, kinetics, species diffusion/advection, membrane transport, source identities, heat production and objective; momentum and liquid constitutive convergence also require solver histories. No mesh independence or paper validation.",
+        "output_power_W": 0.0013446833770923688,
+        "current_density_A_cm2": 0.008404271106827304,
+        "power_density_mW_cm2": 3.361708442730922,
+        "pumping_output_ratio": 0.0011454508197452486,
+        "paper_objective": 114.54508197452486,
+        "paper_validated": false
+      },
+      "objective": 114.54508197452486,
+      "evidence_directory": "benchmarks/P011/verification_logs/baseline-coarse"
+    },
+    {
+      "label": "baseline-medium",
+      "case_directory": "/Users/zhuang/FlowField/runs/p011-baseline-medium-001",
+      "status": "ok",
+      "qualified": true,
+      "config_sha256": "98b1fdb43a43176736374dba584753ee093b40234c636904f79bb437a9498db5",
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "solver_binary_sha256": "5dda6187eb33749dff08bf39f8b1fd88f424371b6f90b64b108d32e91fb0a802",
+      "wall_time_s": 133.84199954103678,
+      "geometry_diagnostics": {
+        "representation": "orthogonal staircase of linearly tapered width and height",
+        "axial_sampling": "cell centers; exact endpoint sections held in first and last cells",
+        "knot_merge_threshold_mm": 0.001,
+        "cells_per_axis": [
+          32,
+          12,
+          31
+        ],
+        "minimum_spacing_mm": {
+          "x": 0.625,
+          "y": 0.16666666666666652,
+          "z": 0.012899999999999912
+        },
+        "maximum_spacing_mm": {
+          "x": 0.625,
+          "y": 0.16666666666666674,
+          "z": 0.16666666666666696
+        },
+        "target_port_area_m2": 1e-06,
+        "port_areas_m2": {
+          "cathodeInlet": 1e-06,
+          "cathodeOutlet": 1e-06,
+          "anodeInlet": 1.0000000000000002e-06,
+          "anodeOutlet": 1.0000000000000002e-06
+        },
+        "port_area_relative_errors": {
+          "cathodeInlet": 0.0,
+          "cathodeOutlet": 0.0,
+          "anodeInlet": 2.220446049250313e-16,
+          "anodeOutlet": 2.220446049250313e-16
+        },
+        "analytical_channel_volume_m3": {
+          "cathode": 2e-08,
+          "anode": 2e-08
+        },
+        "meshed_channel_volume_m3": {
+          "cathode": 1.999999999999967e-08,
+          "anode": 1.999999999999966e-08
+        },
+        "channel_volume_relative_errors": {
+          "cathode": 1.6542323066914832e-14,
+          "anode": 1.6986412276764895e-14
+        },
+        "maximum_section_area_relative_errors": {
+          "cathode": 0.0,
+          "anode": 2.220446049250313e-16
+        },
+        "plate_thickness_mm": 0.5,
+        "active_area_m2": 3.9999999999999996e-05
+      },
+      "metrics": {
+        "net_power_W": 0.0013432888128371743,
+        "current_cathode_A": 0.0033625591326898125,
+        "current_anode_A": 0.0033625591326898793,
+        "pressure_drop_Pa": 4.325902620845482,
+        "inlet_flow_m3_s": 4.0103543486878645e-07,
+        "pumping_power_W": 1.734840238750791e-06,
+        "mean_membrane_water": 13.943505611862147,
+        "mean_cathode_liquid_saturation": 0.008344827659825138,
+        "max_temperature_K": 343.18735541103,
+        "cells": 11904,
+        "iteration": 558,
+        "checks": {
+          "anodeInlet_temperature_bc": 0.0,
+          "anodeInlet_velocity_bc": 1.9774223851822234e-15,
+          "anodeOutlet_temperature_bc": 0.0,
+          "cathodeInlet_temperature_bc": 0.0,
+          "cathodeInlet_velocity_bc": 8.443593584728093e-15,
+          "cathodeOutlet_temperature_bc": 0.0,
+          "anodeTerminal_temperature_bc": 0.0,
+          "anodeTerminal_wall_velocity": 0.0,
+          "anodeTerminal_potential_bc": 0.0,
+          "cathodeTerminal_temperature_bc": 0.0,
+          "cathodeTerminal_wall_velocity": 0.0,
+          "cathodeTerminal_potential_bc": 0.0,
+          "externalWalls_temperature_bc": 0.0,
+          "externalWalls_wall_velocity": 0.0,
+          "saved_gas_balance": 4.80666383120038e-13,
+          "saved_react_balance": 7.262842699175372e-07,
+          "saved_vapor_balance": 0.0009394064305662329,
+          "saved_liquid_balance": 0.00037647118028639684,
+          "saved_water_balance": 0.0006141053469547323,
+          "saved_heat_balance": 5.630706355853943e-06,
+          "faraday_reactant": 1.3558006006389262e-17,
+          "total_molar_source": 1.238946064034884e-17,
+          "total_water_source": 1.0530239076951966e-14,
+          "latent_heat_source": 7.942459069540253e-15,
+          "current_continuity": 1.9861912070430196e-14,
+          "anode_composition": 9.992007221626409e-15,
+          "react_constitutive_divergence": 5.252827919711691e-12,
+          "react_constitutive_face": 1.0142373941197314e-14,
+          "vapor_constitutive_divergence": 4.527495034550763e-09,
+          "vapor_constitutive_face": 4.1507337143486426e-12,
+          "electronic_charge_balance": 9.223949936549373e-08,
+          "protonic_charge_balance": 2.0281684067223614e-07,
+          "reaction_joule_heat": 7.516441532300775e-11,
+          "global_reaction_heat": 3.3386284944546613e-16,
+          "butler_volmer": 4.0334664944899414e-08,
+          "membrane_transport": 1.2173913458878686e-06,
+          "sorption_closure": 0.00024968964098477577,
+          "phase_change_closure": 1.2210931604638972e-05,
+          "heat_transport": 8.132341382644082e-07,
+          "cathodeOutlet_pressure_bc": 4.3021142204225e-16,
+          "anodeOutlet_pressure_bc": 5.7245874707235e-17,
+          "anodeInlet_flow": 1.2989609388114332e-14,
+          "cathodeInlet_flow": 3.3306690738754696e-16,
+          "net_power_W_history": 1.9209578356164588e-14,
+          "current_cathode_A_history": 2.6052637910564282e-14,
+          "current_anode_A_history": 6.190725840133964e-15,
+          "pressure_drop_Pa_history": 4.106326459685928e-15,
+          "inlet_flow_m3_s_history": 8.844481455330495e-15,
+          "pumping_power_W_history": 5.248670153939025e-15
+        },
+        "audit_scope": "Saved local balances, charge, kinetics, species diffusion/advection, membrane transport, source identities, heat production and objective; momentum and liquid constitutive convergence also require solver histories. No mesh independence or paper validation.",
+        "output_power_W": 0.001345023653075925,
+        "current_density_A_cm2": 0.00840639783172453,
+        "power_density_mW_cm2": 3.3625591326898125,
+        "pumping_output_ratio": 0.0012898213609726468,
+        "paper_objective": 128.98213609726469,
+        "paper_validated": false
+      },
+      "objective": 128.98213609726469,
+      "evidence_directory": "benchmarks/P011/verification_logs/baseline-medium"
+    },
+    {
+      "label": "IGA-coarse",
+      "case_directory": "/Users/zhuang/FlowField/runs/p011-iga-002",
+      "status": "ok",
+      "qualified": true,
+      "config_sha256": "d5c74a089c48a415b6bbc04d727d9c09fb5b9e4ab7f943d4a9cf3535c835d25d",
+      "runtime": {
+        "backend": "docker",
+        "image": "opencfd/openfoam-default:2312",
+        "image_id": "sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2",
+        "repo_digests": [
+          "opencfd/openfoam-default@sha256:097e45046a74ee1dae3e6135df0c42723ba55092d246e7c9932f3bfa1e89b7b2"
+        ],
+        "architecture": "arm64"
+      },
+      "solver_binary_sha256": "5dda6187eb33749dff08bf39f8b1fd88f424371b6f90b64b108d32e91fb0a802",
+      "wall_time_s": 75.7455657501705,
+      "geometry_diagnostics": {
+        "representation": "orthogonal staircase of linearly tapered width and height",
+        "axial_sampling": "cell centers; exact endpoint sections held in first and last cells",
+        "knot_merge_threshold_mm": 0.001,
+        "cells_per_axis": [
+          20,
+          12,
+          24
+        ],
+        "minimum_spacing_mm": {
+          "x": 1.0,
+          "y": 0.11699999999999999,
+          "z": 0.012899999999999912
+        },
+        "maximum_spacing_mm": {
+          "x": 1.0,
+          "y": 0.19474999999999998,
+          "z": 0.25
+        },
+        "target_port_area_m2": 1e-06,
+        "port_areas_m2": {
+          "cathodeInlet": 9.99999999999999e-07,
+          "cathodeOutlet": 9.999999999999995e-07,
+          "anodeInlet": 9.999999999999995e-07,
+          "anodeOutlet": 9.999999999999997e-07
+        },
+        "port_area_relative_errors": {
+          "cathodeInlet": 1.1102230246251565e-15,
+          "cathodeOutlet": 4.440892098500626e-16,
+          "anodeInlet": 4.440892098500626e-16,
+          "anodeOutlet": 2.220446049250313e-16
+        },
+        "analytical_channel_volume_m3": {
+          "cathode": 2.0124612496818134e-08,
+          "anode": 2.023129356871581e-08
+        },
+        "meshed_channel_volume_m3": {
+          "cathode": 1.9999999999999938e-08,
+          "anode": 2.0173470176536895e-08
+        },
+        "channel_volume_relative_errors": {
+          "cathode": 0.006192044534417684,
+          "anode": 0.002858116411712186
+        },
+        "maximum_section_area_relative_errors": {
+          "cathode": 0.009236464806163802,
+          "anode": 0.1344976345378459
+        },
+        "plate_thickness_mm": 0.5,
+        "active_area_m2": 3.9999999999999996e-05
+      },
+      "metrics": {
+        "net_power_W": 0.0013448093779200284,
+        "current_cathode_A": 0.003367311417029982,
+        "current_anode_A": 0.0033673114170299605,
+        "pressure_drop_Pa": 5.274319194902606,
+        "inlet_flow_m3_s": 4.0103543486878814e-07,
+        "pumping_power_W": 2.115188891964563e-06,
+        "mean_membrane_water": 13.94060344836933,
+        "mean_cathode_liquid_saturation": 0.005968118339596611,
+        "max_temperature_K": 343.20012015683,
+        "cells": 5760,
+        "iteration": 566,
+        "checks": {
+          "anodeInlet_temperature_bc": 0.0,
+          "anodeInlet_velocity_bc": 5.1083411617207804e-15,
+          "anodeOutlet_temperature_bc": 0.0,
+          "cathodeInlet_temperature_bc": 0.0,
+          "cathodeInlet_velocity_bc": 3.4604891740687005e-15,
+          "cathodeOutlet_temperature_bc": 0.0,
+          "anodeTerminal_temperature_bc": 0.0,
+          "anodeTerminal_wall_velocity": 0.0,
+          "anodeTerminal_potential_bc": 0.0,
+          "cathodeTerminal_temperature_bc": 0.0,
+          "cathodeTerminal_wall_velocity": 0.0,
+          "cathodeTerminal_potential_bc": 0.0,
+          "externalWalls_temperature_bc": 0.0,
+          "externalWalls_wall_velocity": 0.0,
+          "saved_gas_balance": 2.7702195053052626e-12,
+          "saved_react_balance": 7.245831350790066e-07,
+          "saved_vapor_balance": 0.0009347239678302042,
+          "saved_liquid_balance": 0.0002901772319967042,
+          "saved_water_balance": 0.0006031627167722522,
+          "saved_heat_balance": 5.089860658323699e-06,
+          "faraday_reactant": 1.2847474716997805e-17,
+          "total_molar_source": 1.2329267984552191e-17,
+          "total_water_source": 1.1007883514859545e-14,
+          "latent_heat_source": 7.30681213009488e-15,
+          "current_continuity": 6.4395717426206254e-15,
+          "anode_composition": 9.992007221626409e-15,
+          "react_constitutive_divergence": 3.710895429227821e-12,
+          "react_constitutive_face": 1.2785020792641083e-14,
+          "vapor_constitutive_divergence": 3.072955189361069e-09,
+          "vapor_constitutive_face": 4.970836391897223e-12,
+          "electronic_charge_balance": 5.4188175049528274e-08,
+          "protonic_charge_balance": 1.9165492506072525e-07,
+          "reaction_joule_heat": 7.739628482668747e-11,
+          "global_reaction_heat": 2.3189234831613087e-16,
+          "butler_volmer": 3.750362192646515e-08,
+          "membrane_transport": 1.1581880287688253e-06,
+          "sorption_closure": 0.0002456175260221887,
+          "phase_change_closure": 1.0453214599822558e-05,
+          "heat_transport": 7.068405951932254e-07,
+          "cathodeOutlet_pressure_bc": 2.7755575615629e-16,
+          "anodeOutlet_pressure_bc": 3.816391647149e-17,
+          "anodeInlet_flow": 2.220446049250313e-16,
+          "cathodeInlet_flow": 3.774758283725532e-15,
+          "net_power_W_history": 2.1122768316097688e-14,
+          "current_cathode_A_history": 5.2804488289489125e-15,
+          "current_anode_A_history": 1.1720020571569613e-14,
+          "pressure_drop_Pa_history": 1.1787775271374492e-15,
+          "inlet_flow_m3_s_history": 4.620251506515911e-15,
+          "pumping_power_W_history": 1.7419689251176044e-14
+        },
+        "audit_scope": "Saved local balances, charge, kinetics, species diffusion/advection, membrane transport, source identities, heat production and objective; momentum and liquid constitutive convergence also require solver histories. No mesh independence or paper validation.",
+        "output_power_W": 0.001346924566811993,
+        "current_density_A_cm2": 0.008418278542574955,
+        "power_density_mW_cm2": 3.367311417029982,
+        "pumping_output_ratio": 0.0015703840764972896,
+        "paper_objective": 157.03840764972895,
+        "paper_validated": false
+      },
+      "objective": 157.03840764972895,
+      "evidence_directory": "benchmarks/P011/verification_logs/IGA-coarse"
+    }
+  ],
+  "mesh_sensitivity": {
+    "comparison": "baseline medium versus coarse",
+    "relative_change": {
+      "current_density_A_cm2": 0.0002530528668334142,
+      "pressure_drop_Pa": 0.12632313123026462,
+      "paper_objective": 0.1260381840396314
+    },
+    "status": "not_mesh_independent",
+    "reason": "Pressure and objective change by about 12.6%; fine mesh and tapered-geometry sensitivity remain to be established"
+  },
+  "paper_comparison": {
+    "reference": "Figure 7(f), CFC at 0.4 V",
+    "published_power_density_mW_cm2": 480.84,
+    "computed_power_density_mW_cm2": 3.361708442730922,
+    "relative_power_error": -0.993008675562077,
+    "published_pressure_drop_Pa": 14.23,
+    "computed_pressure_drop_Pa": 3.840729628024569,
+    "status": "not_reproduced",
+    "explanation": "Unreported kinetics, inlet reference current, thermal and two-phase closures are explicit estimates; no fit or analytical objective fallback"
+  },
+  "optimization": {
+    "summary": {
+      "status": "completed",
+      "problem": "P011",
+      "algorithm": "RandomSearch",
+      "budget": 2,
+      "regime": "single",
+      "seed": 42,
+      "attempts": 2,
+      "successful_evaluations": 2,
+      "failed_evaluations": 0,
+      "baseline_objective": 114.54508197452486,
+      "best_objective": 114.54508197452486,
+      "best_design": [
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571
+      ],
+      "best_case_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/cases/P011-84040804802d4ea780a435eb4230fbda",
+      "best_feasible_objective": 114.54508197452486,
+      "best_feasible_design": [
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571
+      ],
+      "best_feasible_case_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/cases/P011-84040804802d4ea780a435eb4230fbda",
+      "complete_generations": 0,
+      "partial_generation_evaluations": 0,
+      "stop_reason": "evaluation_budget",
+      "resumed": false,
+      "replayed_evaluations": 0,
+      "new_attempts": 2,
+      "recovered_interruptions": 0,
+      "ioh_directory": "/Users/zhuang/FlowField/runs/p011-random-smoke-001/P011/ioh",
+      "session_wall_time_s": 129.98713929206133,
+      "wall_time_s": 129.98713929206133,
+      "random_draws": 1,
+      "random_repaired_draws": 0,
+      "random_duplicate_draws": 0,
+      "objective_improvement": 0.0
+    },
+    "evidence": "verification_logs/optimization-summary.json",
+    "ioh_logs": "verification_logs/ioh",
+    "scope": "Two-evaluation wiring and logging smoke only; no search convergence or published GA/IGA reproduction claim"
+  },
+  "earlier_development_cases": {
+    "paths": [
+      "runs/p011-baseline-001",
+      "runs/p011-iga-001"
+    ],
+    "status": "obsolete thermal-reference development cases; excluded from current validation"
+  },
+  "limitations": [
+    "Inclined walls use an orthogonal staircase with recorded geometric error.",
+    "The paper omits essential model closures and contains source-equation/reference inconsistencies.",
+    "Current/power prediction is substantially below the paper.",
+    "Serial solver only.",
+    "The existing optimizers are integrated; the paper-specific GA/IGA is not implemented."
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "problem": "P011",
+  "doi": "10.1016/j.renene.2026.125531",
+  "source_sha256": "516e4de6b959d90d7621e4f17f6e31c5d17693a3e3cb5d4bc5fa310e1f72af8d",
+  "purpose": "Publication reference data only; these are not results of the OpenFOAM implementation.",
+  "conditions": {
+    "cell_voltage_V": 0.4,
+    "active_area_m2": 4e-05,
+    "area_status": "inferred channel-plus-rib repeat area"
+  },
+  "table3_dimension_order": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+  ],
+  "table3_dimension_unit": "mm",
+  "designs": {
+    "CFC": {
+      "printed_dimensions_mm": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "feasible_widths_mm": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "feasible_heights_mm": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalized_design": [
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571,
+        0.3571428571428571
+      ],
+      "pressure_drop_cathode_Pa": 14.23,
+      "power_density_mW_cm2": 480.84,
+      "figure7f_current_density_A_cm2_derived": 1.2021,
+      "figure7f_gross_power_W_derived": 0.192336,
+      "reported_fitness": null,
+      "dimensions_source": "Table3,p8",
+      "pressure_power_source": "Fig7f bar labels,p8",
+      "fitness_source": null,
+      "taper_angles_deg_exact_area": [
+        0.0,
+        0.0
+      ]
+    },
+    "GA": {
+      "printed_dimensions_mm": [
+        1.395,
+        0.717,
+        1.533,
+        0.652,
+        0.75,
+        1.332,
+        0.798,
+        1.252
+      ],
+      "feasible_widths_mm": [
+        1.395,
+        1.533,
+        0.75,
+        0.798
+      ],
+      "feasible_heights_mm": [
+        0.7168458781362007,
+        0.6523157208088716,
+        1.3333333333333333,
+        1.2531328320802004
+      ],
+      "normalized_design": [
+        0.6745535714285714,
+        0.7854464285714284,
+        0.15624999999999997,
+        0.1948214285714286
+      ],
+      "pressure_drop_cathode_Pa": 15.88,
+      "power_density_mW_cm2": 549.16,
+      "figure7f_current_density_A_cm2_derived": 1.3728999999999998,
+      "figure7f_gross_power_W_derived": 0.219664,
+      "reported_fitness": 3.1169,
+      "dimensions_source": "Table3,p8",
+      "pressure_power_source": "Fig7f bar labels,p8",
+      "fitness_source": "Section5.1,p8",
+      "taper_angles_deg_exact_area": [
+        0.18486464180827883,
+        0.2297562803204749
+      ]
+    },
+    "IGA": {
+      "printed_dimensions_mm": [
+        1.329,
+        0.752,
+        1.612,
+        0.62,
+        0.779,
+        1.282,
+        1.013,
+        0.987
+      ],
+      "feasible_widths_mm": [
+        1.329,
+        1.612,
+        0.779,
+        1.013
+      ],
+      "feasible_heights_mm": [
+        0.7524454477050414,
+        0.6203473945409429,
+        1.2836970474967908,
+        0.987166831194472
+      ],
+      "normalized_design": [
+        0.6215178571428571,
+        0.8489285714285715,
+        0.17955357142857142,
+        0.3675892857142856
+      ],
+      "pressure_drop_cathode_Pa": 16.05,
+      "power_density_mW_cm2": 572.28,
+      "figure7f_current_density_A_cm2_derived": 1.4306999999999999,
+      "figure7f_gross_power_W_derived": 0.228912,
+      "reported_fitness": 2.9673,
+      "dimensions_source": "Table3,p8",
+      "pressure_power_source": "Fig7f bar labels,p8",
+      "fitness_source": "Section5.1,p8",
+      "taper_angles_deg_exact_area": [
+        0.3784275435396082,
+        0.8494342558445974
+      ]
+    }
+  },
+  "mesh_test": {
+    "source": "Section2.4 and Fig4a,p5",
+    "cells": [
+      33124,
+      54912,
+      72192,
+      92976
+    ],
+    "selected_cells": 72192,
+    "reported_last_pair_current_difference_percent_less_than": 0.05,
+    "approximate_selected_current_density_A_cm2": 1.099,
+    "current_status": "Approximate visual reading; not an exact digitized target."
+  },
+  "comparison_warning": [
+    "Table3 rounded widths/heights do not multiply to exactly1 mm2. Reference feasible designs retain printed widths and derive reciprocal heights.",
+    "Figure7f IGA power572.28 minus CFC480.84 equals91.44 mW/cm2, whereas text reports90.42.",
+    "Figure4a mesh test at0.4V is approximately1.099 A/cm2, whereas Figure7f CFC power at0.4V implies1.2021 A/cm2; unreported setup differences are possible.",
+    "The reported GA and IGA fitness values plus Figure7f powers/pressures imply inlet flow rates differing by about1.88%, despite stated consistent inlet conditions. These are reference inconsistencies, not solver calibration targets."
+  ]
+}

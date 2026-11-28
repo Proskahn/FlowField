@@ -104,4 +104,9 @@ BUILTINS = (
         "P010", "ESCFF PEM fuel cell", 1,
         "Four variables; coupled 3D reconstruction, quantitatively unvalidated against the paper.",
         "Negative net power in W", extra="p010", reference="10.1016/j.ijheatmasstransfer.2025.127792")),
+    ("flowfield.problems.level1_small_continuous.p011:P011Problem", _info(
+        "P011", "Tapered-channel PEM fuel cell", 1,
+        "Four endpoint widths with reciprocal heights; provisional coupled 3D two-phase PEMFC reconstruction.",
+        "100000 times cathode pumping power divided by electrical output",
+        extra="p011", reference="10.1016/j.renene.2026.125531")),
 )

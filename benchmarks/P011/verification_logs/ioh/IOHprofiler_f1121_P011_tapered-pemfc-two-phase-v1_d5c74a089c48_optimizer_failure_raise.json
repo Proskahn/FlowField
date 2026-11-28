@@ -1,0 +1,16 @@
+{
+	"version": "0.3.22", 
+	"suite": "unknown_suite", 
+	"function_id": 1121, 
+	"function_name": "P011_tapered-pemfc-two-phase-v1_d5c74a089c48_optimizer_failure_raise", 
+	"maximization": false, 
+	"algorithm": {"name": "RandomSearch", "info": "seed=42; budget=2; resumed=False; replay is not new CFD"},
+	"attributes": ["evaluations", "raw_y"],
+	"scenarios": [
+		{"dimension": 4,
+		"path": "data_f1121_P011_tapered-pemfc-two-phase-v1_d5c74a089c48_optimizer_failure_raise/IOHprofiler_f1121_DIM4.dat",
+		"runs": [
+			{"instance": 1, "evals": 2, "best": {"evals": 1, "y": 114.54508197452486, "x": [0.3571428571428571, 0.3571428571428571, 0.3571428571428571, 0.3571428571428571]}}
+		]}
+	]
+}
