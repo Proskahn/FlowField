@@ -9,7 +9,7 @@ import json
 import math
 
 DOI = '10.1016/j.renene.2026.125531'
-MODEL_REVISION = 'tapered-pemfc-two-phase-v2'
+MODEL_REVISION = 'tapered-pemfc-two-phase-v3'
 PARAMETERS = ('cathode_inlet_width_mm', 'cathode_outlet_width_mm',
               'anode_inlet_width_mm', 'anode_outlet_width_mm')
 BOUNDS = ((1/1.8, 1.8),) * 4

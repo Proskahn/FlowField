@@ -151,6 +151,36 @@ The explicit penalty allows subsequent candidate simulation failures to count
 against the attempt budget without stopping the search. Failed candidates
 remain recorded as failures; a qualified baseline is still required.
 
+Model revision `tapered-pemfc-two-phase-v3` changes the mesh policy after a
+controlled check found a 4.06% objective jump for a `1e-8 mm` width change in v2.
+Transverse background points now stay at fixed physical coordinates; endpoint
+knots add local refinement instead of repartitioning whole intervals with
+`ceil`. Coarse/medium/fine transverse spacings are `0.125`, `1/12`, and
+`0.0625 mm`. The square baseline has 10,880, 37,632, and 101,376 cells,
+respectively. Geometry diagnostics record the policy, background spacing,
+endpoint fitting, and remaining approximation errors.
+
+The v3 coarse baseline and both `+/-1e-8 mm` outlet-width perturbations retain
+10,880 cells and pass the full CFD qualification. Their relative objective
+differences are below `2e-8`, compared with the previous 4.06% jump. The v3
+baseline objective is approximately 140.5512; values from the old coarse mesh
+must not be pooled with it. See
+[mesh-policy verification](../benchmarks/P011/mesh-policy-verification.json).
+
+This repair preserves the orthogonal staircase formulation and all acceptance
+limits. Local knot merging, material classification, and a shared transverse
+grid still introduce discretization effects; refinement checks are required
+for close design rankings. The tested taper `[0.7, 1.3, 1.5, 0.8] mm` changes
+objective by 0.77% under a `-1e-8 mm` cathode-outlet perturbation on the coarse
+grid, and by 24.8% from coarse to medium. The baseline changes by 5.04% from
+coarse to medium. Therefore v3 fixes the identified baseline repartitioning
+bug but does not qualify the full model for physical design or algorithm
+ranking; keep large campaigns stopped pending further mesh validation. The
+repair does not establish global smoothness, mesh independence, or agreement
+with the paper. Existing v1/v2 cases and
+campaigns are historical evidence. Generate fresh v3 cases and use new output
+directories; do not resume or overwrite an earlier campaign.
+
 ## P006 search resolution and reference rechecks
 
 P006 supports explicitly cheaper search configurations. Its default remains

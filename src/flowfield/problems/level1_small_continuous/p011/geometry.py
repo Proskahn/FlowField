@@ -3,9 +3,11 @@
 Geometry construction uses mm and OpenFOAM output uses SI. Both width and
 height vary linearly along the 20 mm channel. The sloping surfaces are resolved
 as a staircase, which permits the solver's orthogonal finite-volume operators.
-Endpoint knots are retained unless separated by less than 0.001 mm; this
-explicit mesh regularization prevents arbitrarily thin cells during search.
-Every case records the resulting port-area and channel-volume discrepancies.
+Every design starts from the same transverse background lattice. Endpoint
+knots refine it locally instead of repartitioning every interval according to
+its length. Nearby knots are merged within 0.001 mm to avoid sliver cells.
+The remaining staircase/merging errors are recorded for every case; this is
+not a claim of mesh independence or globally smooth geometry discretization.
 """
 import math
 from bisect import bisect_right
@@ -21,10 +23,11 @@ PATCHES = ('anodeInlet', 'anodeOutlet', 'cathodeInlet', 'cathodeOutlet',
 LENGTH_MM = 20.0
 PITCH_MM = 2.0
 KNOT_MERGE_MM = 0.001
+MESH_POLICY = 'anchored-transverse-lattice-v1'
 RESOLUTION = {
-    'coarse': (20, .25, 3, 1, 2),
-    'medium': (32, .18, 4, 1, 3),
-    'fine': (48, .12, 5, 2, 4),
+    'coarse': (20, .125, 3, 1, 2),
+    'medium': (32, 1/12, 4, 1, 3),
+    'fine': (48, .0625, 5, 2, 4),
 }
 
 
@@ -49,7 +52,14 @@ def analytic_channel_volume(g, electrode):
 
 
 def _axis(knots, spacing):
-    """Merge only nearby interior knots, then refine with adjacent ratio <=6."""
+    """Anchor resolution independently of the design; fit interfaces locally.
+
+    Repartitioning each interface interval with ceil(length/spacing) made an
+    infinitesimal departure from the square baseline refine whole channels.
+    Here background points stay at integer multiples of spacing. A physical
+    knot replaces only background points within the declared merge tolerance;
+    all other background points are retained. Grading only inserts points.
+    """
     unique = sorted(set(knots))
     groups = []
     for value in unique:
@@ -59,11 +69,11 @@ def _axis(knots, spacing):
             groups.append([value])
     merged = [sum(group)/len(group) for group in groups]
     merged[0], merged[-1] = unique[0], unique[-1]
-    out = [merged[0]]
-    for first, last in zip(merged, merged[1:]):
-        count = max(1, math.ceil((last-first)/spacing - 1e-12))
-        out.extend(first+(last-first)*j/count for j in range(1, count+1))
-    return _grade(out)
+    background = [index*spacing for index in range(
+        math.ceil(unique[0]/spacing), math.floor(unique[-1]/spacing)+1)]
+    background = [point for point in background
+                  if all(abs(point-knot) >= KNOT_MERGE_MM for knot in merged)]
+    return _grade(sorted(merged+background))
 
 
 def _grade(out):
@@ -157,6 +167,10 @@ def build_geometry(g, config):
     exact_volume = {e: analytic_channel_volume(g, e) for e in areas}
     approximation = dict(
         representation='orthogonal staircase of linearly tapered width and height',
+        mesh_policy=MESH_POLICY,
+        transverse_background_spacing_mm=spacing,
+        endpoint_fitting='local knot insertion; background points within merge tolerance are replaced',
+        geometry_limitations='staircase material boundaries and knot merging remain discretization errors; shared transverse refinements affect both electrodes',
         axial_sampling='cell centers; exact endpoint sections held in first and last cells',
         knot_merge_threshold_mm=KNOT_MERGE_MM,
         cells_per_axis=[nx, ny, len(z)-1],

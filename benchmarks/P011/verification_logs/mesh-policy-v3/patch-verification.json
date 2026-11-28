@@ -1,0 +1,10 @@
+{
+  "files": [
+    "src/flowfield/problems/level1_small_continuous/p011/case.py",
+    "src/flowfield/problems/level1_small_continuous/p011/config.py",
+    "src/flowfield/problems/level1_small_continuous/p011/geometry.py",
+    "tests/test_p011_geometry.py"
+  ],
+  "patch_sha256": "05e7ba6679c31a09831c6443b06147c5705b8210b5c6740f545ccb5de8b6c7cb",
+  "check": "git apply --check and apply passed on original HEAD files; applied bytes match tested files."
+}

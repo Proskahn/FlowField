@@ -1,0 +1,376 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _c39a0f64-20231220 OPENFOAM=2312 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : /case/bin/flowfieldP011Foam -case /case
+Date   : Nov 28 2026
+Time   : 14:32:54
+Host   : f2d8b0989a78
+PID    : 8
+I/O    : uncollated
+Case   : /case
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+P011: 37632 cells; steady 3D PEMFC. First build/solve diagnostics every 10 iterations.
+P011: iteration=1 charge block
+P011: iteration=1 water block
+P011: iteration=1 flow block
+P011: iteration=1 species block
+P011: iteration=1 heat block
+P011: iteration=1; V=1.17025; I=2.1609799000689e-09 A; net power=4.5411056740653e-05 W; change=2.287128464623; balances gas/species/liquid/membrane/energy=1.5487990499299e-11,0.00012690058817256,1.8137418805664e-10,0.00057733954686727,9.3345859601692; momentum=0.55280656800278
+P011: iteration=2 charge block
+P011: iteration=2 water block
+P011: iteration=2 flow block
+P011: iteration=2 species block
+P011: iteration=2 heat block
+P011: iteration=3 charge block
+P011: iteration=3 water block
+P011: iteration=3 flow block
+P011: iteration=3 species block
+P011: iteration=3 heat block
+P011: iteration=10 charge block
+P011: iteration=10 water block
+P011: iteration=10 flow block
+P011: iteration=10 species block
+P011: iteration=10 heat block
+P011: iteration=10; V=1.0825; I=3.2670940124043e-08 A; net power=-3.9410170891212e-06 W; change=0.12344704377259; balances gas/species/liquid/membrane/energy=1.0932620539482e-12,0.0030454981275508,0.00081304025889654,0.0047842236973562,0.88715992335789; momentum=0.049108092657751
+P011: iteration=20 charge block
+P011: iteration=20 water block
+P011: iteration=20 flow block
+P011: iteration=20 species block
+P011: iteration=20 heat block
+P011: iteration=20; V=0.985; I=1.7617130376218e-07 A; net power=-1.9305689026314e-06 W; change=0.0089448763897248; balances gas/species/liquid/membrane/energy=1.7728985356042e-12,0.015103283896807,0.0052478926467935,0.024391391136881,0.35936819820636; momentum=0.0059922137610009
+P011 linear algebra: using direct fallback for 16896 unknowns
+P011: iteration=30 charge block
+P011: iteration=30 water block
+P011: iteration=30 flow block
+P011: iteration=30 species block
+P011: iteration=30 heat block
+P011: iteration=30; V=0.8875; I=9.1729135329883e-07 A; net power=-1.1920618345831e-06 W; change=0.0027080802637084; balances gas/species/liquid/membrane/energy=1.1534207029543e-12,0.076200203596451,0.026896557811921,0.12850038202907,0.29169691874632; momentum=0.0016360005923516
+P011: iteration=40 charge block
+P011: iteration=40 water block
+P011: iteration=40 flow block
+P011: iteration=40 species block
+P011: iteration=40 heat block
+P011: iteration=40; V=0.79; I=4.7699670632251e-06 A; net power=1.7773146557746e-06 W; change=0.014080283063889; balances gas/species/liquid/membrane/energy=8.1255529915904e-13,0.3876934700905,0.13597493926716,0.67947565981699,0.2795334882231; momentum=0.00047057020029882
+P011: iteration=50 charge block
+P011: iteration=50 water block
+P011: iteration=50 flow block
+P011: iteration=50 species block
+P011: iteration=50 heat block
+P011: iteration=50; V=0.6925; I=2.4799142989847e-05 A; net power=1.5186231709838e-05 W; change=0.073192731646201; balances gas/species/liquid/membrane/energy=4.123358844065e-12,1.5350823561652,0.53464749503841,2.7955685692948,0.27599232974859; momentum=0.00013711127897883
+P011: iteration=60 charge block
+P011: iteration=60 water block
+P011: iteration=60 flow block
+P011: iteration=60 species block
+P011: iteration=60 heat block
+P011: iteration=60; V=0.595; I=0.00012882862433427 A; net power=7.4666690809709e-05 W; change=0.15184972035098; balances gas/species/liquid/membrane/energy=1.9500236954434e-12,1.5012661824813,0.51975294481485,2.8418799011524,0.27405828124234; momentum=4.0744347073274e-05
+P011: iteration=70 charge block
+P011: iteration=70 water block
+P011: iteration=70 flow block
+P011: iteration=70 species block
+P011: iteration=70 heat block
+P011: iteration=70; V=0.4975; I=0.00066650954687359 A; net power=0.00032960119639152 W; change=0.15125617607538; balances gas/species/liquid/membrane/energy=5.1631721516227e-12,1.4663770083556,0.50641584322717,2.8850570273636,0.27217521334456; momentum=4.1420374266347e-05
+P011: iteration=80 charge block
+P011: iteration=80 water block
+P011: iteration=80 flow block
+P011: iteration=80 species block
+P011: iteration=80 heat block
+P011: iteration=80; V=0.4; I=0.0033778517995443 A; net power=0.0013491471577799 W; change=0.14831202827478; balances gas/species/liquid/membrane/energy=9.4826447679319e-13,1.4298117574837,0.49886289162559,2.9115789251435,0.26811431278793; momentum=0.00018166512969426
+P011: iteration=90 charge block
+P011: iteration=90 water block
+P011: iteration=90 flow block
+P011: iteration=90 species block
+P011: iteration=90 heat block
+P011: iteration=90; V=0.4; I=0.0033638453914969 A; net power=0.0013435528351855 W; change=0.00020889453796204; balances gas/species/liquid/membrane/energy=1.1656386264414e-12,1.1272076128821,1.1804272959393,0.93139536234395,0.037835600902537; momentum=3.4245445474253e-05
+P011: iteration=100 charge block
+P011: iteration=100 water block
+P011: iteration=100 flow block
+P011: iteration=100 species block
+P011: iteration=100 heat block
+P011: iteration=100; V=0.4; I=0.0033614065079395 A; net power=0.0013425765958518 W; change=0.00022414377655247; balances gas/species/liquid/membrane/energy=9.2672743840344e-13,0.70965869027219,1.3011931036352,0.57450826467147,0.0078921031507692; momentum=8.4733148624004e-06
+P011: iteration=110 charge block
+P011: iteration=110 water block
+P011: iteration=110 flow block
+P011: iteration=110 species block
+P011: iteration=110 heat block
+P011: iteration=110; V=0.4; I=0.0033606767869476 A; net power=0.001342284581378 W; change=0.00020626121318834; balances gas/species/liquid/membrane/energy=8.1840511785327e-13,0.55459421760024,1.2939569418197,0.41051988965618,0.0008888087687878; momentum=4.2334987839413e-06
+P011: iteration=120 charge block
+P011: iteration=120 water block
+P011: iteration=120 flow block
+P011: iteration=120 species block
+P011: iteration=120 heat block
+P011: iteration=120; V=0.4; I=0.0033607172201174 A; net power=0.0013423007337616 W; change=0.00018920294617757; balances gas/species/liquid/membrane/energy=9.1045363776442e-13,0.50414900115039,1.2354810233438,0.33463969863213,0.0018072130208538; momentum=3.0001545238843e-06
+P011: iteration=130 charge block
+P011: iteration=130 water block
+P011: iteration=130 flow block
+P011: iteration=130 species block
+P011: iteration=130 heat block
+P011: iteration=130; V=0.4; I=0.0033609011571135 A; net power=0.0013423743039791 W; change=0.00014968541444407; balances gas/species/liquid/membrane/energy=9.0902001813036e-13,0.45612796209533,1.111073480692,0.29463961747031,0.0024299300918072; momentum=2.3438616556255e-06
+P011: iteration=140 charge block
+P011: iteration=140 water block
+P011: iteration=140 flow block
+P011: iteration=140 species block
+P011: iteration=140 heat block
+P011: iteration=140; V=0.4; I=0.0033610858967121 A; net power=0.0013424482046925 W; change=0.00011204827309766; balances gas/species/liquid/membrane/energy=9.4162391350999e-13,0.40430507553478,0.90920320563436,0.25891937165369,0.0024233179612417; momentum=1.9647133647196e-06
+P011: iteration=150 charge block
+P011: iteration=150 water block
+P011: iteration=150 flow block
+P011: iteration=150 species block
+P011: iteration=150 heat block
+P011: iteration=150; V=0.4; I=0.0033612601223247 A; net power=0.0013425179051651 W; change=9.624260746282e-05; balances gas/species/liquid/membrane/energy=1.0271302901385e-12,0.35527254195444,0.66982737464271,0.22710937002591,0.0022130908781233; momentum=1.7078081582784e-06
+P011: iteration=160 charge block
+P011: iteration=160 water block
+P011: iteration=160 flow block
+P011: iteration=160 species block
+P011: iteration=160 heat block
+P011: iteration=160; V=0.4; I=0.003361428722176 A; net power=0.0013425853571129 W; change=8.7566637320243e-05; balances gas/species/liquid/membrane/energy=1.3256924437733e-11,0.31106491923587,0.44832183908563,0.19909495743485,0.001959837649022; momentum=1.4992353451584e-06
+P011: iteration=170 charge block
+P011: iteration=170 water block
+P011: iteration=170 flow block
+P011: iteration=170 species block
+P011: iteration=170 heat block
+P011: iteration=170; V=0.4; I=0.0033615928510884 A; net power=0.0013426510206773 W; change=7.6938451503227e-05; balances gas/species/liquid/membrane/energy=6.835872696068e-12,0.27193469988971,0.27532090900489,0.17443802485759,0.0017174592760085; momentum=1.3161475308135e-06
+P011: iteration=180 charge block
+P011: iteration=180 water block
+P011: iteration=180 flow block
+P011: iteration=180 species block
+P011: iteration=180 heat block
+P011: iteration=180; V=0.4; I=0.0033617503734891 A; net power=0.0013427140406575 W; change=6.7906170631279e-05; balances gas/species/liquid/membrane/energy=2.5598035780239e-12,0.23752930555605,0.15481647902809,0.15271830297975,0.0015003249808036; momentum=1.1500800936177e-06
+P011: iteration=190 charge block
+P011: iteration=190 water block
+P011: iteration=190 flow block
+P011: iteration=190 species block
+P011: iteration=190 heat block
+P011: iteration=190; V=0.4; I=0.0033618985164656 A; net power=0.0013427733077066 W; change=5.2388890308406e-05; balances gas/species/liquid/membrane/energy=1.9833580855841e-12,0.20734936541925,0.077315632068365,0.13358426817142,0.001309293768702; momentum=1.0014426702906e-06
+P011: iteration=200 charge block
+P011: iteration=200 water block
+P011: iteration=200 flow block
+P011: iteration=200 species block
+P011: iteration=200 heat block
+P011: iteration=200; V=0.4; I=0.0033620352343097 A; net power=0.0013428280034148 W; change=3.052731410404e-05; balances gas/species/liquid/membrane/energy=4.2539512712732e-12,0.18089790846787,0.034614549018905,0.11673941385011,0.0011421499579728; momentum=8.6886963243563e-07
+P011: iteration=210 charge block
+P011: iteration=210 water block
+P011: iteration=210 flow block
+P011: iteration=210 species block
+P011: iteration=210 heat block
+P011: iteration=210; V=0.4; I=0.0033621595073216 A; net power=0.0013428777200568 W; change=2.5361271074455e-05; balances gas/species/liquid/membrane/energy=6.2792610406507e-12,0.15772491348973,0.025216886462618,0.10192615747149,0.00099627428129889; momentum=7.5284969051479e-07
+P011: iteration=220 charge block
+P011: iteration=220 water block
+P011: iteration=220 flow block
+P011: iteration=220 species block
+P011: iteration=220 heat block
+P011: iteration=220; V=0.4; I=0.0033622711824437 A; net power=0.0013429223964971 W; change=2.2729100265487e-05; balances gas/species/liquid/membrane/energy=7.6422337916525e-12,0.13743305896003,0.024661786758545,0.088915320455039,0.00086855798171466; momentum=6.508994672534e-07
+P011: iteration=230 charge block
+P011: iteration=230 water block
+P011: iteration=230 flow block
+P011: iteration=230 species block
+P011: iteration=230 heat block
+P011: iteration=230; V=0.4; I=0.0033623706942961 A; net power=0.0013429622067605 W; change=2.0342677145471e-05; balances gas/species/liquid/membrane/energy=8.4758514198771e-12,0.11967384613434,0.025144398427796,0.077500813929927,0.00075659376047526; momentum=5.6230860646826e-07
+P011: iteration=240 charge block
+P011: iteration=240 water block
+P011: iteration=240 flow block
+P011: iteration=240 species block
+P011: iteration=240 heat block
+P011: iteration=240; V=0.4; I=0.0033624588202128 A; net power=0.0013429974618943 W; change=1.8182695403445e-05; balances gas/species/liquid/membrane/energy=9.1427114329289e-12,0.10414051954878,0.025026325750235,0.06749818625014,0.00065846756930235; momentum=4.8541199410765e-07
+P011: iteration=250 charge block
+P011: iteration=250 water block
+P011: iteration=250 flow block
+P011: iteration=250 species block
+P011: iteration=250 heat block
+P011: iteration=250; V=0.4; I=0.0033625365069476 A; net power=0.0013430285406977 W; change=1.6230844632956e-05; balances gas/species/liquid/membrane/energy=9.811196593855e-12,0.090563229528538,0.02414906656756,0.058741657871501,0.00057255415543695; momentum=4.184927883036e-07
+P011: iteration=260 charge block
+P011: iteration=260 water block
+P011: iteration=260 flow block
+P011: iteration=260 species block
+P011: iteration=260 heat block
+P011: iteration=260; V=0.4; I=0.0033626047542087 A; net power=0.0013430558431482 W; change=1.4469862571388e-05; balances gas/species/liquid/membrane/energy=1.0273350109527e-11,0.078703876597354,0.022761093958079,0.051083452960138,0.00049742404786593; momentum=3.6042442902707e-07
+P011: iteration=270 charge block
+P011: iteration=270 water block
+P011: iteration=270 flow block
+P011: iteration=270 species block
+P011: iteration=270 heat block
+P011: iteration=270; V=0.4; I=0.0033626645482103 A; net power=0.0013430797638074 W; change=1.2883551782363e-05; balances gas/species/liquid/membrane/energy=1.0597711397458e-11,0.068352490641896,0.021028832705257,0.044391885863353,0.00043179976406047; momentum=3.1012967229888e-07
+P011: iteration=280 charge block
+P011: iteration=280 water block
+P011: iteration=280 flow block
+P011: iteration=280 species block
+P011: iteration=280 heat block
+P011: iteration=280; V=0.4; I=0.0033627168236427 A; net power=0.0013431006766179 W; change=1.1456771320755e-05; balances gas/species/liquid/membrane/energy=1.0824898779919e-11,0.059323843644306,0.01912175814572,0.03854997422331,0.00037454320331451; momentum=2.6664633890558e-07
+P011: iteration=290 charge block
+P011: iteration=290 water block
+P011: iteration=290 flow block
+P011: iteration=290 species block
+P011: iteration=290 heat block
+P011: iteration=290; V=0.4; I=0.0033627624448536 A; net power=0.0013431189273758 W; change=1.0175412746182e-05; balances gas/species/liquid/membrane/energy=6.7469427568996e-13,0.051454599063457,0.01718730882252,0.033454040934809,0.00032464477277134; momentum=2.2910348548045e-07
+P011: iteration=300 charge block
+P011: iteration=300 water block
+P011: iteration=300 flow block
+P011: iteration=300 species block
+P011: iteration=300 heat block
+P011: iteration=300; V=0.4; I=0.0033628021986968 A; net power=0.0013431348308721 W; change=9.0263668181897e-06; balances gas/species/liquid/membrane/energy=6.6558886214682e-13,0.044600809427578,0.015313876712562,0.029012377546217,0.00028120485750234; momentum=1.9672980966338e-07
+P011: iteration=310 charge block
+P011: iteration=310 water block
+P011: iteration=310 flow block
+P011: iteration=310 species block
+P011: iteration=310 heat block
+P011: iteration=310; V=0.4; I=0.0033628367939951 A; net power=0.0013431486706786 W; change=7.9974841873741e-06; balances gas/species/liquid/membrane/energy=1.0955096624819e-11,0.038635704908583,0.013558341915099,0.025143984254216,0.00024342613511136; momentum=1.6883517159551e-07
+P011: iteration=320 charge block
+P011: iteration=320 water block
+P011: iteration=320 flow block
+P011: iteration=320 species block
+P011: iteration=320 heat block
+P011: iteration=320; V=0.4; I=0.003362866864593 A; net power=0.0013431607003702 W; change=7.0775325924309e-06; balances gas/species/liquid/membrane/energy=6.6765555613273e-13,0.033447721788684,0.01194759598175,0.021777415249417,0.00021060186943995; momentum=1.4482037735133e-07
+P011: iteration=330 charge block
+P011: iteration=330 water block
+P011: iteration=330 flow block
+P011: iteration=330 species block
+P011: iteration=330 heat block
+P011: iteration=330; V=0.4; I=0.0033628929742058 A; net power=0.001343171145465 W; change=6.2561527674797e-06; balances gas/species/liquid/membrane/energy=6.6653599448398e-13,0.028938773554207,0.010490177387692,0.018849741625629,0.00018210821081214; momentum=1.2416070010347e-07
+P011: iteration=340 charge block
+P011: iteration=340 water block
+P011: iteration=340 flow block
+P011: iteration=340 species block
+P011: iteration=340 heat block
+P011: iteration=340; V=0.4; I=0.003362915622165 A; net power=0.0013431802057235 W; change=5.5238124665208e-06; balances gas/species/liquid/membrane/energy=1.0913143550036e-12,0.025022681667109,0.0091841948601194,0.016305586975486,0.00015739389323401; momentum=1.0639730007246e-07
+P011: iteration=350 charge block
+P011: iteration=350 water block
+P011: iteration=350 flow block
+P011: iteration=350 species block
+P011: iteration=350 heat block
+P011: iteration=350; V=0.4; I=0.0033629352493275 A; net power=0.0013431880575124 W; change=4.8717607201976e-06; balances gas/species/liquid/membrane/energy=4.7004651240989e-12,0.021623802441722,0.0080220603847565,0.014096279130437,0.00013597493557062; momentum=9.1138239064137e-08
+P011: iteration=360 charge block
+P011: iteration=360 water block
+P011: iteration=360 flow block
+P011: iteration=360 species block
+P011: iteration=360 heat block
+P011: iteration=360; V=0.4; I=0.0033629522438922 A; net power=0.0013431948561322 W; change=4.2919820203789e-06; balances gas/species/liquid/membrane/energy=1.0765454425955e-12,0.01867579700676,0.0069933171658902,0.012179081884373,0.00011742754255018; momentum=7.802983207919e-08
+P011: iteration=370 charge block
+P011: iteration=370 water block
+P011: iteration=370 flow block
+P011: iteration=370 species block
+P011: iteration=370 heat block
+P011: iteration=370; V=0.4; I=0.0033629669469485 A; net power=0.0013432007380364 W; change=3.7771508741258e-06; balances gas/species/liquid/membrane/energy=3.3906812742683e-12,0.016120533902009,0.0060863212748994,0.010516505078631,0.00010137671379602; momentum=6.6783532724577e-08
+P011: iteration=380 charge block
+P011: iteration=380 water block
+P011: iteration=380 flow block
+P011: iteration=380 species block
+P011: iteration=380 heat block
+P011: iteration=380; V=0.4; I=0.0033629796575749 A; net power=0.0013432058228723 W; change=3.3205872988112e-06; balances gas/species/liquid/membrane/energy=2.9748147186879e-12,0.01390711367524,0.0052892354297902,0.0090756994678012,8.7498162367152e-05; momentum=5.7118250032393e-08
+P011: iteration=390 charge block
+P011: iteration=390 water block
+P011: iteration=390 flow block
+P011: iteration=390 species block
+P011: iteration=390 heat block
+P011: iteration=390; V=0.4; I=0.003362990637697 A; net power=0.0013432102154234 W; change=2.9162131579324e-06; balances gas/species/liquid/membrane/energy=2.0623966747577e-12,0.011991034903814,0.0045905702898162,0.0078278990318846,7.5504974421039e-05; momentum=4.8843140151214e-08
+P011: iteration=400 charge block
+P011: iteration=400 water block
+P011: iteration=400 flow block
+P011: iteration=400 species block
+P011: iteration=400 heat block
+P011: iteration=400; V=0.4; I=0.0033630001162219 A; net power=0.0013432140072639 W; change=2.558509640918e-06; balances gas/species/liquid/membrane/energy=1.1136970919753e-12,0.010333389574936,0.0039795285077415,0.0067479438246054,6.5148702403528e-05; momentum=4.176502103097e-08
+P011: iteration=410 charge block
+P011: iteration=410 water block
+P011: iteration=410 flow block
+P011: iteration=410 species block
+P011: iteration=410 heat block
+P011: iteration=410; V=0.4; I=0.0033630082929402 A; net power=0.0013432172783206 W; change=2.242476375359e-06; balances gas/species/liquid/membrane/energy=1.8241043710881e-12,0.0089001985218964,0.00344613420993,0.0058138461399954,5.6209925121425e-05; momentum=3.567576913511e-08
+P011: iteration=420 charge block
+P011: iteration=420 water block
+P011: iteration=420 flow block
+P011: iteration=420 species block
+P011: iteration=420 heat block
+P011: iteration=420; V=0.4; I=0.0033630153420539 A; net power=0.0013432200982824 W; change=1.9635918899997e-06; balances gas/species/liquid/membrane/energy=1.5507094244323e-12,0.007661811019596,0.0029812926261877,0.0050064031608402,4.8501277709564e-05; momentum=3.0480328598142e-08
+P011: iteration=430 charge block
+P011: iteration=430 water block
+P011: iteration=430 flow block
+P011: iteration=430 species block
+P011: iteration=430 heat block
+P011: iteration=430; V=0.4; I=0.0033630214152519 A; net power=0.0013432225278327 W; change=1.7177761023111e-06; balances gas/species/liquid/membrane/energy=6.4811060945141e-13,0.0065923835482979,0.0025767911177719,0.0043088671935847,4.1857037883167e-05; momentum=2.602562682183e-08
+P011: iteration=440 charge block
+P011: iteration=440 water block
+P011: iteration=440 flow block
+P011: iteration=440 species block
+P011: iteration=440 heat block
+P011: iteration=440; V=0.4; I=0.0033630266444892 A; net power=0.0013432246197596 W; change=1.501354190413e-06; balances gas/species/liquid/membrane/energy=6.3821718856547e-13,0.0056693969473658,0.002225265270999,0.0037066336492916,3.6132734197776e-05; momentum=2.2214388558023e-08
+P011: iteration=450 charge block
+P011: iteration=450 water block
+P011: iteration=450 flow block
+P011: iteration=450 species block
+P011: iteration=450 heat block
+P011: iteration=450; V=0.4; I=0.0033630311444227 A; net power=0.0013432264199317 W; change=1.3110227114207e-06; balances gas/species/liquid/membrane/energy=6.5435660417291e-13,0.0048732510657408,0.0019201476348751,0.0031869838254944,3.1204534768817e-05; momentum=1.89546527654e-08
+P011: iteration=460 charge block
+P011: iteration=460 water block
+P011: iteration=460 flow block
+P011: iteration=460 species block
+P011: iteration=460 heat block
+P011: iteration=460; V=0.4; I=0.0033630350145844 A; net power=0.0013432279681663 W; change=1.1438175484405e-06; balances gas/species/liquid/membrane/energy=6.5279003968029e-13,0.004186897447048,0.0016556068989796,0.0027388483536865,2.6963736523131e-05; momentum=1.6167776184795e-08
+P011: iteration=470 charge block
+P011: iteration=470 water block
+P011: iteration=470 flow block
+P011: iteration=470 species block
+P011: iteration=470 heat block
+P011: iteration=470; V=0.4; I=0.0033630383412974 A; net power=0.0013432292989968 W; change=9.9708378682425e-07; balances gas/species/liquid/membrane/energy=6.5858206436219e-13,0.0035955183950827,0.0014264839978252,0.0023526008748162,2.3315957981146e-05; momentum=1.3786032847694e-08
+P011: iteration=480 charge block
+P011: iteration=480 water block
+P011: iteration=480 flow block
+P011: iteration=480 species block
+P011: iteration=480 heat block
+P011: iteration=480; V=0.4; I=0.0033630411993626 A; net power=0.0013432304423472 W; change=8.6844760189626e-07; balances gas/species/liquid/membrane/energy=6.5522864414761e-13,0.0030862445780009,0.0012282283443931,0.0020198764100517,2.0180575632488e-05; momentum=1.1751374629552e-08
+P011: iteration=490 charge block
+P011: iteration=490 water block
+P011: iteration=490 flow block
+P011: iteration=490 species block
+P011: iteration=490 heat block
+P011: iteration=490; V=0.4; I=0.003363043653543 A; net power=0.0013432314241255 W; change=7.5579009137643e-07; balances gas/species/liquid/membrane/energy=6.5100455550337e-13,0.0026479069357704,0.001056836470046,0.001733411500449,1.7487246167682e-05; momentum=1.0013777534615e-08
+P011: iteration=500 charge block
+P011: iteration=500 water block
+P011: iteration=500 flow block
+P011: iteration=500 species block
+P011: iteration=500 heat block
+P011: iteration=500; V=0.4; I=0.0033630457598658 A; net power=0.0013432322667454 W; change=6.5722297136434e-07; balances gas/species/liquid/membrane/energy=6.6026521713223e-13,0.0022708189129113,0.00090879423835653,0.0014869037960877,1.5173826007278e-05; momentum=8.5304707773001e-09
+P011: iteration=510 charge block
+P011: iteration=510 water block
+P011: iteration=510 flow block
+P011: iteration=510 species block
+P011: iteration=510 heat block
+P011: iteration=510; V=0.4; I=0.0033630475667636 A; net power=0.001343232989582 W; change=5.7106615223713e-07; balances gas/species/liquid/membrane/energy=6.5061780761035e-13,0.001946585530413,0.000781023231866,0.0012748887762706,1.318849082704e-05; momentum=7.2646290145505e-09
+P011: iteration=520 charge block
+P011: iteration=520 water block
+P011: iteration=520 flow block
+P011: iteration=520 species block
+P011: iteration=520 heat block
+P011: iteration=520; V=0.4; I=0.0033630491160737 A; net power=0.0013432336093721 W; change=4.9582708607055e-07; balances gas/species/liquid/membrane/energy=6.5742080219362e-13,0.001667936134218,0.00067083171669733,0.0010926316582402,1.148539343789e-05; momentum=6.1847645543629e-09
+P011: iteration=530 charge block
+P011: iteration=530 water block
+P011: iteration=530 flow block
+P011: iteration=530 species block
+P011: iteration=530 heat block
+P011: iteration=530; V=0.4; I=0.0033630504439102 A; net power=0.0013432341405632 W; change=4.3018180254241e-07; balances gas/species/liquid/membrane/energy=6.5330792666127e-13,0.0014285779734463,0.00057586956022943,0.00093603282840343,1.0023851356445e-05; momentum=5.2638934041722e-09
+P011: iteration=540 charge block
+P011: iteration=540 water block
+P011: iteration=540 flow block
+P011: iteration=540 species block
+P011: iteration=540 heat block
+P011: iteration=540; V=0.4; I=0.0033630515814269 A; net power=0.001343234595618 W; change=3.7295755117341e-07; balances gas/species/liquid/membrane/energy=6.5606804040043e-13,0.0012230682738636,0.00049408851552714,0.00080154493919733,8.7728845809081e-06; momentum=4.4787934781115e-09
+P011: iteration=550 charge block
+P011: iteration=550 water block
+P011: iteration=550 flow block
+P011: iteration=550 species block
+P011: iteration=550 heat block
+P011: iteration=550; V=0.4; I=0.0033630525554801 A; net power=0.0013432349852803 W; change=3.2311699962081e-07; balances gas/species/liquid/membrane/energy=6.5375685904061e-13,0.0010467023812762,0.00042370529718221,0.00068610056575654,7.6997940614743e-06; momentum=3.8097725182866e-09
+CONVERGED: P011 full coupled model
+End

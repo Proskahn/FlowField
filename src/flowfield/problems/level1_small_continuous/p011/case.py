@@ -61,7 +61,7 @@ timeFormat general; timePrecision 10; runTimeModifiable false;
     write_json(case/'design.json',g)
     manifest=dict(problem='P011',model_revision=MODEL_REVISION,paper_doi=DOI,paper_validated=False,
         design_geometry=g,config=config.to_dict(),config_sha256=config.fingerprint,cells=len(mat),
-        mesh_description='Orthogonal 3D staircase of linearly tapered channels; endpoint heights are reciprocal widths. Geometric and mesh convergence remain separate verification requirements.',
+        mesh_description='Orthogonal 3D staircase on an anchored transverse lattice with local endpoint fitting; reciprocal endpoint heights. Geometric and mesh convergence remain separate verification requirements.',
         geometry_source_sha256=hashlib.sha256((Path(__file__).parent/'geometry.py').read_bytes()).hexdigest(),
         inlet_areas_m2=m['inlet_areas'],geometry_diagnostics=m['approximation'],input_sha256={name:hashlib.sha256((case/name).read_bytes()).hexdigest() for name in sorted(INPUTS)})
     write_json(case/'case.json',manifest);(case/'P011.foam').touch();return case

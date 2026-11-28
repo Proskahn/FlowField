@@ -1,0 +1,340 @@
+.FFFFFFFFFFF.FFFFFFFF.FFFF..
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='coarse', knots=(0.0, 0.49999999, 0.5, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2.4999999848063226e-09 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='coarse', knots=(0.0, 0.211, 0.347, 0.537, 0.883, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.03900000000000001 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='coarse', knots=(0.0, 0.5004, 0.5008, 0.7498, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.08313333333333336 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='medium', knots=(0.0, 0.5, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.013333333333333336 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='medium', knots=(0.0, 0.49999999, 0.5, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.013333334999999974 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='medium', knots=(0.0, 0.211, 0.347, 0.537, 0.883, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.031 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='medium', knots=(0.0, 0.5004, 0.5008, 0.7498, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.013133333333333358 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='fine', knots=(0.0, 0.5, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.01999999999999999 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='fine', knots=(0.0, 0.49999999, 0.5, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.02000000099999999 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='fine', knots=(0.0, 0.211, 0.347, 0.537, 0.883, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.014499999999999999 not less than 1e-13
+
+======================================================================
+FAIL: test_endpoint_refinement_preserves_the_common_background_lattice (test_p011_geometry.TaperedGeometryTests.test_endpoint_refinement_preserves_the_common_background_lattice) (level='fine', knots=(0.0, 0.5004, 0.5008, 0.7498, 1.0))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 55, in test_endpoint_refinement_preserves_the_common_background_lattice
+    self.assertLess(min(abs(value-anchor) for value in values), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.01988000000000001 not less than 1e-13
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=0, delta=-1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 23]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^   ^
+
++ [20, 10, 23]
+?      ^^   ^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=0, delta=1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 22]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^
+
++ [20, 10, 22]
+?      ^^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=1, delta=-1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 23]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^   ^
+
++ [20, 10, 23]
+?      ^^   ^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=1, delta=1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 22]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^
+
++ [20, 10, 22]
+?      ^^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=2, delta=-1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 23]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^   ^
+
++ [20, 10, 23]
+?      ^^   ^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=2, delta=1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 22]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^
+
++ [20, 10, 22]
+?      ^^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=3, delta=-1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 23]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^   ^
+
++ [20, 10, 23]
+?      ^^   ^
+
+
+======================================================================
+FAIL: test_infinitesimal_baseline_changes_do_not_change_resolution (test_p011_geometry.TaperedGeometryTests.test_infinitesimal_baseline_changes_do_not_change_resolution) (level='coarse', coordinate=3, delta=1e-08)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 69, in test_infinitesimal_baseline_changes_do_not_change_resolution
+    self.assert_continuous_mesh_pair(base, changed, delta)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 33, in assert_continuous_mesh_pair
+    self.assertEqual(base['approximation']['cells_per_axis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     changed['approximation']['cells_per_axis'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [20, 8, 22] != [20, 10, 22]
+
+First differing element 1:
+8
+10
+
+- [20, 8, 22]
+?      ^
+
++ [20, 10, 22]
+?      ^^
+
+
+======================================================================
+FAIL: test_merge_boundary_keeps_background_resolution_and_port_quality (test_p011_geometry.TaperedGeometryTests.test_merge_boundary_keeps_background_resolution_and_port_quality) (cathode_outlet_width_mm=0.99799999)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 94, in test_merge_boundary_keeps_background_resolution_and_port_quality
+    self.assertLess(min(abs(value-anchor) for value in m['y']), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.125 not less than 1e-13
+
+======================================================================
+FAIL: test_merge_boundary_keeps_background_resolution_and_port_quality (test_p011_geometry.TaperedGeometryTests.test_merge_boundary_keeps_background_resolution_and_port_quality) (cathode_outlet_width_mm=0.99800001)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 94, in test_merge_boundary_keeps_background_resolution_and_port_quality
+    self.assertLess(min(abs(value-anchor) for value in m['y']), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.04183333249999999 not less than 1e-13
+
+======================================================================
+FAIL: test_merge_boundary_keeps_background_resolution_and_port_quality (test_p011_geometry.TaperedGeometryTests.test_merge_boundary_keeps_background_resolution_and_port_quality) (cathode_outlet_width_mm=1.00199999)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 94, in test_merge_boundary_keeps_background_resolution_and_port_quality
+    self.assertLess(min(abs(value-anchor) for value in m['y']), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.12475000125000002 not less than 1e-13
+
+======================================================================
+FAIL: test_merge_boundary_keeps_background_resolution_and_port_quality (test_p011_geometry.TaperedGeometryTests.test_merge_boundary_keeps_background_resolution_and_port_quality) (cathode_outlet_width_mm=1.00200001)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zhuang/FlowField/tests/test_p011_geometry.py", line 94, in test_merge_boundary_keeps_background_resolution_and_port_quality
+    self.assertLess(min(abs(value-anchor) for value in m['y']), 1e-13)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.12449999750000007 not less than 1e-13
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.303s
+
+FAILED (failures=23)

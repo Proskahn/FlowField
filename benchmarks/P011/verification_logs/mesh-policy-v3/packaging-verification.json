@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "source_tree": "/Users/zhuang/FlowField/runs/p011-mesh-policy-verification/source",
+  "source_note": "Isolated source contains exact current P011 files and restored P006 runtime dependency; the root checkout was not modified.",
+  "source_files_sha256": {
+    "flowfield/problems/level1_small_continuous/p011/__init__.py": "8058936c6786df507a6f78468a2345610814c31407ca4b7a1214ff513c2407e1",
+    "flowfield/problems/level1_small_continuous/p011/case.py": "39d049f97f1c689c60f4bddd313e790e82be78200a65081e7f9795e14bb98426",
+    "flowfield/problems/level1_small_continuous/p011/cli.py": "2f749301e742a29747cc0f46c9e2d1c50446fcdc066762ca884da0e8608eb66a",
+    "flowfield/problems/level1_small_continuous/p011/config.py": "c10de7572e02bb16437d28a92e0751f534746c7a95d39ab01747114f3af048d7",
+    "flowfield/problems/level1_small_continuous/p011/evaluation.py": "89840d812bffad11f87c7eeef8b6a57de027a354aa4916e33353d36dbf1c01e0",
+    "flowfield/problems/level1_small_continuous/p011/geometry.py": "ce9b7c9f0ea10409c3276bb379e560690644a2b0748f31cd1077470e64c09899",
+    "flowfield/problems/level1_small_continuous/p011/metrics.py": "1739c740b19b3a20c13da4db574d4bcd0cbd42cf8eb6536abc46b1ab4edadf9e",
+    "flowfield/problems/level1_small_continuous/p011/reference.py": "77bc5186745568ab1c76c9022e78192d4418463dc826129b0ea7be36587d1b8e",
+    "flowfield/problems/level1_small_continuous/p011/runtime.py": "8ffe6cff38c3ea3ce06ab16b763ebe420f03d8b5fecd7cb4368a6a2017ff63e3",
+    "flowfield/problems/level1_small_continuous/p011/solver/Charge.H": "81faaf2ab463c2dc7abc4c8db862ccfc8e05ccd02368d05b5f3808297ffd37b5",
+    "flowfield/problems/level1_small_continuous/p011/solver/ChargeNewton.H": "19a90b182d51ff1a4724243130f5865fcf7e8e2df4169b03dfdfe2eb2788be08",
+    "flowfield/problems/level1_small_continuous/p011/solver/Common.H": "dc10350378a7d5ba06f141cc90c61fb0a5f126ba60fa259c0fd40e5f1441f5bf",
+    "flowfield/problems/level1_small_continuous/p011/solver/Gas.H": "da44ffb08185edb720c0bdbcdf5a80c81aa415518984bd0ddfd4bc10932b6dc9",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/files": "ea48732dba2086fe9ecaeab40badf7bf4174c72e76496c5782e7613efb9eaf22",
+    "flowfield/problems/level1_small_continuous/p011/solver/Make/options": "0e0cf352d95f489a039f0a6eaacb834892a8e363feb909d9f11ebd053cda5091",
+    "flowfield/problems/level1_small_continuous/p011/solver/WaterHeat.H": "0c4cb1db320628a30572bb48c696a42b723b545133853538e5bbe0d0108e599e",
+    "flowfield/problems/level1_small_continuous/p011/solver/flowfieldP011Foam.C": "cdbe1ab21374cc36758ee360fbb46bdfddc55738756d04c22c51940cad91e249",
+    "flowfield/problems/level1_small_continuous/p011/study.py": "44c839e069cdcaeb0951b2eced3f6dee606f21f217d1f9fb2e01396dd2be89b6"
+  },
+  "pyproject_sha256": "5a90d6b9007bf31c6cbaf0f6bfd770a440656219de8624a7d392992ca54ce7df",
+  "build_command": [
+    "/Users/zhuang/FlowField/.venv/bin/python",
+    "-c",
+    "from setuptools.build_meta import build_wheel; print(build_wheel('dist'))"
+  ],
+  "wheel": "/Users/zhuang/FlowField/runs/p011-mesh-policy-verification/packaging/flowfield_benchmarks-0.8.0-py3-none-any.whl",
+  "wheel_sha256": "8e7908e0661904582ac7562cc5247e67cb8e221f28bdf0d1d40a2ebf7f0cb1bc",
+  "all_p011_packaged_files_byte_match": true,
+  "isolated_case_verification": {
+    "imported_from": "/var/folders/lj/dw682b5n5hb2rcz08b8vnkz80000gn/T/flowfield-p011-v3-package-ze835_nd/installed/flowfield/__init__.py",
+    "site_packages_disabled": true,
+    "model_revision": "tapered-pemfc-two-phase-v3",
+    "mesh_policy": "anchored-transverse-lattice-v1",
+    "cells": 10880,
+    "config_sha256": "ddfaa92282495514ec20d228015d6d2db6988d86203c7f5026a4f61b26a86a3e",
+    "geometry_source_sha256": "ce9b7c9f0ea10409c3276bb379e560690644a2b0748f31cd1077470e64c09899",
+    "old_v2_case": "/Users/zhuang/FlowField/runs/p011-newton-audit/patched-baseline",
+    "old_v2_rejection": "Invalid P011 manifest",
+    "old_v2_files_unchanged": true,
+    "old_v2_file_count": 97,
+    "source_integrity_verified": true,
+    "cfd_executed": false
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "review_scope": "Read-only independent review of anchored mesh policy, case metadata, model revision and regression tests. No production edits or CFD performed by this reviewer.",
+  "blocking_code_findings": [],
+  "conclusion": "Implementation matches the declared anchored-lattice policy. It repairs design-dependent interval repartitioning; it does not remove staircase classification changes, merge/grading transitions or shared-electrode refinement.",
+  "checks": [
+    "Background lattice constructed independently of physical endpoint interval lengths; design-dependent ceil redistribution removed.",
+    "Outer axis endpoints and orthogonal tensor topology preserved; local grading only inserts coordinates.",
+    "Case geometry_source_sha256 retains immutable mesher pinning; model revision v3 changes experiment identity.",
+    "Metadata declares local fitting, snapping/merging and shared-electrode limitations.",
+    "Tests cover baseline and IGA infinitesimal perturbations at all3meshlevels plus merge-boundary geometryquality."
+  ],
+  "independent_geometry_sweep": {
+    "cases": 72,
+    "cell_count_changes": 0,
+    "material_changes": [
+      {
+        "level": "coarse",
+        "widths_mm": [
+          0.7,
+          1.3,
+          1.5,
+          0.8
+        ],
+        "coordinate": 0,
+        "delta_mm": -1e-08,
+        "cells_before": 18920,
+        "cells_after": 18920,
+        "changed_materials": 26
+      },
+      {
+        "level": "coarse",
+        "widths_mm": [
+          0.7,
+          1.3,
+          1.5,
+          0.8
+        ],
+        "coordinate": 1,
+        "delta_mm": -1e-08,
+        "cells_before": 18920,
+        "cells_after": 18920,
+        "changed_materials": 26
+      },
+      {
+        "level": "coarse",
+        "widths_mm": [
+          0.7,
+          1.3,
+          1.5,
+          0.8
+        ],
+        "coordinate": 3,
+        "delta_mm": 1e-08,
+        "cells_before": 18920,
+        "cells_after": 18920,
+        "changed_materials": 26
+      }
+    ]
+  },
+  "coarse_random_geometry_sweep": {
+    "samples": 100,
+    "successful": 100,
+    "rejected": [],
+    "minimum_spacing_mm": 0.0010085454465562638,
+    "maximum_port_area_error": 0.0013329984004710749,
+    "maximum_cells": 51840
+  },
+  "remaining_validation": "Parent is measuring full-CFD objective sensitivity at the representative taper with material flips and across mesh refinement. Those results must qualify any benchmark-readiness statement.",
+  "source_sha256": {
+    "src/flowfield/problems/level1_small_continuous/p011/geometry.py": "ce9b7c9f0ea10409c3276bb379e560690644a2b0748f31cd1077470e64c09899",
+    "src/flowfield/problems/level1_small_continuous/p011/case.py": "39d049f97f1c689c60f4bddd313e790e82be78200a65081e7f9795e14bb98426",
+    "src/flowfield/problems/level1_small_continuous/p011/config.py": "c10de7572e02bb16437d28a92e0751f534746c7a95d39ab01747114f3af048d7",
+    "tests/test_p011_geometry.py": "6fbefdb69bbfd03aa11504952577175cba4a770423bf8ec3e8ba0c6621eb8b1b"
+  }
+}
